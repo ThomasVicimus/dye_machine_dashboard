@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Dye Machine Dashboard - Mobile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Dye Machine Status</h2>
+    </div>
+</div>
+
+<!-- Status Cards -->
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Machine Status</h5>
+                <div class="status-indicator" id="machine-status">
+                    <span class="badge bg-success">Running</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Temperature</h5>
+                <div class="status-indicator" id="temperature">
+                    <span class="badge bg-info">75°C</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pressure</h5>
+                <div class="status-indicator" id="pressure">
+                    <span class="badge bg-warning">2.5 bar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Graph -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Current Data</h5>
+                <div id="mobile-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-indicator {
+        font-size: 1.1em;
+        text-align: center;
+        padding: 8px;
+    }
+    
+    .badge {
+        font-size: 1em;
+        padding: 6px 12px;
+    }
+    
+    .card {
+        margin-bottom: 10px;
+    }
+    
+    h2 {
+        font-size: 1.5em;
+    }
+    
+    h5 {
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize SocketIO connection
+    const socket = io();
+    
+    // Listen for data updates
+    socket.on('update_data', function(data) {
+        // Update mobile content here
+        console.log('Mobile data update received:', data);
+    });
+    
+    // Listen for status updates
+    socket.on('status_update', function(data) {
+        // Update status indicators here
+        console.log('Mobile status update received:', data);
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Dye Machine Dashboard - Desktop{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-center mb-4">Dye Machine Dashboard</h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Graph -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Real-time Data Graph</h5>
+                <div id="live-graph"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Data Table -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Current Data</h5>
+                <div id="data-table"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Indicators -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Machine Status</h5>
+                <div class="status-indicator" id="machine-status">
+                    <span class="badge bg-success">Running</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Temperature</h5>
+                <div class="status-indicator" id="temperature">
+                    <span class="badge bg-info">75°C</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pressure</h5>
+                <div class="status-indicator" id="pressure">
+                    <span class="badge bg-warning">2.5 bar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-indicator {
+        font-size: 1.2em;
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .badge {
+        font-size: 1.1em;
+        padding: 8px 15px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize SocketIO connection
+    const socket = io();
+    
+    // Listen for data updates
+    socket.on('update_data', function(data) {
+        // Update graph and table here
+        console.log('Data update received:', data);
+    });
+    
+    // Listen for status updates
+    socket.on('status_update', function(data) {
+        // Update status indicators here
+        console.log('Status update received:', data);
+    });
+</script>
+{% endblock %} 
