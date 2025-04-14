@@ -1,5 +1,12 @@
- USE ReportData;
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection = utf8mb4;
+SET character_set_client = utf8mb4;
+SET character_set_results = utf8mb4;
 
+USE dm_archive;
+
+DROP TABLE IF EXISTS `machine_production_waste`;
 CREATE TABLE `machine_production_waste`(
     `central_id` VARCHAR(50) NULL,
     `central_name` VARCHAR(50) NULL,
@@ -13,13 +20,15 @@ CREATE TABLE `machine_production_waste`(
     `refresh_time` DATETIME NULL,
     `write_time` DATETIME NULL,
     `weight_kg` INT NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+DROP VIEW IF EXISTS `production_volume`;
 CREATE VIEW `production_volume`
 AS
 SELECT `central_id`, `central_name`, `period`, `date`, `machine_name`, `order_index`, `refresh_time`, `weight_kg`
 FROM  `machine_production_waste`;
 
+DROP TABLE IF EXISTS `batch_queued`;
 CREATE TABLE `batch_queued`(
     `central_id` VARCHAR(50) NULL,
     `central_name` VARCHAR(50) NULL,
@@ -43,6 +52,7 @@ CREATE TABLE `batch_queued`(
     `product_code` VARCHAR(50) NULL
 );
 
+DROP TABLE IF EXISTS `machine_status`;
 CREATE TABLE `machine_status`(
     `central_id` VARCHAR(50) NULL,
     `central_name` VARCHAR(50) NULL,
@@ -78,6 +88,7 @@ CREATE TABLE `machine_status`(
     `status_write_time` DATETIME NULL
 );
 
+DROP TABLE IF EXISTS `overall_usage`;
 CREATE TABLE `overall_usage`(
     `central_id` VARCHAR(50) NULL,
     `central_name` VARCHAR(50) NULL,
@@ -94,6 +105,7 @@ CREATE TABLE `overall_usage`(
     `weight_kg` INT NULL
 );
 
+DROP TABLE IF EXISTS `stop_reasons_summary`;
 CREATE TABLE `stop_reasons_summary`(
     `central_id` VARCHAR(50) NULL,
     `central_name` VARCHAR(50) NULL,
