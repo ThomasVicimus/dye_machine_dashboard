@@ -226,6 +226,9 @@ class MachineUsageChart:
                 ),
                 height=plot_height,
                 width=plot_width,
+                # * Transparent background
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
             )
 
             # Update subplot titles
@@ -357,7 +360,9 @@ if __name__ == "__main__":
             logger.debug(f"Average data: {avg.to_string()}")
             logger.debug(f"Best data: {best.to_string()}")
             logger.debug(f"Worst data: {worst.to_string()}")
+            dfs[period] = {"avg": avg, "best": best, "worst": worst}
 
+        for period in dfs.keys():
             # Create the main chart
             fig = chart_factory.create_machine_usage_chart(period, dfs)
 
