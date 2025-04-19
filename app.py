@@ -163,20 +163,30 @@ desktop_app.layout = html.Div(
                                 )
                             ]
                         ),
-                        # First row of charts
+                        # New Row for Period Buttons (aligned with the first chart column)
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    html.Div(
+                                        id="period-button-container",
+                                        children=create_period_buttons(
+                                            available_periods
+                                        ),
+                                    ),
+                                    width=4,  # Aligns buttons with the first chart
+                                ),
+                                dbc.Col(width=8),  # Empty columns to fill the row
+                            ],
+                            className="mb-2",  # Add some margin below buttons
+                        ),
+                        # First row of charts (buttons removed from chart-1 col)
                         dbc.Row(
                             [
                                 dbc.Col(
                                     [
-                                        html.Div(
-                                            id="period-button-container",
-                                            children=create_period_buttons(
-                                                available_periods
-                                            ),
-                                        ),
                                         dcc.Graph(
                                             id="chart-1", figure=initial_chart1_figure
-                                        ),
+                                        )
                                     ],
                                     width=4,
                                     className="p-2",
@@ -202,7 +212,8 @@ desktop_app.layout = html.Div(
                                     className="p-2",
                                 ),
                             ],
-                            className="mb-2",
+                            className="mb-2",  # This class might be adjustable now
+                            align="start",  # Added to ensure tops align if columns have different heights
                         ),
                         # Second row of charts
                         dbc.Row(
@@ -237,7 +248,8 @@ desktop_app.layout = html.Div(
                                     width=4,
                                     className="p-2",
                                 ),
-                            ]
+                            ],
+                            align="start",  # Added for consistency
                         ),
                     ],
                     fluid=True,
