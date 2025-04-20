@@ -99,6 +99,7 @@ class MachineUsageChart:
                 marker_colors=self.colors,
                 hole=0.3,
                 textinfo="percent",
+                textposition="inside",
                 insidetextorientation="radial",
                 name=title,
                 title=dict(
@@ -294,7 +295,12 @@ def get_MachineUsage_data(db) -> pd.DataFrame:
         logger.debug(df.to_string())
 
         # Get average, best, and worst machine data
-        avg = df[df["order_index"] == 0]
+        if not 0 in df["order_index"].unique():
+            avg = get_avg(df)
+            # print(f"avg: {avg}")
+        else:
+            avg = df[df["order_index"] == 0]
+
         best = (
             df[df["order_index"] == 1].sort_values(by="run", ascending=False).iloc[0:1]
         )
@@ -304,6 +310,22 @@ def get_MachineUsage_data(db) -> pd.DataFrame:
         dfs[period] = {"avg": avg, "best": best, "worst": worst}
 
     return dfs
+
+
+def get_avg(df):
+    # * calculate the average of each cols in the df in form of df
+    mask = df["order_index"] == 1
+    _df = df[mask]
+    df_avg = pd.DataFrame(
+        columns=["run", "idle", "down", "repair", "period", "machine_name"]
+    )
+    df_avg.loc[0, "run"] = _df["run"].mean()
+    df_avg.loc[0, "idle"] = _df["idle"].mean()
+    df_avg.loc[0, "down"] = _df["down"].mean()
+    df_avg.loc[0, "repair"] = _df["repair"].mean()
+    df_avg.loc[0, "period"] = df["period"].iloc[0]
+    df_avg.loc[0, "machine_name"] = pd.NA
+    return df_avg
 
 
 # Example usage
@@ -316,51 +338,8 @@ if __name__ == "__main__":
         conn = db.connect()
         dfs = {}
         chartname = "machine_usage"
-        dfs_period = {}
-        file = f"1_{chartname}.sql"
-        file_name = file.split(".")[0]
-
-        # Load replace yml
-        with open(f"sql/{file_name}_replace.yml", "r", encoding="utf-8") as f:
-            replace_dict = yaml.safe_load(f)
-
-        # Replace period_replace in sql file
-        with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
-            sql_commands = sql_file.read()
-
-        # Create chart factory with language option
         chart_factory = MachineUsageChart(dfs, lang="zh_cn")  # Change language here
-
-        # Create charts directory if it doesn't exist
-        os.makedirs("charts", exist_ok=True)
-
-        # Process each period
-        for period in replace_dict["period_replace"]:
-            Q = sql_commands.format(period_replace=period)
-            df = db.execute_query(Q)
-
-            # Log the raw data for debugging
-            logger.debug(f"Raw data for period {period}:")
-            logger.debug(df.to_string())
-
-            # Get average, best, and worst machine data
-            avg = df[df["order_index"] == 0]
-            best = (
-                df[df["order_index"] == 1]
-                .sort_values(by="run", ascending=False)
-                .iloc[0:1]
-            )
-            worst = (
-                df[df["order_index"] == 1]
-                .sort_values(by="run", ascending=True)
-                .iloc[0:1]
-            )
-
-            # Log the processed data for debugging
-            logger.debug(f"Average data: {avg.to_string()}")
-            logger.debug(f"Best data: {best.to_string()}")
-            logger.debug(f"Worst data: {worst.to_string()}")
-            dfs[period] = {"avg": avg, "best": best, "worst": worst}
+        dfs = get_MachineUsage_data(db)
 
         for period in dfs.keys():
             # Create the main chart
