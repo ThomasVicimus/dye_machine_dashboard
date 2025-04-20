@@ -1,0 +1,15 @@
+The project plan is to build a Python-based dashboard using Flask and Dash. This dashboard will be served over the local network, enabling access for devices on the intranet without requiring Python or other dependencies. The application will consist of several Python scripts working collaboratively. These scripts will handle the main application logic, database interaction, dashboard layout, and interactive elements
+.
+The planned scripts are:
+•
+app.py: Initializes Flask and Dash
+.
+•
+database_connection.py: Connects to the local database using SQLAlchemy
+.
+•
+dashboard_layout.py: Defines the dashboard structure using dash-bootstrap-components
+.
+•
+callbacks.py: Implements interactive logic using flask-socketio
+.
