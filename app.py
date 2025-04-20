@@ -1,7 +1,7 @@
+import dash
 from flask import Flask, redirect, request, render_template, jsonify
 from flask_socketio import SocketIO
 from dash import Dash, html, dcc, Output, Input, State, callback_context, ALL
-import dash
 import dash_bootstrap_components as dbc
 from user_agents import parse
 import logging
@@ -9,12 +9,20 @@ import os
 from datetime import datetime
 import json
 import pandas as pd
+import plotly.graph_objects as go  # Keep go for placeholder figure
 from apscheduler.schedulers.background import BackgroundScheduler
-from database_connection import db
-import plotly.graph_objects as go
 
-# Import the chart factory
-from chart_factory_MachineUasge import MachineUsageChart, get_MachineUsage_data
+# Keep db import if needed for other parts, remove if only for chart 1
+# from database_connection import db
+
+# Import chart-specific functions and constants
+from callbacks_chart_machine_usage import (
+    load_initial_chart1_data,
+    create_chart1_layout,
+    create_period_buttons_chart1,
+    register_chart1_callbacks,
+    PERIOD_STORE_ID as CHART1_PERIOD_STORE_ID,  # Use alias to avoid potential future conflicts
+)
 
 # Configuration
 ENABLE_TEMPLATES = False  # Set to False to use Dash-only mode
@@ -52,7 +60,7 @@ desktop_app = Dash(
     server=server,
     url_base_pathname="/dashboard/" if ENABLE_TEMPLATES else "/",
     external_stylesheets=[dbc.themes.BOOTSTRAP],
-    suppress_callback_exceptions=True,  # Allow callbacks on elements not present in initial layout
+    suppress_callback_exceptions=True,
 )
 
 mobile_app = Dash(
@@ -62,79 +70,22 @@ mobile_app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
 )
 
-# --- Data Fetching and Initial Chart Setup ---
-try:
-    conn = db.connect()
-    # Assume get_MachineUsage_data returns dict: {period: {"avg": df, "best": df, "worst": df}}
-    dfs_chart1 = get_MachineUsage_data(db)
-    available_periods = list(dfs_chart1.keys())
-    if not available_periods:
-        logger.warning("No periods found in dfs_chart1 data.")
-        default_period = "No Data"
-        initial_chart1_figure = go.Figure().update_layout(
-            title="No Data Available"
-        )  # Placeholder figure
-    else:
-        default_period = available_periods[0]
-        logger.info(f"Available periods: {available_periods}")
-        logger.info(f"Default period: {default_period}")
-
-        # Create chart factory instance
-        # Note: The factory itself doesn't need the period-specific data if we pass it during chart creation
-        chart_factory = MachineUsageChart(
-            {}, lang="zh_cn"
-        )  # Pass empty dict or handle differently if needed
-
-        # Create the initial figure for the first chart
-        initial_data = dfs_chart1
-        initial_chart1_figure = chart_factory.create_machine_usage_chart(
-            default_period,
-            initial_data,
-            # TODO: Add dynamic sizing parameters here based on screen size/theme
-        )
-
-        # Create a generic chart for other slots (using sample data or first period)
-        # This prevents needing to fetch/calculate data for all 6 slots initially
-        placeholder_chart_figure = (
-            initial_chart1_figure  # Use the same figure for placeholders
-        )
-
-except Exception as e:
-    logger.error(
-        f"Error during initial data fetching or chart creation: {e}", exc_info=True
-    )
-    available_periods = []
-    default_period = "Error"
-    initial_chart1_figure = go.Figure().update_layout(title="Error Loading Chart 1")
-    placeholder_chart_figure = go.Figure().update_layout(title="Error Loading Chart")
-finally:
-    if "conn" in locals() and conn:
-        db.close(conn)
+# --- Initial Data Load for Charts ---
+# Load data specifically for chart 1 using the refactored function
+(
+    initial_chart1_figure,
+    placeholder_chart_figure,
+    chart1_available_periods,
+    chart1_default_period,
+) = load_initial_chart1_data()
+# TODO: Load initial data for other charts here when they are added
 
 
 # --- Desktop Layout Definition ---
-def create_period_buttons(periods):
-    if not periods:
-        return dbc.Alert("No periods available", color="warning")
-    return dbc.ButtonGroup(
-        [
-            dbc.Button(
-                period,
-                id={"type": "period-button", "index": period},
-                color="primary",
-                outline=True,
-                size="sm",
-            )
-            for period in periods
-        ],
-        className="mb-2",
-    )
-
-
 desktop_app.layout = html.Div(
     id="main-container",
     children=[
-        # Theme switcher (fixed position)
+        # Theme switcher (fixed position - Remains the same)
         html.Div(
             [
                 dbc.Button(
@@ -151,6 +102,7 @@ desktop_app.layout = html.Div(
             children=[
                 dbc.Container(
                     [
+                        # Header Row (Remains the same)
                         dbc.Row(
                             [
                                 dbc.Col(
@@ -163,34 +115,26 @@ desktop_app.layout = html.Div(
                                 )
                             ]
                         ),
-                        # New Row for Period Buttons (aligned with the first chart column)
+                        # Row for Period Buttons (Re-added)
                         dbc.Row(
                             [
                                 dbc.Col(
-                                    html.Div(
-                                        id="period-button-container",
-                                        children=create_period_buttons(
-                                            available_periods
-                                        ),
+                                    # Call the imported button creation function
+                                    create_period_buttons_chart1(
+                                        chart1_available_periods
                                     ),
-                                    width=4,  # Aligns buttons with the first chart
+                                    width=4,  # Align with first chart column
                                 ),
                                 dbc.Col(width=8),  # Empty columns to fill the row
                             ],
-                            className="mb-2",  # Add some margin below buttons
+                            className="mb-2",
                         ),
-                        # First row of charts (buttons removed from chart-1 col)
+                        # First row of charts
                         dbc.Row(
                             [
-                                dbc.Col(
-                                    [
-                                        dcc.Graph(
-                                            id="chart-1", figure=initial_chart1_figure
-                                        )
-                                    ],
-                                    width=4,
-                                    className="p-2",
-                                ),
+                                # Call the layout function (now just the graph column)
+                                create_chart1_layout(initial_chart1_figure),
+                                # Placeholder columns for other charts
                                 dbc.Col(
                                     [
                                         dcc.Graph(
@@ -212,8 +156,8 @@ desktop_app.layout = html.Div(
                                     className="p-2",
                                 ),
                             ],
-                            className="mb-2",  # This class might be adjustable now
-                            align="start",  # Added to ensure tops align if columns have different heights
+                            className="mb-2",
+                            align="start",
                         ),
                         # Second row of charts
                         dbc.Row(
@@ -249,25 +193,27 @@ desktop_app.layout = html.Div(
                                     className="p-2",
                                 ),
                             ],
-                            align="start",  # Added for consistency
+                            align="start",
                         ),
                     ],
                     fluid=True,
-                    style={"max-width": "1920px", "padding": "20px"},  # Keep max-width
+                    style={"max-width": "1920px", "padding": "20px"},
                 )
             ],
         ),
-        # Stores
+        # Stores - Include stores needed by any chart callback
         dcc.Store(id="theme-store", data="dark_blue"),
         dcc.Store(id="screen-size-store"),
-        dcc.Store(id="selected-period-store", data=default_period),
+        dcc.Store(
+            id=CHART1_PERIOD_STORE_ID, data=chart1_default_period
+        ),  # Use the specific ID from the callbacks file
         dcc.Interval(
             id="interval-component", interval=60 * 1000, n_intervals=0
         ),  # Keep interval if needed
     ],
 )
 
-# Mobile dashboard layout
+# --- Mobile Layout Definition (Unchanged) ---
 mobile_app.layout = html.Div(
     [
         html.H2("Real-time Data - Mobile"),
@@ -276,12 +222,18 @@ mobile_app.layout = html.Div(
     ]
 )
 
+# --- Register Callbacks ---
+register_chart1_callbacks(desktop_app)
+# TODO: Register callbacks for other charts here when added
 
-# Device detection and redirection with screen size detection
+# --- Core App Callbacks (Theme, Screen Size, Mobile, Routing) ---
+
+
+# Device detection and redirection (Unchanged, adjust index return if needed)
 @server.route("/")
 def index():
     if not ENABLE_TEMPLATES:
-        return redirect("/dashboard/")
+        return desktop_app.index()  # Serve Dash app directly if templates disabled
 
     user_agent_string = request.headers.get("User-Agent", "")
     user_agent = parse(user_agent_string)
@@ -289,26 +241,24 @@ def index():
     if user_agent.is_mobile:
         return render_template("mobile.html")
     else:
-        # Pass initial theme to template if needed
         return render_template("desktop.html", initial_theme="dark_blue")
 
 
-# Screen size detection endpoint
+# Screen size detection endpoint (Unchanged)
 @server.route("/screen-size", methods=["POST"])
 def screen_size():
     data = request.get_json()
     width = data.get("width", 1920)
     height = data.get("height", 1080)
     logger.info(f"Screen size received via HTTP POST: {width}x{height}")
-    # Optionally, broadcast this info via SocketIO to update the specific client's Dash app
-    # Or store it in a session associated with the request/client
+    # Store or broadcast size via SocketIO if needed by callbacks
     socketio.emit(
         "screen_size_update", {"width": width, "height": height}, room=request.sid
     )
     return jsonify({"status": "success"})
 
 
-# Theme switching callback
+# Theme switching callback (Unchanged)
 @desktop_app.callback(
     Output("theme-store", "data"),
     [Input("theme-dark-blue", "n_clicks"), Input("theme-black", "n_clicks")],
@@ -317,14 +267,13 @@ def update_theme(dark_blue_clicks, black_clicks):
     ctx = callback_context
     if not ctx.triggered:
         return "dark_blue"
-
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     theme = "dark_blue" if button_id == "theme-dark-blue" else "black"
     logger.info(f"Theme changed to: {theme}")
     return theme
 
 
-# Theme application callback
+# Theme application callback (Unchanged)
 @desktop_app.callback(
     Output("dashboard-content", "style"),
     Input("theme-store", "data"),
@@ -334,33 +283,26 @@ def apply_theme(theme):
     content_style = {
         "backgroundColor": theme_colors["background"],
         "color": theme_colors["text"],
-        "paddingTop": "60px",  # Add padding to avoid overlap with fixed theme switcher
-        # Other styles like padding, border can be applied here if needed
-        # "padding": "20px",
-        # "borderRadius": "10px",
-        # "border": f'1px solid {theme_colors["border"]}',
+        "paddingTop": "60px",
     }
     return content_style
 
 
-# Mobile callbacks
+# Mobile callbacks (Unchanged)
 @mobile_app.callback(
     Output("mobile-content", "children"), Input("mobile-interval", "n_intervals")
 )
 def update_mobile(n):
-    # This will be replaced with actual data from database_connection.py
-    mock_data = {"value": [42]}
-    df = pd.DataFrame(mock_data)
-
+    # Example: Replace with actual mobile data logic
     return html.Div(
         [
-            html.H4(f"Current Value: {df['value'].iloc[0]}"),
+            html.H4("Mobile Value: 42"),
             html.P(f"Update Time: {datetime.now().strftime('%H:%M:%S')}"),
         ]
     )
 
 
-# SocketIO events
+# SocketIO events (Unchanged)
 @socketio.on("connect")
 def handle_connect():
     logger.info(f"Client connected: {request.sid}")
@@ -371,6 +313,7 @@ def handle_disconnect():
     logger.info(f"Client disconnected: {request.sid}")
 
 
+# SocketIO screen size handler (Store if needed by callbacks)
 @socketio.on("screen_size")
 def handle_screen_size(data):
     width = data.get("width")
@@ -378,110 +321,17 @@ def handle_screen_size(data):
     logger.info(
         f"Screen size received via SocketIO from {request.sid}: {width}x{height}"
     )
-    # Store screen size information associated with this client (e.g., in a dictionary)
-    # Example: session_screen_sizes[request.sid] = {'width': width, 'height': height}
-    # Trigger a callback to update the charts for this specific client if needed
-    # This requires modifying the chart callback to take screen size as input
+    # Example: Store size associated with session ID if needed
+    # session_screen_sizes[request.sid] = {'width': width, 'height': height}
+    # Optionally trigger updates via socketio.emit if Dash stores aren't used
 
 
-# Callback to update the selected period store when a button is clicked
-@desktop_app.callback(
-    Output("selected-period-store", "data"),
-    Input({"type": "period-button", "index": ALL}, "n_clicks"),
-    State("selected-period-store", "data"),
-    prevent_initial_call=True,
-)
-def update_selected_period(n_clicks_list, current_period):
-    ctx = callback_context
-    if not ctx.triggered:
-        return current_period  # No button clicked, return current state
-
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if not button_id:  # Should not happen with pattern matching
-        return current_period
-
-    # The button_id is a JSON string like '{"index":"PeriodA","type":"period-button"}'
-    try:
-        button_info = json.loads(button_id)
-        selected_period = button_info.get("index")
-        if selected_period:
-            logger.info(f"Period button clicked: {selected_period}")
-            return selected_period
-    except json.JSONDecodeError:
-        logger.error(f"Failed to parse button ID: {button_id}")
-        return current_period
-
-    return current_period  # Return current if parsing failed
-
-
-# Callback to update chart-1 based on the selected period
-@desktop_app.callback(
-    Output("chart-1", "figure"),
-    Input("selected-period-store", "data"),
-    # TODO: Add Input for screen size from dcc.Store(id="screen-size-store")
-    # TODO: Add Input for theme from dcc.Store(id="theme-store")
-    prevent_initial_call=True,  # IMPORTANT: Initial figure is set in the layout
-)
-def update_chart1_figure(selected_period):
-    logger.info(f"Updating chart-1 for period: {selected_period}")
-    if (
-        not selected_period
-        or selected_period == "No Data"
-        or selected_period == "Error"
-    ):
-        return go.Figure().update_layout(title=f"Invalid Period: {selected_period}")
-
-    try:
-        # Re-fetch data or use cached data if available and appropriate
-        # For simplicity, re-fetching here. Consider caching for performance.
-        conn_update = db.connect()
-        dfs_update = get_MachineUsage_data(conn_update)
-        db.close(conn_update)
-
-        if selected_period not in dfs_update:
-            logger.warning(
-                f"Selected period '{selected_period}' not found in updated data."
-            )
-            return go.Figure().update_layout(
-                title=f"Data not found for {selected_period}"
-            )
-
-        # period_data = dfs_update[selected_period]
-        # Recreate the factory - could be optimized by creating once
-        chart_factory_update = MachineUsageChart({}, lang="zh_cn")
-
-        # TODO: Get screen size and theme from Inputs added above
-        # screen_width = ...
-        # theme = ...
-        # Calculate plot size/font based on screen_width and theme
-        # plot_height, plot_width, title_font_size, ... = calculate_sizes(screen_width, theme)
-
-        new_figure = chart_factory_update.create_machine_usage_chart(
-            selected_period,
-            dfs_update,
-            # Pass calculated sizes here
-            # plot_height=plot_height,
-            # plot_width=plot_width,
-            # ...
-        )
-        return new_figure
-
-    except Exception as e:
-        logger.error(
-            f"Error updating chart-1 for period {selected_period}: {e}", exc_info=True
-        )
-        return go.Figure().update_layout(
-            title=f"Error loading data for {selected_period}"
-        )
-
-
-# Initialize scheduler
+# --- Scheduler and Server Start ---
 scheduler = BackgroundScheduler()
-# scheduler.add_job(func=get_data, trigger="interval", seconds=60)
+# scheduler.add_job(...) # Add jobs if needed
 scheduler.start()
 
 if __name__ == "__main__":
     logger.info("Starting server...")
     logger.info(f"Template mode: {'Enabled' if ENABLE_TEMPLATES else 'Disabled'}")
-    # Use host='0.0.0.0' to make accessible on the network
     socketio.run(server, host="0.0.0.0", port=8050, debug=True)
