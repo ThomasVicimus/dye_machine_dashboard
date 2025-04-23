@@ -1,5 +1,5 @@
 import dash
-from flask import Flask, redirect, request, render_template, jsonify
+from flask import Flask, redirect, request, jsonify
 from flask_socketio import SocketIO
 from dash import Dash, html, dcc, Output, Input, State, callback_context, ALL
 import dash_bootstrap_components as dbc
@@ -197,7 +197,7 @@ desktop_app.layout = html.Div(
                         ),
                     ],
                     fluid=True,
-                    style={"max-width": "1920px", "padding": "20px"},
+                    style={"padding": "20px"},
                 )
             ],
         ),
@@ -229,33 +229,26 @@ register_chart1_callbacks(desktop_app)
 # --- Core App Callbacks (Theme, Screen Size, Mobile, Routing) ---
 
 
-# Device detection and redirection (Unchanged, adjust index return if needed)
+# Device detection and redirection (Simplified for Dash-only mode)
 @server.route("/")
 def index():
-    if not ENABLE_TEMPLATES:
-        return desktop_app.index()  # Serve Dash app directly if templates disabled
-
-    user_agent_string = request.headers.get("User-Agent", "")
-    user_agent = parse(user_agent_string)
-
-    if user_agent.is_mobile:
-        return render_template("mobile.html")
-    else:
-        return render_template("desktop.html", initial_theme="dark_blue")
+    # No need to check ENABLE_TEMPLATES as it's always False
+    # No need for user agent parsing or template rendering
+    return desktop_app.index()
 
 
-# Screen size detection endpoint (Unchanged)
-@server.route("/screen-size", methods=["POST"])
-def screen_size():
-    data = request.get_json()
-    width = data.get("width", 1920)
-    height = data.get("height", 1080)
-    logger.info(f"Screen size received via HTTP POST: {width}x{height}")
-    # Store or broadcast size via SocketIO if needed by callbacks
-    socketio.emit(
-        "screen_size_update", {"width": width, "height": height}, room=request.sid
-    )
-    return jsonify({"status": "success"})
+# # Screen size detection endpoint (Unchanged)
+# @server.route("/screen-size", methods=["POST"])
+# def screen_size():
+#     data = request.get_json()
+#     width = data.get("width", 1920)
+#     height = data.get("height", 1080)
+#     logger.info(f"Screen size received via HTTP POST: {width}x{height}")
+#     # Store or broadcast size via SocketIO if needed by callbacks
+#     socketio.emit(
+#         "screen_size_update", {"width": width, "height": height}, room=request.sid
+#     )
+#     return jsonify({"status": "success"})
 
 
 # Theme switching callback (Unchanged)
@@ -333,5 +326,4 @@ scheduler.start()
 
 if __name__ == "__main__":
     logger.info("Starting server...")
-    logger.info(f"Template mode: {'Enabled' if ENABLE_TEMPLATES else 'Disabled'}")
     socketio.run(server, host="0.0.0.0", port=8050, debug=True)
