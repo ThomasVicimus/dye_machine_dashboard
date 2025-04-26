@@ -6,6 +6,7 @@ import numpy as np
 from typing import Dict, List
 import logging
 import yaml
+import math
 
 # Configure logging
 logging.basicConfig(
@@ -248,6 +249,262 @@ class MachineUsageChart:
             )
             raise
 
+    def create_machine_usage_chart_mobile_main(
+        self,
+        period: str,
+        dfs: Dict[str, Dict[str, pd.DataFrame]],
+        plot_height: int = 230,
+        plot_width: int = 250,
+        title_font_size: int = 14,
+        legend_font_size: int = 9,
+        margin_top: int = 50,
+        margin_bottom: int = 50,
+        margin_left: int = 10,
+        margin_right: int = 10,
+    ) -> go.Figure:
+        """
+        Create a single pie chart for the average machine usage, suitable for mobile view.
+
+        Args:
+            period: The period for the chart.
+            avg_df: DataFrame containing the average machine usage data.
+            plot_height: Height of the plot in pixels (default: 300)
+            plot_width: Width of the plot in pixels (default: 300)
+            title_font_size: Font size for the main title (default: 14)
+            legend_font_size: Font size for legend text (default: 9)
+            margin_top: Top margin in pixels (default: 50)
+            margin_bottom: Bottom margin in pixels (default: 50)
+            margin_left: Left margin in pixels (default: 10)
+            margin_right: Right margin in pixels (default: 10)
+
+        Returns:
+            plotly.graph_objects.Figure: The pie chart figure.
+        """
+        try:
+            avg_df = dfs[period]["avg"]
+            logger.debug(f"Creating mobile main chart for period: {period}")
+            logger.debug(f"Input Average DataFrame shape: {avg_df.shape}")
+
+            fig = go.Figure()
+
+            pie_trace = self.create_pie_chart(
+                avg_df,
+                title="",  # Title handled by layout
+                subtitle=f"{lang_option[self.lang]['subplot_title'][0]}",  # Use 'Average' as subtitle directly on pie
+            )
+            # Remove individual pie title as we have main layout title
+            pie_trace.title = None
+            fig.add_trace(pie_trace)
+
+            # Update layout for a single chart, mobile-friendly
+            fig.update_layout(
+                title=f"{lang_option[self.lang]['main_title']} - {period} ({lang_option[self.lang]['subplot_title'][0]})",
+                title_x=0.5,
+                title_font=dict(size=title_font_size),
+                showlegend=True,
+                # legend=dict(
+                #     orientation="v",
+                #     yanchor="bottom",
+                #     y=-0.15,  # Adjust legend position slightly
+                #     xanchor="center",
+                #     x=0.5,
+                #     font=dict(size=legend_font_size),
+                # ),
+                margin=dict(
+                    t=margin_top,
+                    b=margin_bottom,
+                    l=margin_left,
+                    r=margin_right,
+                ),
+                height=plot_height,
+                width=plot_width,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                annotations=[
+                    # Remove subplot annotations if they exist (shouldn't for single chart)
+                ],
+            )
+
+            return fig
+
+        except Exception as e:
+            logger.error(
+                f"Error creating mobile machine usage chart for period {period}: {str(e)}"
+            )
+            raise
+
+    def create_machine_usage_chart_mobile_all_machine(
+        self,
+        period: str,
+        dfs: Dict[str, Dict[str, pd.DataFrame]],
+        plot_height: int = 230,
+        plot_width: int = 250,
+        title_font_size: int = 14,
+        subplot_title_font_size: int = 12,
+        legend_font_size: int = 9,
+        margin_top: int = 50,
+        margin_bottom: int = 50,
+        margin_left: int = 10,
+        margin_right: int = 10,
+    ) -> List[go.Figure]:
+        """
+        Creates a list of figures, each containing up to 3 pie charts
+        representing individual machine usage from the 'all_machine' data.
+
+        Args:
+            period: The period for which to create the charts.
+            dfs: Dictionary containing dataframes for different charts,
+                 including 'all_machine'.
+            plot_height: Height of each plot in pixels (default: 400).
+            plot_width: Width of each plot in pixels (default: 600).
+            title_font_size: Font size for the main title (default: 16).
+            subplot_title_font_size: Font size for subplot titles (default: 14).
+            legend_font_size: Font size for legend text (default: 10).
+            margin_top: Top margin in pixels (default: 70).
+            margin_bottom: Bottom margin in pixels (default: 60).
+            margin_left: Left margin in pixels (default: 20).
+            margin_right: Right margin in pixels (default: 20).
+
+        Returns:
+            List[plotly.graph_objects.Figure]: A list of figure objects.
+        """
+        try:
+            if period not in dfs or "all_machine" not in dfs[period]:
+                logger.warning(
+                    f"'all_machine' data not found for period {period}. Skipping chart creation."
+                )
+                return []
+
+            all_machine_df = dfs[period]["all_machine"]
+
+            if all_machine_df.empty:
+                logger.info(
+                    f"'all_machine' DataFrame is empty for period {period}. No charts to create."
+                )
+                return []
+
+            if "machine_name" not in all_machine_df.columns:
+                logger.error(
+                    "'machine_name' column missing in 'all_machine' DataFrame."
+                )
+                # Handle missing column, e.g., assign default names or raise error
+                # For now, create generic names
+                all_machine_df["machine_name"] = [
+                    f"Machine {i+1}" for i in range(len(all_machine_df))
+                ]
+                # raise ValueError("'machine_name' column missing in 'all_machine' DataFrame.")
+
+            logger.debug(f"Creating individual machine charts for period: {period}")
+            logger.debug(f"All Machines DataFrame shape: {all_machine_df.shape}")
+
+            num_machines = len(all_machine_df)
+            charts_per_figure = 3
+            num_figures = math.ceil(num_machines / charts_per_figure)
+            figures = []
+
+            # Use a consistent legend across all figures based on the first figure's traces
+            show_legend_for_figure = True
+
+            for i in range(num_figures):
+                start_idx = i * charts_per_figure
+                end_idx = min((i + 1) * charts_per_figure, num_machines)
+                current_machines_df = all_machine_df.iloc[start_idx:end_idx]
+                num_cols = len(current_machines_df)
+
+                if num_cols == 0:
+                    continue
+
+                # Get machine names for subplot titles, handle potential missing names
+                subplot_titles = [
+                    (
+                        str(name)
+                        if pd.notna(name)
+                        else f"{lang_option[self.lang]['machine']} {idx+1}"
+                    )
+                    for idx, name in enumerate(
+                        current_machines_df["machine_name"], start=start_idx
+                    )
+                ]
+
+                fig = make_subplots(
+                    rows=1,
+                    cols=num_cols,
+                    specs=[[{"type": "pie"}] * num_cols],
+                    subplot_titles=subplot_titles,
+                )
+
+                for j in range(num_cols):
+                    machine_data = current_machines_df.iloc[[j]]  # Pass as DataFrame
+                    machine_name = subplot_titles[j]  # Use the already determined title
+
+                    pie_trace = self.create_pie_chart(
+                        machine_data,
+                        title=machine_name,  # Main title for the pie (used as name)
+                        subtitle=machine_name,  # Subtitle for the pie
+                    )
+                    # Remove the individual title generated by create_pie_chart as we use subplot_titles
+                    pie_trace.title = None
+
+                    fig.add_trace(
+                        pie_trace,
+                        row=1,
+                        col=j + 1,
+                    )
+
+                # Update layout for the current figure
+                fig.update_layout(
+                    title=f"{lang_option[self.lang]['main_title']} - {period} ({lang_option[self.lang]['machine']} {start_idx+1}-{end_idx})",
+                    title_x=0.5,
+                    title_font=dict(size=title_font_size),
+                    showlegend=show_legend_for_figure,  # Show legend only needed once
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=-0.1,  # Adjust legend position
+                        xanchor="center",
+                        x=0.5,
+                        font=dict(size=legend_font_size),
+                        # Use labels from the first trace for consistency if needed
+                        # traceorder='reversed',
+                        # title_text='Status'
+                    ),
+                    margin=dict(
+                        t=margin_top,
+                        b=margin_bottom,
+                        l=margin_left,
+                        r=margin_right,
+                    ),
+                    height=plot_height,
+                    width=plot_width,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                )
+
+                # Update subplot title fonts
+                fig.update_annotations(
+                    font=dict(
+                        size=subplot_title_font_size,
+                        family="Arial, sans-serif",
+                    )
+                )
+
+                figures.append(fig)
+                # After the first figure, we can potentially hide the legend if redundant
+                # show_legend_for_figure = False # Uncomment if you want legend only on the first figure
+
+            return figures
+
+        except Exception as e:
+            logger.error(
+                f"Error creating all machines charts for period {period}: {str(e)}"
+            )
+            # Log the DataFrame that caused the error
+            if "all_machine_df" in locals():
+                logger.error(
+                    f"Problematic DataFrame content:\n{all_machine_df.to_string()}"
+                )
+            raise
+
     def get_all_periods(self) -> List[str]:
         """
         Get list of all available periods in the data.
@@ -307,7 +564,13 @@ def get_MachineUsage_data(db) -> pd.DataFrame:
         worst = (
             df[df["order_index"] == 1].sort_values(by="run", ascending=True).iloc[0:1]
         )
-        dfs[period] = {"avg": avg, "best": best, "worst": worst}
+        all_machine = df[df["order_index"] == 1].sort_values(by="run", ascending=True)
+        dfs[period] = {
+            "avg": avg,
+            "best": best,
+            "worst": worst,
+            "all_machine": all_machine,
+        }
 
     return dfs
 
