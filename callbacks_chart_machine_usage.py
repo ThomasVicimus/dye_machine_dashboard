@@ -19,7 +19,7 @@ BUTTON_CONTAINER_ID = "period-button-container-chart1"
 # ---- Data Loading ----
 
 
-def load_initial_chart1_data():
+def load_initial_chart1_data(mobile: bool = False):
     """Fetches initial data and creates the first figures for chart 1."""
     initial_figure = go.Figure().update_layout(title="Loading...")
     placeholder_figure = go.Figure().update_layout(title="...")
@@ -46,11 +46,17 @@ def load_initial_chart1_data():
             chart_factory = MachineUsageChart(
                 {}, lang="zh_cn"
             )  # Create factory instance here
-            initial_figure = chart_factory.create_machine_usage_chart(
-                default_period,
-                dfs_chart1,
-                # TODO: Pass dynamic sizes if needed
-            )
+            if not mobile:
+                initial_figure = chart_factory.create_machine_usage_chart(
+                    default_period,
+                    dfs_chart1,
+                    # TODO: Pass dynamic sizes if needed
+                )
+            else:
+                initial_figure = chart_factory.create_machine_usage_chart_mobile_main(
+                    default_period,
+                    dfs_chart1,
+                )
             # Use the same figure for other placeholders initially
             placeholder_figure = initial_figure
 
@@ -90,17 +96,34 @@ def create_period_buttons_chart1(periods):
     )
 
 
-def create_chart1_layout(initial_figure):
+def create_chart1_layout(initial_figure, mobile: bool = False):
     """Creates the dbc.Col layout containing just the graph for chart 1."""
-    return dbc.Col(
-        [
-            dcc.Graph(
-                id=CHART_ID, figure=initial_figure, config={"displayModeBar": False}
-            )
-        ],
-        width=4,
-        className="p-2",
-    )
+    if not mobile:
+        return dbc.Col(
+            [
+                dcc.Graph(
+                    id=CHART_ID, figure=initial_figure, config={"displayModeBar": False}
+                )
+            ],
+            width=4,
+            className="p-2",
+        )
+    else:
+        return dbc.Col(
+            [
+                dcc.Graph(
+                    id=f"mobile-{CHART_ID}",
+                    figure=initial_figure,
+                    style={
+                        "height": "20vh",
+                        "width": "95%",
+                    },  # Height adjusted
+                    config={"displayModeBar": False},
+                )
+            ],
+            width=4,  # Width changed
+            className="p-0",
+        )
 
 
 # ---- Callback Registration ----
