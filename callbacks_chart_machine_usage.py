@@ -16,63 +16,6 @@ PERIOD_STORE_ID = "selected-period-store-chart1"
 BUTTON_TYPE = "period-button-chart1"
 BUTTON_CONTAINER_ID = "period-button-container-chart1"
 
-# ---- Data Loading ----
-
-
-def load_initial_chart1_data(mobile: bool = False):
-    """Fetches initial data and creates the first figures for chart 1."""
-    initial_figure = go.Figure().update_layout(title="Loading...")
-    placeholder_figure = go.Figure().update_layout(title="...")
-    available_periods = []
-    default_period = None
-
-    try:
-        conn = db.connect()
-        # Assume get_MachineUsage_data returns dict: {period: {"avg": df, "best": df, "worst": df}}
-        dfs_chart1 = get_MachineUsage_data(conn)
-        db.close(conn)
-
-        available_periods = list(dfs_chart1.keys())
-        if not available_periods:
-            logger.warning("No periods found in dfs_chart1 data.")
-            default_period = "No Data"
-            initial_figure = go.Figure().update_layout(title="No Data Available")
-            placeholder_figure = initial_figure
-        else:
-            default_period = available_periods[0]
-            logger.info(f"Chart 1: Available periods: {available_periods}")
-            logger.info(f"Chart 1: Default period: {default_period}")
-
-            chart_factory = MachineUsageChart(
-                {}, lang="zh_cn"
-            )  # Create factory instance here
-            if not mobile:
-                initial_figure = chart_factory.create_machine_usage_chart(
-                    default_period,
-                    dfs_chart1,
-                    # TODO: Pass dynamic sizes if needed
-                )
-            else:
-                initial_figure = chart_factory.create_machine_usage_chart_mobile_main(
-                    default_period,
-                    dfs_chart1,
-                )
-            # Use the same figure for other placeholders initially
-            placeholder_figure = initial_figure
-
-    except Exception as e:
-        logger.error(
-            f"Error during initial data fetching or chart creation for Chart 1: {e}",
-            exc_info=True,
-        )
-        if "conn" in locals() and conn:  # Ensure connection is closed on error
-            db.close(conn)
-        default_period = "Error"
-        initial_figure = go.Figure().update_layout(title="Error Loading Chart 1")
-        placeholder_figure = go.Figure().update_layout(title="Error Loading Chart")
-
-    return initial_figure, placeholder_figure, available_periods, default_period
-
 
 # ---- Layout Components ----
 
@@ -96,7 +39,7 @@ def create_period_buttons_chart1(periods):
     )
 
 
-def create_chart1_layout(initial_figure, mobile: bool = False):
+def create_chart1_layout(initial_figure, mobile: bool = False, href: str | None = None):
     """Creates the dbc.Col layout containing just the graph for chart 1."""
     if not mobile:
         return dbc.Col(
@@ -109,18 +52,30 @@ def create_chart1_layout(initial_figure, mobile: bool = False):
             className="p-2",
         )
     else:
+        graph_component = dcc.Graph(
+            id=f"mobile-{CHART_ID}",
+            figure=initial_figure,
+            style={
+                "height": "20vh",
+                "width": "95%",
+            },  # Height adjusted
+            config={"displayModeBar": False},
+        )
+
+        # If href is provided, wrap the graph in a dcc.Link
+        if href:
+            content = dcc.Link(
+                graph_component,
+                href=href,
+                id=f"link-mobile-{CHART_ID}",
+                # Add style to make the link occupy the full space if needed
+                style={"display": "block", "height": "100%", "width": "100%"},
+            )
+        else:
+            content = graph_component
+
         return dbc.Col(
-            [
-                dcc.Graph(
-                    id=f"mobile-{CHART_ID}",
-                    figure=initial_figure,
-                    style={
-                        "height": "20vh",
-                        "width": "95%",
-                    },  # Height adjusted
-                    config={"displayModeBar": False},
-                )
-            ],
+            [content],  # Place the content (Graph or Link wrapping Graph) here
             width=4,  # Width changed
             className="p-0",
         )

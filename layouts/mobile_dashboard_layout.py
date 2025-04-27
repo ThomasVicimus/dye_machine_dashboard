@@ -1,14 +1,44 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
-# Note: create_chart1_layout is imported in mobile_app.py and passed here.
-# initial_chart1_figure and placeholder_chart_figure are also passed.
+# Note: Figures are passed from mobile_app.py
 
 
-def create_main_dashboard_layout(
-    create_chart1_layout_func, initial_chart1_fig, placeholder_fig
-):
-    """Creates the main mobile dashboard layout structure."""
+def create_main_dashboard_layout(initial_charts: dict, color_theme, lang):
+    """Creates the main mobile dashboard layout structure with clickable charts."""
+
+    charts = {
+        "mobile-chart-1": initial_charts["machine_usage"],
+        "mobile-chart-2": initial_charts["machine_usage"],
+        "mobile-chart-3": initial_charts["machine_usage"],
+        "mobile-chart-4": initial_charts["machine_usage"],
+        "mobile-chart-5": initial_charts["machine_usage"],
+        "mobile-chart-6": initial_charts["machine_usage"],
+    }
+
+    def create_chart_column(chart_id, figure):
+        """Helper to create a Bootstrap column containing a clickable chart graph."""
+        graph_component = dcc.Graph(
+            id=chart_id,
+            figure=figure,
+            style={"height": "20vh", "width": "95%"},
+            config={"displayModeBar": False},
+        )
+        return dbc.Col(
+            dcc.Link(
+                graph_component,
+                href=f"/details/{chart_id}",  # Link using the chart ID
+                id=f"link-{chart_id}",
+                style={
+                    "display": "block",
+                    "height": "100%",
+                    "width": "100%",
+                },  # Ensure link covers graph
+            ),
+            width=4,
+            className="p-0",
+        )
+
     return html.Div(
         id="mobile-wrapper",
         style={
@@ -34,32 +64,8 @@ def create_main_dashboard_layout(
                     # Row 1 (Charts 1-3)
                     dbc.Row(
                         [
-                            # Pass href to create_chart1_layout
-                            create_chart1_layout_func(
-                                initial_chart1_fig,
-                                mobile=True,
-                                href="/details/machine-usage",  # Link to the detail page
-                            ),
-                            dbc.Col(
-                                dcc.Graph(
-                                    id="mobile-chart-2",
-                                    figure=placeholder_fig,
-                                    style={"height": "20vh", "width": "95%"},
-                                    config={"displayModeBar": False},  # Added config
-                                ),
-                                width=4,
-                                className="p-0",
-                            ),
-                            dbc.Col(
-                                dcc.Graph(
-                                    id="mobile-chart-3",
-                                    figure=placeholder_fig,
-                                    style={"height": "20vh", "width": "95%"},
-                                    config={"displayModeBar": False},  # Added config
-                                ),
-                                width=4,
-                                className="p-0",
-                            ),
+                            create_chart_column(cid, fig)
+                            for cid, fig in list(charts.items())[:3]
                         ],
                         className="mb-1 g-0",
                         align="stretch",
@@ -67,36 +73,8 @@ def create_main_dashboard_layout(
                     # Row 2 (Charts 4-6)
                     dbc.Row(
                         [
-                            dbc.Col(
-                                dcc.Graph(
-                                    id="mobile-chart-4",
-                                    figure=placeholder_fig,
-                                    style={"height": "20vh", "width": "95%"},
-                                    config={"displayModeBar": False},  # Added config
-                                ),
-                                width=4,
-                                className="p-0",
-                            ),
-                            dbc.Col(
-                                dcc.Graph(
-                                    id="mobile-chart-5",
-                                    figure=placeholder_fig,
-                                    style={"height": "20vh", "width": "95%"},
-                                    config={"displayModeBar": False},  # Added config
-                                ),
-                                width=4,
-                                className="p-0",
-                            ),
-                            dbc.Col(
-                                dcc.Graph(
-                                    id="mobile-chart-6",
-                                    figure=placeholder_fig,
-                                    style={"height": "20vh", "width": "95%"},
-                                    config={"displayModeBar": False},  # Added config
-                                ),
-                                width=4,
-                                className="p-0",
-                            ),
+                            create_chart_column(cid, fig)
+                            for cid, fig in list(charts.items())[3:]
                         ],
                         className="mb-1 g-0",
                         align="stretch",
