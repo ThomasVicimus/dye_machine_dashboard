@@ -2,52 +2,91 @@ import logging
 import dash
 import dash_bootstrap_components as dbc
 from dash import html, dcc, Output, Input, State
+import plotly.graph_objects as go  # Import go for placeholder
 
-# Assumes CHART1_PERIOD_STORE_ID is defined in mobile_app.py and passed correctly
-# Assumes chart_factory, chart1_default_period, load_data_func, layout_func are passed
+# Assumes CHART1_PERIOD_STORE_ID is defined and passed
+# Assumes detail_figure_generators (dict mapping chart_id -> function(period)) is passed
+# Assumes chart_titles (dict mapping chart_id -> str) is passed
+# Assumes layout_func (function returning main layout) is passed
 
 logger = logging.getLogger(__name__)
 
 
+# Placeholder figure function (can be defined elsewhere too)
+def create_generic_placeholder_figure(title="Loading..."):
+    fig = go.Figure()
+    fig.update_layout(
+        xaxis={"visible": False},
+        yaxis={"visible": False},
+        annotations=[
+            {
+                "text": title,
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": False,
+                "font": {"size": 16, "color": "#888"},
+            }
+        ],
+        paper_bgcolor="#1a1a1a",
+        plot_bgcolor="#1a1a1a",
+        margin=dict(l=10, r=10, t=30, b=10),  # Added top margin for title
+    )
+    return fig
+
+
 def register_mobile_page_callbacks(
     app,
-    chart_factory,
     chart1_default_period,
     chart1_period_store_id,
-    load_data_func,  # Function to load data for detailed view (e.g., get_MachineUsage_data)
-    layout_func,  # Function to generate main layout (create_main_dashboard_layout)
+    detail_figure_generators: dict,  # e.g., {'mobile-chart-1': func1, ...}
+    chart_titles: dict,  # e.g., {'mobile-chart-1': 'Details Chart 1', ...}
+    layout_func,
 ):
-    """Registers callbacks for mobile page routing and content display."""
+    """Registers callbacks for mobile page routing and generic content display."""
 
     @app.callback(
         Output("mobile-page-content", "children"),
         Input("mobile-url", "pathname"),
-        State(chart1_period_store_id, "data"),  # Get the currently selected period
+        State(chart1_period_store_id, "data"),
     )
     def display_page(pathname, chart1_period_data):
-        if pathname == "/details/machine-usage":
-            # --- Detailed Machine Usage View ---
+
+        if pathname and pathname.startswith("/details/"):
+            # --- Generic Detailed View ---
             try:
+                # Extract chart_id from URL (e.g., /details/mobile-chart-1 -> mobile-chart-1)
+                chart_id = pathname.split("/")[-1]
+
+                if not chart_id:
+                    raise ValueError("Chart ID missing in URL")
+
                 # Determine the period to use
                 period = (
                     chart1_period_data if chart1_period_data else chart1_default_period
                 )
-                logger.info(f"Loading detailed view for period: {period}")
+                logger.info(f"Loading detail view for {chart_id}, period: {period}")
 
-                # Load data required for the detailed chart using the passed function
-                # Assumes load_data_func connects/closes DB if needed
-                dfs = load_data_func(period=period)
+                # Get the specific figure generator function for this chart_id
+                figure_generator = detail_figure_generators.get(chart_id)
 
-                # Generate the detailed figure
-                detailed_figure = chart_factory.create_machine_usage_chart_mobile_all_machine(
-                    period=period,
-                    dfs=dfs,
-                    # Add other specific parameters if needed
-                )
+                if figure_generator:
+                    # Call the generator function (it should handle data fetching)
+                    detail_figure = figure_generator(period=period)
+                    detail_title = chart_titles.get(
+                        chart_id, "Detail View"
+                    )  # Get title
+                else:
+                    logger.warning(
+                        f"No detail figure generator found for chart_id: {chart_id}"
+                    )
+                    detail_figure = create_generic_placeholder_figure(
+                        f"No detail view for {chart_id}"
+                    )
+                    detail_title = "Detail View Unavailable"
 
-                # Layout for the detailed page (needs rotation wrapper)
+                # Generic layout for the detailed page (needs rotation wrapper)
                 return html.Div(
-                    id="mobile-detail-wrapper",
+                    id=f"mobile-detail-wrapper-{chart_id}",  # Dynamic ID
                     style={
                         "width": "100vw",
                         "height": "100vh",
@@ -57,7 +96,7 @@ def register_mobile_page_callbacks(
                     },
                     children=[
                         dbc.Container(
-                            id="mobile-rotated-detail-content",
+                            id=f"mobile-rotated-detail-content-{chart_id}",  # Dynamic ID
                             children=[
                                 dbc.Row(
                                     [
@@ -71,7 +110,7 @@ def register_mobile_page_callbacks(
                                         ),
                                         dbc.Col(
                                             html.H4(
-                                                "Detailed Usage",
+                                                detail_title,
                                                 className="text-white text-center",
                                             ),
                                             width=True,
@@ -83,8 +122,8 @@ def register_mobile_page_callbacks(
                                 dbc.Row(
                                     dbc.Col(
                                         dcc.Graph(
-                                            id="mobile-detail-chart",
-                                            figure=detailed_figure,
+                                            id=f"mobile-detail-chart-{chart_id}",  # Dynamic ID
+                                            figure=detail_figure,
                                             style={
                                                 "height": "80vh",
                                                 "width": "100%",
@@ -112,7 +151,13 @@ def register_mobile_page_callbacks(
                     ],
                 )
             except Exception as e:
-                logger.error(f"Error generating detailed view: {e}", exc_info=True)
+                chart_id_info = (
+                    f" (Chart ID: {chart_id})" if "chart_id" in locals() else ""
+                )
+                logger.error(
+                    f"Error generating detailed view{chart_id_info}: {e}", exc_info=True
+                )
+                # Generic Error Page
                 return html.Div(
                     id="mobile-error-wrapper",
                     style={
@@ -149,14 +194,11 @@ def register_mobile_page_callbacks(
                 )
         elif pathname == "/" or pathname is None:
             # --- Main Dashboard View ---
-            # Call the passed layout function
-            # We need the initial figures again here, which might be tricky.
-            # Re-fetching or passing them to register_mobile_page_callbacks is needed.
-            # For now, let's assume layout_func can handle this or we adjust later.
-            # Let's modify layout_func call later in mobile_app.py to include figures.
+            logger.debug("Displaying main dashboard layout.")
             return layout_func()
         else:
             # --- 404 Not Found Page ---
+            logger.warning(f"Pathname not found: {pathname}")
             return html.Div(
                 id="mobile-404-wrapper",
                 style={"width": "100vw", "height": "100vh", "backgroundColor": "#000"},
