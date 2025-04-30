@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 import json
+from io import StringIO
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +45,10 @@ def deserialize_dataframe_dict(serialized_dict):
         for key, value in period_data.items():
             if isinstance(value, str):
                 try:
-                    # Attempt to read as JSON, assuming it's a DataFrame
-                    # Use orient='split' as used during serialization
-                    deserialized_period[key] = pd.read_json(value, orient="split")
+                    # Wrap the JSON string in StringIO to avoid FutureWarning
+                    deserialized_period[key] = pd.read_json(
+                        StringIO(value), orient="split"
+                    )
                 except (ValueError, TypeError) as e:
                     # If it fails, it might not be a DataFrame JSON string, keep as is
                     logger.debug(
