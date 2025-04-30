@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # ---- Callback Registration ----
 
 
-def register_time_period_callbacks(app, chart_id, mobile=False):
+def register_time_period_callbacks(app, chart_id, mobile=False, lang: str = "zh_cn"):
     """Registers callbacks for chart 1 interactivity."""
     # define var for each chart
     PERIOD_BUTTON_TYPE = "period-button"
@@ -28,7 +28,7 @@ def register_time_period_callbacks(app, chart_id, mobile=False):
             "CHART_ID": "chart-1",
             "CHART_DATA_STORE_ID": "chart1-data-store",
             "chart_factory": MachineUsageChart(
-                {}, lang="zh_cn"
+                {}, lang=lang
             ),  # Create factory instance for callbacks
         },
         # "chart2": {
