@@ -64,6 +64,10 @@ def create_mobile_layout(
             "backgroundColor": "#000000",
         },
         children=[
+            # Add URL location tracking component
+            dcc.Location(id="mobile-url", refresh=False),
+            # Add the container for page content (used by detail_page_callbacks.py)
+            html.Div(id="mobile-page-content"),
             dbc.Container(
                 id="mobile-rotated-content",
                 children=[
@@ -139,6 +143,7 @@ def create_mobile_layout(
                     dcc.Store(
                         id="time-period-store",
                         data=default_period,
+                        storage_type="session",
                     ),
                 ],
                 fluid=True,
@@ -155,6 +160,6 @@ def create_mobile_layout(
                     "flexDirection": "column",
                     "marginBottom": "5vh",
                 },
-            )
+            ),
         ],
     )
