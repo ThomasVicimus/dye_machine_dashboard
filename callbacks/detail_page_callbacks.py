@@ -263,10 +263,11 @@ def register_mobile_page_callbacks(
                                             "height": "40vh",
                                             "width": "100%",
                                         },
-                                        config={"displayModeBar": True},
+                                        config={"displayModeBar": False},
                                     ),
                                     width=12,
-                                )
+                                ),
+                                className="mb-3",  # Add bottom margin between charts
                             )
                         )
                 else:
@@ -281,19 +282,31 @@ def register_mobile_page_callbacks(
                                         "height": "80vh",
                                         "width": "100%",
                                     },
-                                    config={"displayModeBar": True},
+                                    config={"displayModeBar": False},
                                 ),
                                 width=12,
-                            )
+                            ),
+                            className="mb-3",  # Add bottom margin
                         )
                     ]
+
+                # Wrap all graph components in a scrollable container
+                graphs_container = html.Div(
+                    children=graph_components,
+                    style={
+                        "overflowY": "auto",
+                        "maxHeight": "90vh",  # Limit height to ensure scrollability
+                        "padding": "5px",
+                    },
+                )
 
                 return_layout = html.Div(
                     id=f"mobile-detail-wrapper-{chart_id}",  # Dynamic ID
                     style={
                         "width": "100vw",
                         "height": "100vh",
-                        "overflowY": "auto",
+                        "overflowY": "auto",  # Ensure vertical scrolling is enabled
+                        "overflowX": "hidden",  # Prevent horizontal scrolling
                         "position": "relative",
                         "backgroundColor": "#000000",
                         "zIndex": 1000,  # Ensure it's on top of everything
@@ -323,21 +336,22 @@ def register_mobile_page_callbacks(
                                     align="center",
                                     className="mb-2",
                                 ),
-                                # Insert the graph components here
-                                *graph_components,
+                                # Insert the scrollable graphs container instead of individual components
+                                graphs_container,
                             ],
                             fluid=True,
                             style={
                                 "transform": "rotate(90deg)",
                                 "transformOrigin": "top left",
-                                "width": "100vh",
-                                "height": "100vw",
+                                "width": "100vh",  # This matches the height of the viewport in the rotated view
+                                "height": "100vw",  # This matches the width of the viewport in the rotated view
                                 "position": "absolute",
                                 "top": "0",
                                 "left": "100%",
                                 "padding": "15px",
                                 "display": "flex",
                                 "flexDirection": "column",
+                                "overflowY": "auto",  # Enable scrolling on the rotated content
                                 "backgroundColor": "#000000",  # Make sure container background is solid
                             },
                         )
@@ -356,6 +370,8 @@ def register_mobile_page_callbacks(
                     style={
                         "width": "100vw",
                         "height": "100vh",
+                        "overflowY": "auto",  # Ensure vertical scrolling is enabled
+                        "overflowX": "hidden",  # Prevent horizontal scrolling
                         "backgroundColor": "#000",
                         "zIndex": 1000,  # Ensure it's on top of everything
                     },
@@ -382,6 +398,7 @@ def register_mobile_page_callbacks(
                                 "left": "100%",
                                 "padding": "15px",
                                 "color": "white",
+                                "overflowY": "auto",  # Enable scrolling on the rotated content
                                 "backgroundColor": "#000000",  # Make sure container background is solid
                             },
                         )
@@ -406,6 +423,8 @@ def register_mobile_page_callbacks(
                     style={
                         "width": "100vw",
                         "height": "100vh",
+                        "overflowY": "auto",  # Ensure vertical scrolling is enabled
+                        "overflowX": "hidden",  # Prevent horizontal scrolling
                         "backgroundColor": "#000",
                         "zIndex": 1000,  # Ensure it's on top of everything
                     },
@@ -425,6 +444,7 @@ def register_mobile_page_callbacks(
                                 "left": "100%",
                                 "padding": "15px",
                                 "color": "white",
+                                "overflowY": "auto",  # Enable scrolling on the rotated content
                                 "backgroundColor": "#000000",  # Make sure container background is solid
                             },
                         )
