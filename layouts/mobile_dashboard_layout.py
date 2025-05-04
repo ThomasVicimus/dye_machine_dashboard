@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from Database.serialize_df import serialize_dataframe_dict
-from layouts.create_buttons import create_period_button
+from layouts.create_buttons import create_period_button, create_theme_buttons
 
 # Note: Figures are passed from mobile_app.py
 
@@ -55,19 +55,21 @@ def create_mobile_layout(
     #     )
 
     return html.Div(
-        id="mobile-wrapper",
+        id="dashboard-content",
         style={
             "width": "100vw",
             "height": "100vh",
             "overflowY": "auto",
             "position": "relative",
-            "backgroundColor": "#000000",
+            "backgroundColor": "#202020",
         },
         children=[
             # Add URL location tracking component
             dcc.Location(id="mobile-url", refresh=False),
             # Add the container for page content (used by detail_page_callbacks.py)
             html.Div(id="mobile-page-content"),
+            # Add theme store for theme switching
+            dcc.Store(id="theme-store", data=color_theme),
             dbc.Container(
                 id="mobile-rotated-content",
                 children=[
@@ -75,7 +77,7 @@ def create_mobile_layout(
                         dbc.Col(
                             html.H2(
                                 "Mobile Dashboard",
-                                className="text-center pt-1 pb-0 text-white",
+                                className="text-center pt-1 pb-0",
                             ),
                             width=12,
                         )
@@ -87,7 +89,13 @@ def create_mobile_layout(
                                 create_period_button(periods=periods),
                                 width=4,  # Align with first chart column
                             ),
-                            dbc.Col(width=8),  # Empty columns to fill the row
+                            dbc.Col(width=4),  # Empty space in middle
+                            dbc.Col(
+                                # Add color theme buttons on the right
+                                create_theme_buttons(),
+                                width=4,
+                                className="d-flex justify-content-end",  # Align to the right
+                            ),
                         ],
                         className="mb-2",
                     ),
@@ -126,9 +134,7 @@ def create_mobile_layout(
                     #     align="stretch",
                     # ),
                     # Placeholder for potential future updates or controls
-                    html.Div(
-                        id="mobile-dynamic-content", className="text-white text-center"
-                    ),
+                    html.Div(id="mobile-dynamic-content", className="text-center"),
                     dcc.Interval(
                         id="mobile-interval", interval=60 * 1000, n_intervals=0
                     ),

@@ -1,4 +1,4 @@
-from database_connection import DatabaseConnection
+from Database.database_connection import DatabaseConnection
 import pandas as pd
 import yaml
 import logging
