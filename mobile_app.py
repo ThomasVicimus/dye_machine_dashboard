@@ -8,6 +8,7 @@ import logging
 import os
 from callbacks.select_time_period_callback import register_time_period_callbacks
 from callbacks.detail_page_callbacks import register_mobile_page_callbacks
+from callbacks.select_theme_callback import register_theme_callbacks
 from Database.fetch_all_charts_data import *
 from layouts.mobile_dashboard_layout import create_mobile_layout
 
@@ -35,7 +36,7 @@ mobile_app = Dash(
 
 mobile_app.layout = create_mobile_layout(
     initial_charts_data=data,
-    color_theme="dark",
+    color_theme="black",
     lang="zh_cn",
     default_period="今日",
 )
@@ -46,6 +47,11 @@ register_time_period_callbacks(
     chart_id="chart-1",
     mobile=True,
     lang="zh_cn",
+)
+register_theme_callbacks(
+    app=mobile_app,
+    default_color="black",
+    default_lang="zh_cn",
 )
 
 register_mobile_page_callbacks(
