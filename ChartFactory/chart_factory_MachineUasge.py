@@ -93,7 +93,7 @@ class MachineUsageChart:
             # Log the values being used
             logger.debug(f"Values for pie chart: {values}")
             logger.debug(f"Type of values: {type(values)}")
-
+            # * font color #fdfefe
             return go.Pie(
                 labels=labels,
                 values=values,
@@ -108,7 +108,9 @@ class MachineUsageChart:
                     text=f"{subtitle}<br><br>",  # Added extra <br> for spacing
                     position="top center",
                     font=dict(
-                        size=16, family="Arial, sans-serif"  # Increased title font size
+                        size=16,
+                        family="Arial, sans-serif",
+                        color="#fdfefe",  # Increased title font size
                     ),
                 ),
             )
@@ -231,6 +233,7 @@ class MachineUsageChart:
                 # * Transparent background
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#fdfefe"),
             )
 
             # Update subplot titles
@@ -320,6 +323,7 @@ class MachineUsageChart:
                 width=plot_width,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#fdfefe"),
                 annotations=[
                     # Remove subplot annotations if they exist (shouldn't for single chart)
                 ],
@@ -591,6 +595,7 @@ class MachineUsageChart:
                     width=plot_width,
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#fdfefe"),
                 )
 
                 # Update subplot title fonts

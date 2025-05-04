@@ -9,8 +9,8 @@ from Database.serialize_df import deserialize_dataframe_dict
 
 # import pandas as pd # Add if DataFrame reconstruction is needed later
 
-from database_connection import db
-from chart_factory_MachineUasge import MachineUsageChart, get_MachineUsage_data
+from Database.database_connection import db
+from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
 
 logger = logging.getLogger(__name__)
 
