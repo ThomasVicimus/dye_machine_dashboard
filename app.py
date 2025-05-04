@@ -54,6 +54,8 @@ THEMES = {
     },
 }
 
+DEFAULT_PERIOD = "今日"
+
 # Initialize Dash applications with theme support
 desktop_app = Dash(
     __name__,
