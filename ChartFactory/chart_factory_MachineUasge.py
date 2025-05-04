@@ -348,125 +348,92 @@ class MachineUsageChart:
         margin_right: int = 10,
     ) -> List[go.Figure]:
         """
-        Creates a list of figures, each containing up to 3 pie charts
-        representing individual machine usage from the 'all_machine' data.
+        Creates a list of figures, with the first figure containing the avg, best, and worst pie charts,
+        followed by figures containing up to 3 pie charts representing individual machine usage from the 'all_machine' data.
+        If the total number of subplots cannot be divided by 3, placeholders are added to maintain consistent layout.
 
         Args:
             period: The period for which to create the charts.
             dfs: Dictionary containing dataframes for different charts,
                  including 'all_machine'.
             plot_height: Height of each plot in pixels (default: 400).
-            plot_width: Width of each plot in pixels (default: 600).
-            title_font_size: Font size for the main title (default: 16).
-            subplot_title_font_size: Font size for subplot titles (default: 14).
-            legend_font_size: Font size for legend text (default: 10).
-            margin_top: Top margin in pixels (default: 70).
-            margin_bottom: Bottom margin in pixels (default: 60).
-            margin_left: Left margin in pixels (default: 20).
-            margin_right: Right margin in pixels (default: 20).
+            plot_width: Width of each plot in pixels (default: 650).
+            title_font_size: Font size for the main title (default: 14).
+            subplot_title_font_size: Font size for subplot titles (default: 12).
+            legend_font_size: Font size for legend text (default: 9).
+            margin_top: Top margin in pixels (default: 50).
+            margin_bottom: Bottom margin in pixels (default: 50).
+            margin_left: Left margin in pixels (default: 10).
+            margin_right: Right margin in pixels (default: 10).
 
         Returns:
             List[plotly.graph_objects.Figure]: A list of figure objects.
         """
         try:
-            if period not in dfs or "all_machine" not in dfs[period]:
-                logger.warning(
-                    f"'all_machine' data not found for period {period}. Skipping chart creation."
-                )
-                return []
-
-            all_machine_df = dfs[period]["all_machine"]
-
-            if all_machine_df.empty:
-                logger.info(
-                    f"'all_machine' DataFrame is empty for period {period}. No charts to create."
-                )
-                return []
-
-            if "machine_name" not in all_machine_df.columns:
-                logger.error(
-                    "'machine_name' column missing in 'all_machine' DataFrame."
-                )
-                # Handle missing column, e.g., assign default names or raise error
-                # For now, create generic names
-                all_machine_df["machine_name"] = [
-                    f"Machine {i+1}" for i in range(len(all_machine_df))
-                ]
-                # raise ValueError("'machine_name' column missing in 'all_machine' DataFrame.")
-
-            logger.debug(f"Creating individual machine charts for period: {period}")
-            logger.debug(f"All Machines DataFrame shape: {all_machine_df.shape}")
-
-            num_machines = len(all_machine_df)
-            charts_per_figure = 3
-            num_figures = math.ceil(num_machines / charts_per_figure)
             figures = []
 
-            # Use a consistent legend across all figures based on the first figure's traces
-            show_legend_for_figure = True
+            # First figure: Avg, Best, Worst
+            if all(key in dfs[period] for key in ["avg", "best", "worst"]):
+                avg_df = dfs[period]["avg"]
+                best_df = dfs[period]["best"]
+                worst_df = dfs[period]["worst"]
 
-            for i in range(num_figures):
-                start_idx = i * charts_per_figure
-                end_idx = min((i + 1) * charts_per_figure, num_machines)
-                current_machines_df = all_machine_df.iloc[start_idx:end_idx]
-                num_cols = len(current_machines_df)
-
-                if num_cols == 0:
-                    continue
-
-                # Get machine names for subplot titles, handle potential missing names
+                # Create first figure with avg, best, worst
                 subplot_titles = [
-                    (
-                        str(name)
-                        if pd.notna(name)
-                        else f"{lang_option[self.lang]['machine']} {idx+1}"
-                    )
-                    for idx, name in enumerate(
-                        current_machines_df["machine_name"], start=start_idx
-                    )
+                    f"{lang_option[self.lang]['subplot_title'][0]}",  # Average
+                    f"{lang_option[self.lang]['subplot_title'][1]}",  # Best
+                    f"{lang_option[self.lang]['subplot_title'][2]}",  # Worst
                 ]
 
                 fig = make_subplots(
                     rows=1,
-                    cols=num_cols,
-                    specs=[[{"type": "pie"}] * num_cols],
+                    cols=3,
+                    specs=[[{"type": "pie"}, {"type": "pie"}, {"type": "pie"}]],
                     subplot_titles=subplot_titles,
                 )
 
-                for j in range(num_cols):
-                    machine_data = current_machines_df.iloc[[j]]  # Pass as DataFrame
-                    machine_name = subplot_titles[j]  # Use the already determined title
+                # Add pie charts to subplots with titles and subtitles
+                fig.add_trace(
+                    self.create_pie_chart(
+                        avg_df,
+                        f"{lang_option[self.lang]['subplot_title'][0]}",
+                        f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
+                    ),
+                    row=1,
+                    col=1,
+                )
+                fig.add_trace(
+                    self.create_pie_chart(
+                        best_df,
+                        f"{lang_option[self.lang]['subplot_title'][1]}",
+                        f"{period}-{best_df['machine_name'].iloc[0] if 'machine_name' in best_df.columns else lang_option[self.lang]['subplot_title'][1]}",
+                    ),
+                    row=1,
+                    col=2,
+                )
+                fig.add_trace(
+                    self.create_pie_chart(
+                        worst_df,
+                        f"{lang_option[self.lang]['subplot_title'][2]}",
+                        f"{period}-{worst_df['machine_name'].iloc[0] if 'machine_name' in worst_df.columns else lang_option[self.lang]['subplot_title'][2]}",
+                    ),
+                    row=1,
+                    col=3,
+                )
 
-                    pie_trace = self.create_pie_chart(
-                        machine_data,
-                        title=machine_name,  # Main title for the pie (used as name)
-                        subtitle=machine_name,  # Subtitle for the pie
-                    )
-                    # Remove the individual title generated by create_pie_chart as we use subplot_titles
-                    pie_trace.title = None
-
-                    fig.add_trace(
-                        pie_trace,
-                        row=1,
-                        col=j + 1,
-                    )
-
-                # Update layout for the current figure
+                # Update layout for the first figure
                 fig.update_layout(
-                    title=f"{lang_option[self.lang]['main_title']} - {period} ({lang_option[self.lang]['machine']} {start_idx+1}-{end_idx})",
+                    title=f"{lang_option[self.lang]['main_title']} - {period} (Summary)",
                     title_x=0.5,
                     title_font=dict(size=title_font_size),
-                    showlegend=show_legend_for_figure,  # Show legend only needed once
+                    showlegend=True,
                     legend=dict(
                         orientation="h",
                         yanchor="bottom",
-                        y=-0.1,  # Adjust legend position
+                        y=-0.1,
                         xanchor="center",
                         x=0.5,
                         font=dict(size=legend_font_size),
-                        # Use labels from the first trace for consistency if needed
-                        # traceorder='reversed',
-                        # title_text='Status'
                     ),
                     margin=dict(
                         t=margin_top,
@@ -489,8 +456,152 @@ class MachineUsageChart:
                 )
 
                 figures.append(fig)
-                # After the first figure, we can potentially hide the legend if redundant
-                # show_legend_for_figure = False # Uncomment if you want legend only on the first figure
+
+            # Check if all_machine data exists
+            if "all_machine" not in dfs[period] or dfs[period]["all_machine"].empty:
+                logger.warning(
+                    f"'all_machine' data not found or empty for period {period}."
+                )
+                return figures  # Return figures with just the first summary chart if available
+
+            all_machine_df = dfs[period]["all_machine"]
+
+            if "machine_name" not in all_machine_df.columns:
+                logger.warning(
+                    "'machine_name' column missing in 'all_machine' DataFrame. Using generic names."
+                )
+                all_machine_df["machine_name"] = [
+                    f"Machine {i+1}" for i in range(len(all_machine_df))
+                ]
+
+            logger.debug(f"Creating individual machine charts for period: {period}")
+            logger.debug(f"All Machines DataFrame shape: {all_machine_df.shape}")
+
+            num_machines = len(all_machine_df)
+            machines_per_figure = 3
+
+            # Calculate number of figures needed for individual machines
+            # Each figure will have exactly 3 charts (machines per figure)
+            num_additional_figures = math.ceil(num_machines / machines_per_figure)
+
+            # Process each figure
+            for i in range(num_additional_figures):
+                start_idx = i * machines_per_figure
+                end_idx = min((i + 1) * machines_per_figure, num_machines)
+                current_machines_df = all_machine_df.iloc[start_idx:end_idx]
+                num_machines_in_fig = len(current_machines_df)
+
+                # Calculate how many placeholder charts are needed
+                num_placeholders = 0
+                if num_machines_in_fig < machines_per_figure:
+                    num_placeholders = machines_per_figure - num_machines_in_fig
+
+                # Get machine names for subplot titles
+                subplot_titles = [
+                    (
+                        str(name)
+                        if pd.notna(name)
+                        else f"{lang_option[self.lang]['machine']} {idx+1}"
+                    )
+                    for idx, name in enumerate(
+                        current_machines_df["machine_name"], start=start_idx
+                    )
+                ]
+
+                # Add placeholder titles if needed
+                for p in range(num_placeholders):
+                    subplot_titles.append("")  # Empty title for placeholder
+
+                # Always create with exactly 3 columns
+                fig = make_subplots(
+                    rows=1,
+                    cols=machines_per_figure,
+                    specs=[[{"type": "pie"}] * machines_per_figure],
+                    subplot_titles=subplot_titles,
+                )
+
+                # Add machine pie charts
+                for j in range(num_machines_in_fig):
+                    machine_data = current_machines_df.iloc[[j]]  # Pass as DataFrame
+                    machine_name = subplot_titles[j]  # Use the already determined title
+
+                    pie_trace = self.create_pie_chart(
+                        machine_data,
+                        title=machine_name,  # Main title for the pie (used as name)
+                        subtitle=machine_name,  # Subtitle for the pie
+                    )
+                    # Remove the individual title generated by create_pie_chart as we use subplot_titles
+                    pie_trace.title = None
+
+                    fig.add_trace(
+                        pie_trace,
+                        row=1,
+                        col=j + 1,
+                    )
+
+                # Add placeholder empty pie charts if needed
+                # These ensure every figure has exactly 3 charts for visual consistency
+                for p in range(num_placeholders):
+                    j = num_machines_in_fig + p
+                    # Create an empty/placeholder pie chart
+                    empty_data = pd.DataFrame(
+                        {"run": [0], "idle": [0], "down": [0], "repair": [0]}
+                    )
+
+                    # Use transparent colors for placeholder
+                    empty_pie = go.Pie(
+                        labels=lang_option[self.lang]["legend"],
+                        values=[0, 0, 0, 0],  # Zero values
+                        marker_colors=["rgba(0,0,0,0)"] * 4,  # Transparent colors
+                        showlegend=False,
+                        textinfo="none",
+                        hoverinfo="none",
+                        name="",
+                    )
+
+                    fig.add_trace(
+                        empty_pie,
+                        row=1,
+                        col=j + 1,
+                    )
+
+                # Update layout for the current figure
+                fig.update_layout(
+                    title=f"{lang_option[self.lang]['main_title']} - {period} ({lang_option[self.lang]['machine']} {start_idx+1}-{end_idx})",
+                    title_x=0.5,
+                    title_font=dict(size=title_font_size),
+                    showlegend=(
+                        True if i == 0 else False
+                    ),  # Show legend only on first machine figure
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=-0.1,  # Adjust legend position
+                        xanchor="center",
+                        x=0.5,
+                        font=dict(size=legend_font_size),
+                    ),
+                    margin=dict(
+                        t=margin_top,
+                        b=margin_bottom,
+                        l=margin_left,
+                        r=margin_right,
+                    ),
+                    height=plot_height,
+                    width=plot_width,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                )
+
+                # Update subplot title fonts
+                fig.update_annotations(
+                    font=dict(
+                        size=subplot_title_font_size,
+                        family="Arial, sans-serif",
+                    )
+                )
+
+                figures.append(fig)
 
             return figures
 
