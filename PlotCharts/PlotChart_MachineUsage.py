@@ -9,14 +9,15 @@ from dash import dcc
 
 logger = logging.getLogger(__name__)
 
-CHART_ID = "chart-1"
+# CHART_ID = "chart-1"
 
 
 def create_chart1_layout(
     default_period: str,
     dfs: dict,
+    chart_id: str,
+    # = CHART_ID,  # TODO: to be removed
     mobile: bool = False,
-    chart_id: str = CHART_ID,  # TODO: to be removed
 ):
     """Creates the dbc.Col layout containing just the graph for chart 1."""
     chart_factory = MachineUsageChart({}, lang="zh_cn")  # Create factory instance here
@@ -29,7 +30,7 @@ def create_chart1_layout(
         return dbc.Col(
             [
                 dcc.Graph(
-                    id=CHART_ID, figure=initial_figure, config={"displayModeBar": False}
+                    id=chart_id, figure=initial_figure, config={"displayModeBar": False}
                 )
             ],
             width=4,
@@ -42,7 +43,7 @@ def create_chart1_layout(
             dfs,
         )
         graph_component = dcc.Graph(
-            id=CHART_ID,
+            id=chart_id,
             figure=initial_figure,
             style={
                 "height": "20vh",
@@ -53,8 +54,8 @@ def create_chart1_layout(
         return dbc.Col(
             dcc.Link(
                 graph_component,
-                href=f"/details/{CHART_ID}",  # Link using the chart ID
-                id=f"link-{CHART_ID}",
+                href=f"/details/{chart_id}",  # Link using the chart ID
+                id=f"link-{chart_id}",
                 style={
                     "display": "block",
                     "height": "100%",
