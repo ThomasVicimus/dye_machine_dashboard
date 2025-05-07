@@ -108,11 +108,13 @@ class MachineUsageChart:
                     text=f"{subtitle}<br><br>",  # Added extra <br> for spacing
                     position="top center",
                     font=dict(
-                        size=16,
+                        # size="auto",
                         family="Arial, sans-serif",
-                        color="#fdfefe",  # Increased title font size
+                        color="#fdfefe",
                     ),
                 ),
+                # textfont=dict(size="auto", family="Arial, sans-serif", color="#ffffff"),
+                # hoverlabel=dict(font=dict(size="auto", family="Arial, sans-serif")),
             )
 
         except Exception as e:
@@ -127,8 +129,8 @@ class MachineUsageChart:
         # avg_df: pd.DataFrame,
         # best_df: pd.DataFrame,
         # worst_df: pd.DataFrame,
-        plot_height: int = 400,
-        plot_width: int = 500,
+        plot_height: int = None,
+        plot_width: int = None,
         title_font_size: int = 16,
         subplot_title_font_size: int = 14,
         legend_font_size: int = 10,
@@ -144,8 +146,8 @@ class MachineUsageChart:
             period: The period for which to create the chart
             dfs: Dictionary containing dataframes for different charts
 
-            plot_height: Height of the plot in pixels (default: 400)
-            plot_width: Width of the plot in pixels (default: 500)
+            plot_height: Height of the plot in pixels (default: None for auto-sizing)
+            plot_width: Width of the plot in pixels (default: None for auto-sizing)
             title_font_size: Font size for the main title (default: 16)
             subplot_title_font_size: Font size for subplot titles (default: 14)
             legend_font_size: Font size for legend text (default: 10)
@@ -173,9 +175,9 @@ class MachineUsageChart:
                 cols=3,
                 specs=[[{"type": "pie"}, {"type": "pie"}, {"type": "pie"}]],
                 subplot_titles=(
-                    f"{lang_option[self.lang]['subplot_title'][0]}",
-                    f"{lang_option[self.lang]['subplot_title'][1]}",
-                    f"{lang_option[self.lang]['subplot_title'][2]}",
+                    f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
+                    f"{period}-{lang_option[self.lang]['subplot_title'][1]}",
+                    f"{period}-{lang_option[self.lang]['subplot_title'][2]}",
                 ),
             )
 
@@ -183,8 +185,10 @@ class MachineUsageChart:
             fig.add_trace(
                 self.create_pie_chart(
                     avg_df,
-                    f"{lang_option[self.lang]['subplot_title'][0]}",
-                    f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
+                    # f"{lang_option[self.lang]['subplot_title'][0]}",
+                    # f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
+                    "",
+                    "",
                 ),
                 row=1,
                 col=1,
@@ -192,8 +196,10 @@ class MachineUsageChart:
             fig.add_trace(
                 self.create_pie_chart(
                     best_df,
-                    f"{lang_option[self.lang]['subplot_title'][1]}",
-                    f"{period}-{best_df['machine_name'].iloc[0] if 'machine_name' in best_df.columns else lang_option[self.lang]['subplot_title'][1]}",
+                    # f"{lang_option[self.lang]['subplot_title'][1]}",
+                    # f"{period}-{best_df['machine_name'].iloc[0] if 'machine_name' in best_df.columns else lang_option[self.lang]['subplot_title'][1]}",
+                    "",
+                    "",
                 ),
                 row=1,
                 col=2,
@@ -201,8 +207,10 @@ class MachineUsageChart:
             fig.add_trace(
                 self.create_pie_chart(
                     worst_df,
-                    f"{lang_option[self.lang]['subplot_title'][2]}",
-                    f"{period}-{worst_df['machine_name'].iloc[0] if 'machine_name' in worst_df.columns else lang_option[self.lang]['subplot_title'][2]}",
+                    # f"{lang_option[self.lang]['subplot_title'][2]}",
+                    # f"{period}-{worst_df['machine_name'].iloc[0] if 'machine_name' in worst_df.columns else lang_option[self.lang]['subplot_title'][2]}",
+                    "",
+                    "",
                 ),
                 row=1,
                 col=3,
@@ -212,7 +220,7 @@ class MachineUsageChart:
             fig.update_layout(
                 title=f"{lang_option[self.lang]['main_title']} - {period}",
                 title_x=0.5,
-                title_font=dict(size=title_font_size),
+                # title_font=dict(size=title_font_size),
                 showlegend=True,
                 legend=dict(
                     orientation="h",
@@ -220,16 +228,11 @@ class MachineUsageChart:
                     y=-0.2,
                     xanchor="right",
                     x=1,
-                    font=dict(size=legend_font_size),
+                    # font=dict(size=legend_font_size),
                 ),
-                margin=dict(
-                    t=margin_top,
-                    b=margin_bottom,
-                    l=margin_left,
-                    r=margin_right,
-                ),
-                height=plot_height,
-                width=plot_width,
+                # height=plot_height,
+                # width=plot_width,
+                autosize=True,
                 # * Transparent background
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -333,7 +336,7 @@ class MachineUsageChart:
 
         except Exception as e:
             logger.error(
-                f"Error creating mobile machine usage chart for period {period}: {str(e)}"
+                f"Error creating machine usage chart for period {period}: {str(e)}"
             )
             raise
 
@@ -352,26 +355,23 @@ class MachineUsageChart:
         margin_right: int = 10,
     ) -> List[go.Figure]:
         """
-        Creates a list of figures, with the first figure containing the avg, best, and worst pie charts,
-        followed by figures containing up to 3 pie charts representing individual machine usage from the 'all_machine' data.
-        If the total number of subplots cannot be divided by 3, placeholders are added to maintain consistent layout.
+        Create detailed charts for each machine in the dataset for mobile detail view.
 
         Args:
-            period: The period for which to create the charts.
-            dfs: Dictionary containing dataframes for different charts,
-                 including 'all_machine'.
-            plot_height: Height of each plot in pixels (default: 400).
-            plot_width: Width of each plot in pixels (default: 650).
-            title_font_size: Font size for the main title (default: 14).
-            subplot_title_font_size: Font size for subplot titles (default: 12).
-            legend_font_size: Font size for legend text (default: 9).
-            margin_top: Top margin in pixels (default: 50).
-            margin_bottom: Bottom margin in pixels (default: 50).
-            margin_left: Left margin in pixels (default: 10).
-            margin_right: Right margin in pixels (default: 10).
+            period: The period for which to create the chart
+            dfs: Dictionary containing dataframes for all machines
+            plot_height: Height of the plot in pixels (default: None for auto-sizing)
+            plot_width: Width of the plot in pixels (default: None for auto-sizing)
+            title_font_size: Font size for the main title (default: 14)
+            subplot_title_font_size: Font size for subplot titles (default: 12)
+            legend_font_size: Font size for legend text (default: 9)
+            margin_top: Top margin in pixels (default: 40)
+            margin_bottom: Bottom margin in pixels (default: 40)
+            margin_left: Left margin in pixels (default: 10)
+            margin_right: Right margin in pixels (default: 10)
 
         Returns:
-            List[plotly.graph_objects.Figure]: A list of figure objects.
+            List[plotly.graph_objects.Figure]: List of figures for each machine
         """
         try:
             figures = []
@@ -449,6 +449,7 @@ class MachineUsageChart:
                     width=plot_width,
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#fdfefe"),
                 )
 
                 # Update subplot title fonts
