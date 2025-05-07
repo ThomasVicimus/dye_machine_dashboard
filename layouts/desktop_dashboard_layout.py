@@ -57,8 +57,8 @@ def create_desktop_layout(
     return html.Div(
         id="dashboard-content",
         style={
-            # "width": "100vw",
-            # "height": "100vh",
+            "width": "100%",
+            "height": "100vh",
             "overflowY": "auto",
             "position": "relative",
             "backgroundColor": "#202020",
@@ -72,13 +72,15 @@ def create_desktop_layout(
             dcc.Store(id="theme-store", data=color_theme),
             dbc.Container(
                 id="desktop-content",
-                # id="mobile-rotated-content",
+                fluid=True,
+                className="px-2 py-3",
                 children=[
                     dbc.Row(
                         dbc.Col(
                             html.H2(
                                 "Desktop Dashboard",
                                 className="text-center my-3",
+                                style={"fontSize": "calc(1.3rem + 0.6vw)"},
                             ),
                             width=12,
                         )
@@ -89,16 +91,17 @@ def create_desktop_layout(
                                 # Call the imported button creation function
                                 create_period_button(periods=periods),
                                 width=4,  # Align with first chart column
+                                className="d-flex align-items-center",
                             ),
                             dbc.Col(width=4),  # Empty space in middle
                             dbc.Col(
                                 # Add color theme buttons on the right
                                 create_theme_buttons(),
                                 width=4,
-                                className="d-flex justify-content-end",  # Align to the right
+                                className="d-flex justify-content-end align-items-center",  # Align to the right
                             ),
                         ],
-                        className="mb-2",
+                        className="mb-2 g-2",
                     ),
                     # Row 1 (Charts 1-3)
                     dbc.Row(
@@ -122,8 +125,9 @@ def create_desktop_layout(
                                 chart_id="chart-3",
                             ),
                         ],
-                        className="mb-1 g-0",
+                        className="mb-1 g-2",
                         align="stretch",
+                        style={"height": "auto", "minHeight": "35vh"},
                     ),
                     # Row 2 (Charts 4-6)
                     # dbc.Row(
@@ -152,21 +156,12 @@ def create_desktop_layout(
                         storage_type="session",
                     ),
                 ],
-                fluid=True,
-                style={"max-width": "1920px", "padding": "20px"},
-                # style={
-                #     "transform": "rotate(90deg)",
-                #     "transformOrigin": "top left",
-                #     "width": "100vh",
-                #     "height": "100vw",
-                #     "position": "absolute",
-                #     "top": "0",
-                #     "left": "100%",
-                #     "padding": "10px",
-                #     "display": "flex",
-                #     "flexDirection": "column",
-                #     "marginBottom": "5vh",
-                # },
+                style={
+                    "width": "100%",
+                    "height": "100%",
+                    "padding": "clamp(0.5rem, 2vw, 2rem)",
+                    "maxWidth": "100%",
+                },
             ),
         ],
     )
