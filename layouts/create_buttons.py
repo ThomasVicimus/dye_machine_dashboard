@@ -13,6 +13,7 @@ def create_period_button(periods):
                 color="primary",
                 outline=True,
                 size="sm",
+                style={"fontSize": "calc(0.7rem + 0.1vw)"},
             )
             for period in periods
         ],
@@ -36,8 +37,8 @@ def create_theme_buttons():
                 style={
                     "background-color": color_data["bg"],
                     "border-color": color_data["border"],
-                    "height": "30px",
-                    "width": "30px",
+                    "height": "clamp(20px, 3vw, 35px)",
+                    "width": "clamp(20px, 3vw, 35px)",
                 },
                 size="sm",
             )
