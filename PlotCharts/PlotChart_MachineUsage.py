@@ -27,10 +27,21 @@ def create_chart1_layout(
             default_period,
             dfs,
         )
+        initial_figure.update_layout(
+            autosize=True,
+            height=None,
+            # automargin=True,
+            # *taller margin
+            margin=dict(l=10, r=10, t=90, b=10),
+            # font=dict(size=10),
+        )
         return dbc.Col(
             [
                 dcc.Graph(
-                    id=chart_id, figure=initial_figure, config={"displayModeBar": False}
+                    id=chart_id,
+                    figure=initial_figure,
+                    config={"displayModeBar": False, "responsive": True},
+                    style={"width": "100%", "height": "100%", "minHeight": "25vh"},
                 )
             ],
             width=4,
