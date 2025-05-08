@@ -27,10 +27,21 @@ def create_chart1_layout(
             default_period,
             dfs,
         )
+        initial_figure.update_layout(
+            autosize=True,
+            height=None,
+            # automargin=True,
+            # *taller margin
+            margin=dict(l=10, r=10, t=90, b=10),
+            # font=dict(size=10),
+        )
         return dbc.Col(
             [
                 dcc.Graph(
-                    id=chart_id, figure=initial_figure, config={"displayModeBar": False}
+                    id=chart_id,
+                    figure=initial_figure,
+                    config={"displayModeBar": False, "responsive": True},
+                    style={"width": "100%", "height": "100%", "minHeight": "25vh"},
                 )
             ],
             width=4,
@@ -42,14 +53,22 @@ def create_chart1_layout(
             default_period,
             dfs,
         )
+        initial_figure.update_layout(
+            autosize=True,
+            height=None,
+            # automargin=True,
+            # *taller margin
+            # margin=dict(l=25, r=25, t=30, b=10),
+            # font=dict(size=10),
+        )
         graph_component = dcc.Graph(
             id=chart_id,
             figure=initial_figure,
             style={
-                "height": "20vh",
-                "width": "95%",
+                "height": "50%",
+                "width": "85%",
             },  # Height adjusted
-            config={"displayModeBar": False},
+            config={"displayModeBar": False, "responsive": True},
         )
         return dbc.Col(
             dcc.Link(

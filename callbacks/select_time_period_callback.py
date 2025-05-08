@@ -141,11 +141,18 @@ def register_time_period_callbacks(app, chart_id, mobile=False, lang: str = "zh_
                     selected_period,
                     dfs_update,  # Pass the deserialized dataset
                 )
+                # No additional layout updates for mobile to preserve default styling
             else:
                 # Create the chart using the deserialized data and the selected period
                 new_figure = chart_factory.create_machine_usage_chart(
                     selected_period,
                     dfs_update,  # Pass the deserialized dataset
+                )
+                # Match exact layout update as in create_chart1_layout
+                new_figure.update_layout(
+                    autosize=True,
+                    height=None,
+                    margin=dict(l=10, r=10, t=90, b=10),
                 )
             return new_figure
 
