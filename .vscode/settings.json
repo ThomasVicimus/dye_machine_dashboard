@@ -1,0 +1,60 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Local instance MySQL80",
+            "database": "phateton",
+            "username": "root",
+            "password": "password"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "dealership-phaetonautomotivegroup-cluster.cluster-ccm2gafxhyv5.us-west-1.rds.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Tekion Live",
+            "database": "phaetonautomotivegroup",
+            "password": "MKrK8Kz2f7e9q3zZ",
+            "username": "phaetonautomotivegroup_user"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "phaeton-dmsconnect-instance-1.cmauorhvqeuf.us-west-2.rds.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Reynolds",
+            "username": "dmsconnect",
+            "password": "*B790471FFE647B1114189D5FCA68C23627902B0D",
+            "database": "dms"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "dm_archive",
+            "database": "dm_archive",
+            "username": "root",
+            "password": "password"
+        }
+    ]
+}
