@@ -553,7 +553,7 @@ def get_MachineUsage_data(db) -> pd.DataFrame:
 
         # Get average, best, and worst machine data
         if not 0 in df["order_index"].unique():
-            avg = get_avg(df)
+            avg = get_avg_chart1(df)
             # print(f"avg: {avg}")
         else:
             avg = df[df["order_index"] == 0]
@@ -575,7 +575,7 @@ def get_MachineUsage_data(db) -> pd.DataFrame:
     return dfs
 
 
-def get_avg(df):
+def get_avg_chart1(df):
     # * calculate the average of each cols in the df in form of df
     mask = df["order_index"] == 1
     _df = df[mask]
