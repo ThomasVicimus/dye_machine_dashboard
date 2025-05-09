@@ -1,5 +1,6 @@
 from dash import html, dcc, Output, Input, State, callback_context, ALL
 import logging
+from Database.serialize_df import deserialize_dataframe_dict
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +80,16 @@ def register_theme_callbacks(
             Output("chart-2", "style_data_conditional"),
             Output("chart-2", "style_cell"),
         ],
-        Input("theme-store", "data"),
+        [Input("theme-store", "data"), Input("chart2-data-store", "data")],
     )
-    def update_table_theme(theme):
+    def update_table_theme(theme, data):
+        # get column name
+        data = deserialize_dataframe_dict(data)
+        status_column = ""
+        df = data.get("desktop", None)
+        column_names = [*df.keys()]
+        status_column = column_names[1] if len(column_names) > 1 else None
+
         """Update table styling based on selected theme."""
         if theme == "black":
             header_style = {
@@ -89,7 +97,7 @@ def register_theme_callbacks(
                 "fontWeight": "bold",
                 "color": "#ffffff",
             }
-            conditional_styling = [
+            row_conditional_styling = [
                 {
                     "if": {"row_index": "odd"},
                     "backgroundColor": "#202020",
@@ -110,7 +118,7 @@ def register_theme_callbacks(
                 "fontWeight": "bold",
                 "color": "#ffffff",
             }
-            conditional_styling = [
+            row_conditional_styling = [
                 {
                     "if": {"row_index": "odd"},
                     "backgroundColor": "#061023",
@@ -125,5 +133,40 @@ def register_theme_callbacks(
                 "padding": "8px",
                 "color": "#fdfefe",
             }
+
+        # Add machine status conditional formatting
+        # This assumes the second column contains machine status
+        status_conditional_styling = [
+            # Running - Green
+            {
+                "if": {
+                    "column_id": status_column,
+                    "filter_query": f'{{{status_column}}} eq "行機" or {{{status_column}}} eq "行机"',
+                },
+                "backgroundColor": "#2ecc71",  # Green
+                "color": "white",
+            },
+            # Paused - Yellow
+            {
+                "if": {
+                    "column_id": status_column,
+                    "filter_query": f'{{{status_column}}} eq "暫停" or {{{status_column}}} eq "暂停"',
+                },
+                "backgroundColor": "#f1c40f",  # Yellow-orange
+                "color": "black",
+            },
+            # Stopped - Red
+            {
+                "if": {
+                    "column_id": status_column,
+                    "filter_query": f'{{{status_column}}} eq "停機" or {{{status_column}}} eq "停机"',
+                },
+                "backgroundColor": "#e74c3c",  # Red
+                "color": "white",
+            },
+        ]
+
+        # Combine row styling with status styling
+        conditional_styling = row_conditional_styling + status_conditional_styling
 
         return header_style, conditional_styling, cell_style
