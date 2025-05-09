@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
+from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -112,9 +113,8 @@ def create_desktop_layout(
                                 mobile=False,
                                 chart_id="chart-1",
                             ),
-                            create_chart1_layout(
-                                default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                            create_chart2_layout(
+                                dfs=initial_charts_data["chart2-data-store"],
                                 mobile=False,
                                 chart_id="chart-2",
                             ),
