@@ -72,3 +72,58 @@ def register_theme_callbacks(
             f"Applying theme: {theme}, background: {theme_colors['background']}"
         )
         return content_style
+
+    @app.callback(
+        [
+            Output("chart-2", "style_header"),
+            Output("chart-2", "style_data_conditional"),
+            Output("chart-2", "style_cell"),
+        ],
+        Input("theme-store", "data"),
+    )
+    def update_table_theme(theme):
+        """Update table styling based on selected theme."""
+        if theme == "black":
+            header_style = {
+                "backgroundColor": "#999999",
+                "fontWeight": "bold",
+                "color": "#ffffff",
+            }
+            conditional_styling = [
+                {
+                    "if": {"row_index": "odd"},
+                    "backgroundColor": "#202020",
+                },
+                {
+                    "if": {"row_index": "even"},
+                    "backgroundColor": "#464646",
+                },
+            ]
+            cell_style = {
+                "textAlign": "left",
+                "padding": "8px",
+                "color": "#fdfefe",
+            }
+        else:  # dark_blue
+            header_style = {
+                "backgroundColor": "#16213e",
+                "fontWeight": "bold",
+                "color": "#ffffff",
+            }
+            conditional_styling = [
+                {
+                    "if": {"row_index": "odd"},
+                    "backgroundColor": "#061023",
+                },
+                {
+                    "if": {"row_index": "even"},
+                    "backgroundColor": "#0c2149",
+                },
+            ]
+            cell_style = {
+                "textAlign": "left",
+                "padding": "8px",
+                "color": "#fdfefe",
+            }
+
+        return header_style, conditional_styling, cell_style
