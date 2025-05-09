@@ -43,13 +43,9 @@ def create_chart2_layout(
     # Define theme-based styling
     if theme == "black":
         header_bg_color = "#999999"
-        odd_row_color = "#202020"
-        even_row_color = "#464646"
         text_color = "#fdfefe"
     else:  # dark_blue
         header_bg_color = "#16213e"
-        odd_row_color = "#061023"
-        even_row_color = "#0c2149"
         text_color = "#fdfefe"
 
     # Desktop table
@@ -84,16 +80,7 @@ def create_chart2_layout(
                         "fontWeight": "bold",
                         "color": "#ffffff",
                     },
-                    style_data_conditional=[
-                        {
-                            "if": {"row_index": "odd"},
-                            "backgroundColor": odd_row_color,
-                        },
-                        {
-                            "if": {"row_index": "even"},
-                            "backgroundColor": even_row_color,
-                        },
-                    ],
+                    # style_data_conditional=conditional_styling,
                 ),
             ]
         )
@@ -136,16 +123,7 @@ def create_chart2_layout(
                         "fontWeight": "bold",
                         "color": "#ffffff",
                     },
-                    style_data_conditional=[
-                        {
-                            "if": {"row_index": "odd"},
-                            "backgroundColor": odd_row_color,
-                        },
-                        {
-                            "if": {"row_index": "even"},
-                            "backgroundColor": even_row_color,
-                        },
-                    ],
+                    style_data_conditional=conditional_styling,
                 ),
             ]
         )
