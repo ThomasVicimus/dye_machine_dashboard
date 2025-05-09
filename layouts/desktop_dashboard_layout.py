@@ -151,6 +151,12 @@ def create_desktop_layout(
                         ),
                     ),
                     dcc.Store(
+                        id="chart2-data-store",
+                        data=serialize_dataframe_dict(
+                            initial_charts_data["chart2-data-store"]
+                        ),
+                    ),
+                    dcc.Store(
                         id="time-period-store",
                         data=default_period,
                         storage_type="session",
