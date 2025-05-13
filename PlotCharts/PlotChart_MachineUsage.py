@@ -65,8 +65,8 @@ def create_chart1_layout(
             id=chart_id,
             figure=initial_figure,
             style={
-                "height": "50%",
-                "width": "85%",
+                "height": "100%",
+                "width": "100%",
             },  # Height adjusted
             config={"displayModeBar": False, "responsive": True},
         )

@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
+from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -108,9 +109,8 @@ def create_mobile_layout(
                                 mobile=True,
                                 chart_id="chart-1",
                             ),
-                            create_chart1_layout(
-                                default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                            create_chart2_layout(
+                                dfs=initial_charts_data["chart2-data-store"],
                                 mobile=True,
                                 chart_id="chart-2",
                             ),
@@ -123,6 +123,7 @@ def create_mobile_layout(
                         ],
                         className="mb-1 g-0",
                         align="stretch",
+                        style={"height": "20vh"},
                     ),
                     # Row 2 (Charts 4-6)
                     # dbc.Row(
@@ -147,25 +148,31 @@ def create_mobile_layout(
                         ),
                     ),
                     dcc.Store(
+                        id="chart2-data-store",
+                        data=serialize_dataframe_dict(
+                            initial_charts_data["chart2-data-store"]
+                        ),
+                    ),
+                    dcc.Store(
                         id="time-period-store",
                         data=default_period,
                         storage_type="session",
                     ),
                 ],
                 fluid=True,
-                style={
-                    "transform": "rotate(90deg)",
-                    "transformOrigin": "top left",
-                    "width": "100vh",
-                    "height": "100vw",
-                    "position": "absolute",
-                    "top": "0",
-                    "left": "100%",
-                    "padding": "10px",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "marginBottom": "5vh",
-                },
+                # style={
+                #     "transform": "rotate(90deg)",
+                #     "transformOrigin": "top left",
+                #     "width": "100vh",
+                #     "height": "100vw",
+                #     "position": "absolute",
+                #     "top": "0",
+                #     "left": "100%",
+                #     "padding": "10px",
+                #     "display": "flex",
+                #     "flexDirection": "column",
+                #     "marginBottom": "5vh",
+                # },
             ),
         ],
     )
