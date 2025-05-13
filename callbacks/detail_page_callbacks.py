@@ -200,15 +200,8 @@ def register_mobile_page_callbacks(
                 )
 
                 # Deserialize the chart data
-                logger.info(
-                    f"DETAIL DEBUG: Chart data type before deserialization: {type(chart_data)}"
-                )
-                logger.info(f"DETAIL DEBUG: Chart data is None? {chart_data is None}")
 
                 deserialized_chart_data = deserialize_dataframe_dict(chart_data)
-                logger.info(
-                    f"DETAIL DEBUG: Deserialization result type: {type(deserialized_chart_data)}"
-                )
 
                 # Check if deserialization was successful
                 if deserialized_chart_data is None or (
@@ -245,9 +238,6 @@ def register_mobile_page_callbacks(
                     detail_title = chart_titles
                     logger.info(f"DETAIL DEBUG: Figure created, title={detail_title}")
 
-                # Generic layout for the detailed page (needs rotation wrapper)
-                logger.info(f"DETAIL DEBUG: Building detail page layout")
-
                 # Handle multiple figures if returned as array
                 graph_components = []
                 if isinstance(figures, list):
@@ -260,14 +250,17 @@ def register_mobile_page_callbacks(
                                         id=f"mobile-detail-chart-{chart_id}-{i}",
                                         figure=fig,
                                         style={
-                                            "height": "40vh",
+                                            "height": "45vh",
                                             "width": "100%",
                                         },
-                                        config={"displayModeBar": False},
+                                        config={
+                                            "displayModeBar": False,
+                                            "responsive": True,
+                                        },
                                     ),
                                     width=12,
                                 ),
-                                className="mb-3",  # Add bottom margin between charts
+                                className="mb-5",  # Add  bottom margin between charts
                             )
                         )
                 else:
@@ -282,7 +275,10 @@ def register_mobile_page_callbacks(
                                         "height": "80vh",
                                         "width": "100%",
                                     },
-                                    config={"displayModeBar": False},
+                                    config={
+                                        "displayModeBar": False,
+                                        "responsive": True,
+                                    },
                                 ),
                                 width=12,
                             ),
@@ -340,20 +336,20 @@ def register_mobile_page_callbacks(
                                 graphs_container,
                             ],
                             fluid=True,
-                            style={
-                                "transform": "rotate(90deg)",
-                                "transformOrigin": "top left",
-                                "width": "100vh",  # This matches the height of the viewport in the rotated view
-                                "height": "100vw",  # This matches the width of the viewport in the rotated view
-                                "position": "absolute",
-                                "top": "0",
-                                "left": "100%",
-                                "padding": "15px",
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "overflowY": "auto",  # Enable scrolling on the rotated content
-                                "backgroundColor": "#000000",  # Make sure container background is solid
-                            },
+                            # style={
+                            #     "transform": "rotate(90deg)",
+                            #     "transformOrigin": "top left",
+                            #     "width": "100vh",  # This matches the height of the viewport in the rotated view
+                            #     "height": "100vw",  # This matches the width of the viewport in the rotated view
+                            #     "position": "absolute",
+                            #     "top": "0",
+                            #     "left": "100%",
+                            #     "padding": "15px",
+                            #     "display": "flex",
+                            #     "flexDirection": "column",
+                            #     "overflowY": "auto",  # Enable scrolling on the rotated content
+                            #     "backgroundColor": "#000000",  # Make sure container background is solid
+                            # },
                         )
                     ],
                 )
@@ -388,19 +384,19 @@ def register_mobile_page_callbacks(
                                     className="btn btn-secondary",
                                 ),
                             ],
-                            style={
-                                "transform": "rotate(90deg)",
-                                "transformOrigin": "top left",
-                                "width": "100vh",
-                                "height": "100vw",
-                                "position": "absolute",
-                                "top": "0",
-                                "left": "100%",
-                                "padding": "15px",
-                                "color": "white",
-                                "overflowY": "auto",  # Enable scrolling on the rotated content
-                                "backgroundColor": "#000000",  # Make sure container background is solid
-                            },
+                            # style={
+                            #     "transform": "rotate(90deg)",
+                            #     "transformOrigin": "top left",
+                            #     "width": "100vh",
+                            #     "height": "100vw",
+                            #     "position": "absolute",
+                            #     "top": "0",
+                            #     "left": "100%",
+                            #     "padding": "15px",
+                            #     "color": "white",
+                            #     "overflowY": "auto",  # Enable scrolling on the rotated content
+                            #     "backgroundColor": "#000000",  # Make sure container background is solid
+                            # },
                         )
                     ],
                 )
