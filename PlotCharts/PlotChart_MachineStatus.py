@@ -11,6 +11,8 @@ def create_chart2_layout(
     dfs: dict,
     chart_id: str = "chart-2",
     page_interval: int = 15,
+    desktop_row_count: int = 6,
+    mobile_row_count: int = 4,
     mobile: bool = False,
     theme: str = "black",
 ):
@@ -38,7 +40,14 @@ def create_chart2_layout(
         )
 
     # Calculate total number of pages
-    total_pages = (len(df) // 8) + (1 if len(df) % 8 > 0 else 0)
+    if not mobile:
+        total_pages = (len(df) // desktop_row_count) + (
+            1 if len(df) % desktop_row_count > 0 else 0
+        )
+    else:
+        total_pages = (len(df) // mobile_row_count) + (
+            1 if len(df) % mobile_row_count > 0 else 0
+        )
 
     # Define theme-based styling
     if theme == "black":
@@ -60,11 +69,11 @@ def create_chart2_layout(
                 dash_table.DataTable(
                     id=chart_id,
                     columns=[{"name": i, "id": i} for i in df.columns],
-                    data=df.head(8).to_dict("records"),
+                    data=df.to_dict("records"),
+                    page_size=desktop_row_count,
                     page_current=0,
-                    page_size=8,
                     page_count=total_pages,
-                    page_action="custom",
+                    page_action="native",
                     style_table={
                         "overflowX": "auto",
                         "height": "100%",
@@ -80,7 +89,6 @@ def create_chart2_layout(
                         "fontWeight": "bold",
                         "color": "#ffffff",
                     },
-                    # style_data_conditional=conditional_styling,
                 ),
             ]
         )
@@ -102,11 +110,11 @@ def create_chart2_layout(
                 dash_table.DataTable(
                     id=chart_id,
                     columns=[{"name": i, "id": i} for i in df.columns],
-                    data=df.head(8).to_dict("records"),
+                    data=df.to_dict("records"),
                     page_current=0,
-                    page_size=8,
+                    page_size=mobile_row_count,
                     page_count=total_pages,
-                    page_action="custom",
+                    page_action="native",
                     style_table={
                         "overflowX": "auto",
                         "width": "85%",
@@ -123,7 +131,7 @@ def create_chart2_layout(
                         "fontWeight": "bold",
                         "color": "#ffffff",
                     },
-                    style_data_conditional=conditional_styling,
+                    # style_data_conditional=conditional_styling,
                 ),
             ]
         )
@@ -144,28 +152,28 @@ def create_chart2_layout(
         )
 
 
-def register_callbacks(app):
-    """Register callbacks for the machine status table pagination.
+# def register_callbacks(app):
+#     """Register callbacks for the machine status table pagination.
 
-    This function should be called after app initialization to set up the
-    auto-pagination feature of the status table.
+#     This function should be called after app initialization to set up the
+#     auto-pagination feature of the status table.
 
-    Args:
-        app: The Dash app instance.
-    """
+#     Args:
+#         app: The Dash app instance.
+#     """
 
-    def create_callback_for_table(chart_id):
-        @app.callback(
-            Output(chart_id, "page_current"),
-            [
-                Input(f"{chart_id}-interval", "n_intervals"),
-                Input(chart_id, "page_count"),
-            ],
-        )
-        def update_table_page(n_intervals, page_count):
-            """Auto-paginate the table based on interval ticks."""
-            if page_count <= 1:
-                return 0
-            return n_intervals % page_count
+#     def create_callback_for_table(chart_id):
+#         @app.callback(
+#             Output(chart_id, "page_current"),
+#             [
+#                 Input(f"{chart_id}-interval", "n_intervals"),
+#                 Input(chart_id, "page_count"),
+#             ],
+#         )
+#         def update_table_page(n_intervals, page_count):
+#             """Auto-paginate the table based on interval ticks."""
+#             if page_count <= 1:
+#                 return 0
+#             return n_intervals % page_count
 
-        return update_table_page
+#         return update_table_page
