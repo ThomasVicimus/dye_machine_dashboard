@@ -105,12 +105,14 @@ def register_chart1_callbacks(app):
         Output(CHART_ID, "figure"),
         # Trigger directly by period selection AND read data from the store
         Input(PERIOD_STORE_ID, "data"),
-        Input(CHART1_DATA_STORE_ID, "data"),
+        Input("all-chart-data-store", "data"),
         prevent_initial_call=True,
     )
-    def update_chart1_figure(selected_period, chart1_data):
+    def update_chart1_figure(selected_period, charts_data):
         # Deserialize the data from the store first
-        deserialized_chart1_data = deserialize_dataframe_dict(chart1_data)
+        deserialized_chart1_data = deserialize_dataframe_dict(charts_data)[
+            "chart1-data-store"
+        ]
 
         # chart1_data now holds the full dataset loaded at startup
         # selected_period is the newly chosen period

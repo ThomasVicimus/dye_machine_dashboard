@@ -14,8 +14,9 @@ def get_all_charts_data(db) -> dict:
     Get all charts data from the database.(unserialized dataframes// serializing in layout.py)
     """
     dfs = {
-        "chart1-data-store": get_MachineUsage_data(db),
-        "chart2-data-store": get_MachineStatus_data(db),
+        "chart-1-data-store": get_MachineUsage_data(db),
+        "chart-2-data-store": get_MachineStatus_data(db),
+        "chart-3-data-store": get_MachineUsage_data(db),
     }
     # No serialization here, done inside get_MachineUsage_data
     return dfs
@@ -165,7 +166,7 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
         "state",
         "batch_no",
         "steps",
-        "expected_finish_time",
+        # "expected_finish_time",
     ]
     dfs["mobile"] = df_mobile[cols]
 
