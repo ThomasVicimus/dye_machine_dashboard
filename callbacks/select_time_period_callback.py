@@ -4,13 +4,9 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, Output, Input, State, callback_context, ALL
 import json
 import logging
-import pandas as pd  # Add pandas import
 from Database.serialize_df import deserialize_dataframe_dict
-
-# import pandas as pd # Add if DataFrame reconstruction is needed later
-
-from Database.database_connection import db
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -18,34 +14,40 @@ logger = logging.getLogger(__name__)
 # ---- Callback Registration ----
 
 
-def register_time_period_callbacks(app, chart_id, mobile=False, lang: str = "zh_cn"):
-    """Registers callbacks for chart 1 interactivity."""
-    # define var for each chart
-    PERIOD_BUTTON_TYPE = "period-button"
-    PERIOD_STORE_ID = "time-period-store"
+def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
     charts_var = {
         "chart-1": {
             "CHART_ID": "chart-1",
-            "CHART_DATA_STORE_ID": "chart1-data-store",
-            "chart_factory": MachineUsageChart(
+            "chart_factory_desktop": MachineUsageChart(
                 {}, lang=lang
-            ),  # Create factory instance for callbacks
+            ).create_machine_usage_chart,
+            "chart_factory_mobile": MachineUsageChart(
+                {}, lang=lang
+            ).create_machine_usage_chart_mobile_main,
+            "chart_titles": "Machine Usage",
         },
-        # "chart2": {
+        # "chart-2": {
         #     "CHART_ID": "chart-2",
-        #     "PERIOD_STORE_ID": "selected-period-store-chart2",
-        #     "CHART_DATA_STORE_ID": "chart2-data-store",
-        #     "PERIOD_BUTTON_TYPE": "period-button",
+        #     "chart_factory": MachineUsageChart(
+        #         {}, lang=lang
+        #     ).create_machine_usage_chart,
+        #     "chart_titles": "Machine Usage 2",
         # },
+        "chart-3": {
+            "CHART_ID": "chart-3",
+            "chart_factory_desktop": MachineUsageChart(
+                {}, lang=lang
+            ).create_machine_usage_chart,
+            "chart_factory_mobile": MachineUsageChart(
+                {}, lang=lang
+            ).create_machine_usage_chart_mobile_main,
+            "chart_titles": "Machine Usage",
+        },
     }
 
-    CHART_ID = charts_var[chart_id]["CHART_ID"]
-    CHART_DATA_STORE_ID = charts_var[chart_id]["CHART_DATA_STORE_ID"]
-    chart_factory = charts_var[chart_id]["chart_factory"]
-
-    # chart_factory = MachineUsageChart(
-    #     {}, lang="zh_cn"
-    # )  # Create factory instance for callbacks
+    """Registers callbacks for all charts defined in charts_var."""
+    PERIOD_BUTTON_TYPE = "period-button"
+    PERIOD_STORE_ID = "time-period-store"
 
     @app.callback(
         Output(PERIOD_STORE_ID, "data"),
@@ -66,103 +68,143 @@ def register_time_period_callbacks(app, chart_id, mobile=False, lang: str = "zh_
             button_info = json.loads(button_id)
             selected_period = button_info.get("index")
             if selected_period:
+                # Log which button triggered this, though it updates a global store
                 logger.info(
-                    f"Chart {CHART_ID}: Period button clicked: {selected_period}"
+                    f"Period button clicked (updates {PERIOD_STORE_ID}): {selected_period}"
                 )
                 return selected_period
         except json.JSONDecodeError:
-            logger.error(f"Chart {CHART_ID}: Failed to parse button ID: {button_id}")
+            logger.error(
+                f"Failed to parse button ID for {PERIOD_STORE_ID}: {button_id}"
+            )
             return current_period
-
         return current_period
 
-    @app.callback(
-        Output(CHART_ID, "figure"),
-        # Trigger directly by period selection AND read data from the store
-        Input(PERIOD_STORE_ID, "data"),
-        Input(CHART_DATA_STORE_ID, "data"),
-        prevent_initial_call=True,
-    )
-    def update_chart_figure(selected_period, chart_data):
-        # Deserialize the data from the store first
-        deserialized_chart_data = deserialize_dataframe_dict(chart_data)
+    # Register callbacks for each chart in charts_var
+    for chart_id, chart_config in charts_var.items():
+        CHART_ID = chart_config["CHART_ID"]
+        if mobile:
+            chart_factory = chart_config["chart_factory_mobile"]
+        else:
+            chart_factory = chart_config["chart_factory_desktop"]
 
-        # chart1_data now holds the full dataset loaded at startup
-        # selected_period is the newly chosen period
-        logger.info(
-            f"Chart {CHART_ID}: Updating figure for period: {selected_period} using initially loaded data."
+        @app.callback(
+            Output(CHART_ID, "figure"),
+            Input(PERIOD_STORE_ID, "data"),
+            Input("all-chart-data-store", "data"),
+            prevent_initial_call=True,
         )
+        def update_chart_figure(selected_period, all_chart_data):
+            # Get the specific chart's data from all_chart_data
+            chart_specific_data_serialized = all_chart_data.get(
+                f"{chart_id}-data-store"
+            )  # Use chart_id from the loop
 
-        # Handle cases where initial data loading might have failed or deserialization failed
-        if deserialized_chart_data is None or (
-            isinstance(deserialized_chart_data, dict)
-            and "error" in deserialized_chart_data
-        ):
-            error_msg = (
-                deserialized_chart_data.get(
-                    "error", "Initial data load or deserialization failed"
+            logger.info(
+                f"Chart {CHART_ID}: Serialized data received: {chart_specific_data_serialized.keys()}"
+            )
+
+            # Deserialize the specific chart's data
+            deserialized_chart_data = None  # Initialize to None
+            try:
+                deserialized_chart_data = deserialize_dataframe_dict(
+                    chart_specific_data_serialized
                 )
-                if isinstance(deserialized_chart_data, dict)
-                else "Initial data load or deserialization failed"
-            )
-            logger.warning(
-                f"Chart {CHART_ID}: Cannot update figure, data unavailable. Msg: {error_msg}"
-            )
-            return go.Figure().update_layout(title=f"Error: {error_msg}")
-
-        # Handle cases where the selected period itself is invalid
-        if not selected_period or selected_period in ["No Data", "Error"]:
-            logger.warning(
-                f"Chart {CHART_ID}: Invalid period selected: {selected_period}"
-            )
-            return go.Figure().update_layout(
-                title=f"Invalid Period Selected: {selected_period}"
-            )
-
-        # Data is pre-fetched and now deserialized in deserialized_chart_data
-        dfs_update = deserialized_chart_data  # Use the deserialized data
-
-        # Check if the selected period exists within the deserialized data
-        if selected_period not in dfs_update:
-            logger.warning(
-                f"Chart {CHART_ID}: Selected period '{selected_period}' not found in initially loaded data."
-            )
-            # Attempt to find available periods from the loaded data for a better error message
-            available_periods = (
-                list(dfs_update.keys()) if isinstance(dfs_update, dict) else []
-            )
-            return go.Figure().update_layout(
-                title=f"Data not found for {selected_period}. Available: {available_periods}"
-            )
-
-        try:
-            if mobile:
-                new_figure = chart_factory.create_machine_usage_chart_mobile_main(
-                    selected_period,
-                    dfs_update,  # Pass the deserialized dataset
+                logger.info(f"Chart {CHART_ID}: Deserialization successful.")
+                logger.debug(
+                    f"Chart {CHART_ID}: Deserialized data: {deserialized_chart_data.keys()}"
                 )
-                # No additional layout updates for mobile to preserve default styling
-            else:
-                # Create the chart using the deserialized data and the selected period
-                new_figure = chart_factory.create_machine_usage_chart(
-                    selected_period,
-                    dfs_update,  # Pass the deserialized dataset
+            except Exception as e:
+                logger.error(
+                    f'Chart {CHART_ID}: Exception during deserialization for store key f"{chart_id}-data-store": {e}',
+                    exc_info=True,
                 )
-                # Match exact layout update as in create_chart1_layout
-                new_figure.update_layout(
-                    autosize=True,
-                    height=None,
-                    margin=dict(l=10, r=10, t=90, b=10),
-                )
-            return new_figure
+                # Keep deserialized_chart_data as None or an error structure if preferred
+                # For now, it will remain None, and the existing error handling below will catch it.
 
-        except Exception as e:
-            logger.error(
-                f"Chart {CHART_ID}: Error generating figure for period {selected_period} from initial data: {e}",
-                exc_info=True,
+            logger.info(
+                f"Chart {CHART_ID}: Updating figure for period: {selected_period} using initially loaded data."
             )
-            return go.Figure().update_layout(
-                title=f"Error generating chart for {selected_period}"
+            logger.debug(
+                f"Chart {CHART_ID}: Deserialized data: {deserialized_chart_data}"
             )
 
-    logger.info(f"Chart {CHART_ID} callbacks registered (using initially loaded data).")
+            # Handle cases where initial data loading might have failed or deserialization failed
+            if deserialized_chart_data is None or (
+                isinstance(deserialized_chart_data, dict)
+                and "error" in deserialized_chart_data
+            ):
+                error_msg_detail = (
+                    "Deserialization resulted in None"
+                    if deserialized_chart_data is None
+                    else deserialized_chart_data.get(
+                        "error", "Unknown deserialization error"
+                    )
+                )
+                error_msg = (
+                    deserialized_chart_data.get(
+                        "error", "Initial data load or deserialization failed"
+                    )
+                    if isinstance(deserialized_chart_data, dict)
+                    else "Initial data load or deserialization failed"
+                )
+                logger.warning(
+                    f"Chart {CHART_ID}: Cannot update figure. Reason: {error_msg_detail}. Serialized data was: {chart_specific_data_serialized}"
+                )
+                logger.warning(
+                    f"Chart {CHART_ID}: Cannot update figure, data unavailable. Msg: {error_msg}"
+                )
+                return go.Figure().update_layout(title=f"Error: {error_msg}")
+
+            # # Handle cases where the selected period itself is invalid
+            # if not selected_period or selected_period in ["No Data", "Error"]:
+            #     logger.warning(
+            #         f"Chart {CHART_ID}: Invalid period selected: {selected_period}"
+            #     )
+            #     return go.Figure().update_layout(
+            #         title=f"Invalid Period Selected: {selected_period}"
+            #     )
+
+            # # Check if the selected period exists within the chart data
+            # if selected_period not in deserialized_chart_data:
+            #     logger.warning(
+            #         f"Chart {CHART_ID}: Selected period '{selected_period}' not found in data for chart {chart_id}."
+            #     )
+            #     available_periods = list(deserialized_chart_data.keys())
+            #     return go.Figure().update_layout(
+            #         title=f"Data not found for period {selected_period}. Available periods: {available_periods}"
+            #     )
+
+            try:
+                if mobile:
+                    new_figure = chart_factory(
+                        selected_period,
+                        deserialized_chart_data,  # Pass the chart-specific deserialized dataset
+                    )
+                    # No additional layout updates for mobile to preserve default styling
+                else:
+                    # Create the chart using the deserialized data and the selected period
+                    new_figure = chart_factory(
+                        selected_period,
+                        deserialized_chart_data,  # Pass the chart-specific deserialized dataset
+                    )
+                    # Match exact layout update as in create_chart1_layout
+                    new_figure.update_layout(
+                        autosize=True,
+                        height=None,
+                        margin=dict(l=10, r=10, t=90, b=10),
+                    )
+                return new_figure
+
+            except Exception as e:
+                logger.error(
+                    f"Chart {CHART_ID}: Error generating figure for period {selected_period} from initial data: {e}",
+                    exc_info=True,
+                )
+                return go.Figure().update_layout(
+                    title=f"Error generating chart for {selected_period}"
+                )
+
+        logger.info(
+            f"Chart {CHART_ID} callbacks registered (using initially loaded data)."
+        )
