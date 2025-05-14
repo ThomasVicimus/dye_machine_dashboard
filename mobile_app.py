@@ -7,10 +7,11 @@ from user_agents import parse
 import logging
 import os
 from callbacks.select_time_period_callback import register_time_period_callbacks
-from callbacks.detail_page_callbacks import register_mobile_page_callbacks
+from callbacks.detail_page_callbacks import register_detail_page_callbacks
 from callbacks.select_theme_callback import register_theme_callbacks
 from Database.fetch_all_charts_data import *
 from layouts.mobile_dashboard_layout import create_mobile_layout
+from callbacks.chart2_detail_callback import register_chart2_detail_callback
 
 db = DatabaseConnection()
 conn = db.connect()
@@ -44,7 +45,6 @@ mobile_app.layout = create_mobile_layout(
 
 register_time_period_callbacks(
     app=mobile_app,
-    chart_id="chart-1",
     mobile=True,
     lang="zh_cn",
 )
@@ -54,12 +54,14 @@ register_theme_callbacks(
     default_lang="zh_cn",
 )
 
-register_mobile_page_callbacks(
+register_detail_page_callbacks(
     app=mobile_app,
-    chart_id="chart-1",
+    # chart_id="chart-1",
     default_period="今日",
     lang="zh_cn",
 )
+# register_chart2_detail_callback(app=mobile_app)
+
 if __name__ == "__main__":
     logger.info("Starting mobile server...")
     mobile_app.run(host="0.0.0.0", port=8051, debug=True)
