@@ -22,7 +22,10 @@ def create_desktop_layout(
         color_theme: The color theme setting.
         lang: The language setting.
     """
-    periods = initial_charts_data["chart1-data-store"].keys()
+    periods = initial_charts_data["chart-1-data-store"].keys()
+    serialized_initial_charts_data = {
+        key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
+    }
     # charts = {
     #     "mobile-chart-1": initial_charts_layout["machine_usage"],
     #     "mobile-chart-2": initial_charts_layout["machine_usage"],
@@ -109,18 +112,18 @@ def create_desktop_layout(
                         [
                             create_chart1_layout(
                                 default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                                dfs=initial_charts_data["chart-1-data-store"],
                                 mobile=False,
                                 chart_id="chart-1",
                             ),
                             create_chart2_layout(
-                                dfs=initial_charts_data["chart2-data-store"],
+                                dfs=initial_charts_data["chart-2-data-store"],
                                 mobile=False,
                                 chart_id="chart-2",
                             ),
                             create_chart1_layout(
                                 default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                                dfs=initial_charts_data["chart-1-data-store"],
                                 mobile=False,
                                 chart_id="chart-3",
                             ),
@@ -146,7 +149,7 @@ def create_desktop_layout(
                     # Add the data store here and populate with initial data
                     dcc.Store(
                         id="all-chart-data-store",
-                        data=serialize_dataframe_dict(initial_charts_data),
+                        data=serialized_initial_charts_data,
                     ),
                     dcc.Store(
                         id="time-period-store",

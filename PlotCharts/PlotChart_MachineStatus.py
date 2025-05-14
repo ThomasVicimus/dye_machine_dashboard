@@ -1,8 +1,8 @@
 from Database.database_connection import db
 import logging
 import dash_bootstrap_components as dbc
-from dash import dcc, html, dash_table
-from dash.dependencies import Input, Output
+from dash import dcc, html
+from ChartFactory.chartfactory_chart2 import create_chart2_figure
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,15 @@ def create_chart2_layout(
         header_bg_color = "#16213e"
         text_color = "#fdfefe"
 
+    fig = create_chart2_figure(
+        df,
+        mobile,
+        mobile_row_count,
+        desktop_row_count,
+        total_pages,
+        text_color,
+        header_bg_color,
+    )
     # Desktop table
     if not mobile:
         table_component = html.Div(
@@ -66,30 +75,7 @@ def create_chart2_layout(
                     interval=page_interval * 1000,  # Convert to milliseconds
                     n_intervals=0,
                 ),
-                dash_table.DataTable(
-                    id=chart_id,
-                    columns=[{"name": i, "id": i} for i in df.columns],
-                    data=df.to_dict("records"),
-                    page_size=desktop_row_count,
-                    page_current=0,
-                    page_count=total_pages,
-                    page_action="native",
-                    style_table={
-                        "overflowX": "auto",
-                        "height": "100%",
-                        "minHeight": "25vh",
-                    },
-                    style_cell={
-                        "textAlign": "left",
-                        "padding": "8px",
-                        "color": text_color,
-                    },
-                    style_header={
-                        "backgroundColor": header_bg_color,
-                        "fontWeight": "bold",
-                        "color": "#ffffff",
-                    },
-                ),
+                fig,
             ]
         )
 
@@ -107,56 +93,12 @@ def create_chart2_layout(
                     interval=page_interval * 1000,
                     n_intervals=0,
                 ),
-                dash_table.DataTable(
-                    id=chart_id,
-                    columns=[{"name": i, "id": i} for i in df.columns],
-                    data=df.to_dict("records"),
-                    page_current=0,
-                    page_size=mobile_row_count,
-                    page_count=total_pages,
-                    page_action="native",
-                    style_table={
-                        "overflowX": "auto",
-                        "width": "100%",
-                        "height": "100%",
-                        # "tableLayout": "fixed",
-                    },
-                    # style_cell={
-                    #     "minWidth": "10px",
-                    #     "maxWidth": "20px",
-                    #     "width": "50px",
-                    #     "overflow": "hidden",
-                    #     "textOverflow": "ellipsis",
-                    #     "whiteSpace": "nowrap",
-                    #     "color": text_color,
-                    # },
-                    style_cell={
-                        "textAlign": "left",
-                        "padding": "5px",
-                        "fontSize": "12px",
-                        "color": text_color,
-                    },
-                    style_header={
-                        "backgroundColor": header_bg_color,
-                        "fontWeight": "bold",
-                        "color": "#ffffff",
-                    },
-                    # style_data_conditional=conditional_styling,
-                ),
+                fig,
             ]
         )
 
         return dbc.Col(
             table_component,
-            # dcc.Link(
-            #     href=f"/details/{chart_id}",
-            #     id=f"link-{chart_id}",
-            #     style={
-            #         "display": "block",
-            #         "height": "100%",
-            #         "width": "100%",
-            #     },
-            # ),
             width=4,
             className="p-0",
         )

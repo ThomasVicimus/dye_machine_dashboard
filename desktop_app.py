@@ -7,8 +7,10 @@ from user_agents import parse
 import logging
 import os
 from callbacks.select_time_period_callback import register_time_period_callbacks
-from callbacks.detail_page_callbacks import register_mobile_page_callbacks
+
+# from callbacks.detail_page_callbacks import register_mobile_page_callbacks
 from callbacks.select_theme_callback import register_theme_callbacks
+
 from callbacks.refresher_callback import register_chart2_page_turner
 from Database.fetch_all_charts_data import *
 from layouts.desktop_dashboard_layout import create_desktop_layout
@@ -45,7 +47,7 @@ desktop_app.layout = create_desktop_layout(
 
 register_time_period_callbacks(
     app=desktop_app,
-    chart_id="chart-1",
+    # chart_id="chart-1",
     mobile=False,
     lang="zh_cn",
 )
