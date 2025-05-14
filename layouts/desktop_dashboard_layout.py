@@ -145,16 +145,8 @@ def create_desktop_layout(
                     ),
                     # Add the data store here and populate with initial data
                     dcc.Store(
-                        id="chart1-data-store",
-                        data=serialize_dataframe_dict(
-                            initial_charts_data["chart1-data-store"]
-                        ),
-                    ),
-                    dcc.Store(
-                        id="chart2-data-store",
-                        data=serialize_dataframe_dict(
-                            initial_charts_data["chart2-data-store"]
-                        ),
+                        id="all-chart-data-store",
+                        data=serialize_dataframe_dict(initial_charts_data),
                     ),
                     dcc.Store(
                         id="time-period-store",

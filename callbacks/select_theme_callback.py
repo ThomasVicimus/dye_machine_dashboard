@@ -80,10 +80,11 @@ def register_theme_callbacks(
             Output("chart-2", "style_data_conditional"),
             Output("chart-2", "style_cell"),
         ],
-        [Input("theme-store", "data"), Input("chart2-data-store", "data")],
+        [Input("theme-store", "data"), Input("all-chart-data-store", "data")],
     )
-    def update_table_theme(theme, data):
+    def update_table_theme(theme, allchart_data):
         # get column name
+        data = allchart_data["chart-2-data-store"]
         data = deserialize_dataframe_dict(data)
         status_column = ""
         df = data.get("desktop", None)

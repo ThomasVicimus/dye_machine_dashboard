@@ -117,9 +117,19 @@ def create_chart2_layout(
                     page_action="native",
                     style_table={
                         "overflowX": "auto",
-                        "width": "85%",
-                        "height": "50%",
+                        "width": "100%",
+                        "height": "100%",
+                        # "tableLayout": "fixed",
                     },
+                    # style_cell={
+                    #     "minWidth": "10px",
+                    #     "maxWidth": "20px",
+                    #     "width": "50px",
+                    #     "overflow": "hidden",
+                    #     "textOverflow": "ellipsis",
+                    #     "whiteSpace": "nowrap",
+                    #     "color": text_color,
+                    # },
                     style_cell={
                         "textAlign": "left",
                         "padding": "5px",
@@ -137,16 +147,16 @@ def create_chart2_layout(
         )
 
         return dbc.Col(
-            dcc.Link(
-                table_component,
-                href=f"/details/{chart_id}",
-                id=f"link-{chart_id}",
-                style={
-                    "display": "block",
-                    "height": "100%",
-                    "width": "100%",
-                },
-            ),
+            table_component,
+            # dcc.Link(
+            #     href=f"/details/{chart_id}",
+            #     id=f"link-{chart_id}",
+            #     style={
+            #         "display": "block",
+            #         "height": "100%",
+            #         "width": "100%",
+            #     },
+            # ),
             width=4,
             className="p-0",
         )

@@ -112,9 +112,8 @@ def create_mobile_layout(
                                 mobile=True,
                                 chart_id="chart-1",
                             ),
-                            create_chart1_layout(
-                                default_period=default_period,
-                                dfs=initial_charts_data["chart-1-data-store"],
+                            create_chart2_layout(
+                                dfs=initial_charts_data["chart-2-data-store"],
                                 mobile=True,
                                 chart_id="chart-2",
                             ),
