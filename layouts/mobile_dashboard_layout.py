@@ -22,7 +22,10 @@ def create_mobile_layout(
         color_theme: The color theme setting.
         lang: The language setting.
     """
-    periods = initial_charts_data["chart1-data-store"].keys()
+    periods = initial_charts_data["chart-1-data-store"].keys()
+    serialized_initial_charts_data = {
+        key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
+    }
     # charts = {
     #     "mobile-chart-1": initial_charts_layout["machine_usage"],
     #     "mobile-chart-2": initial_charts_layout["machine_usage"],
@@ -105,18 +108,19 @@ def create_mobile_layout(
                         [
                             create_chart1_layout(
                                 default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                                dfs=initial_charts_data["chart-1-data-store"],
                                 mobile=True,
                                 chart_id="chart-1",
                             ),
-                            create_chart2_layout(
-                                dfs=initial_charts_data["chart2-data-store"],
+                            create_chart1_layout(
+                                default_period=default_period,
+                                dfs=initial_charts_data["chart-1-data-store"],
                                 mobile=True,
                                 chart_id="chart-2",
                             ),
                             create_chart1_layout(
                                 default_period=default_period,
-                                dfs=initial_charts_data["chart1-data-store"],
+                                dfs=initial_charts_data["chart-1-data-store"],
                                 mobile=True,
                                 chart_id="chart-3",
                             ),
@@ -142,16 +146,8 @@ def create_mobile_layout(
                     # TODOL Json serialize the data store
                     # Add the data store here and populate with initial data
                     dcc.Store(
-                        id="chart1-data-store",
-                        data=serialize_dataframe_dict(
-                            initial_charts_data["chart1-data-store"]
-                        ),
-                    ),
-                    dcc.Store(
-                        id="chart2-data-store",
-                        data=serialize_dataframe_dict(
-                            initial_charts_data["chart2-data-store"]
-                        ),
+                        id="all-chart-data-store",
+                        data=serialized_initial_charts_data,
                     ),
                     dcc.Store(
                         id="time-period-store",
