@@ -4,16 +4,37 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, Output, Input, State
 import plotly.graph_objects as go  # Import go for placeholder
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
+from ChartFactory.chartfactory_chart2 import create_chart2_figure_detail
 from dash.dependencies import ALL
 from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
 
-# Assumes CHART1_PERIOD_STORE_ID is defined and passed
-# Assumes detail_figure_generators (dict mapping chart_id -> function(period)) is passed
-# Assumes chart_title (dict mapping chart_id -> str) is passed
-# Assumes layout_func (function returning main layout) is passed
-
 logger = logging.getLogger(__name__)
+
+global PERIOD_STORE_ID
+global table_id
+global charts_var
+global lang
+
+PERIOD_STORE_ID = (
+    "time-period-store"  # Ensure this matches the ID in mobile_dashboard_layout.py
+)
+lang = "zh_cn"
+table_id = ["chart-2"]
+charts_var = {
+    "chart-1": {
+        "CHART_ID": "chart-1",
+        "chart_factory": MachineUsageChart(
+            {}, lang=lang
+        ).create_machine_usage_chart_mobile_all_machine,  # Create factory instance for callbacks
+        "chart_title": "设备使用率",
+    },
+    "chart-2": {
+        "CHART_ID": "chart-2",
+        "chart_factory": create_chart2_figure_detail,
+        "chart_title": "总覽表",
+    },
+}
 
 
 # Placeholder figure function (can be defined elsewhere too)
@@ -36,6 +57,26 @@ def create_generic_placeholder_figure(title="Loading..."):
         margin=dict(l=10, r=10, t=30, b=10),  # Added top margin for title
     )
     return fig
+
+
+def register_table_click_url_push(app, url_id="mobile-url"):
+    @app.callback(
+        Output(url_id, "pathname", allow_duplicate=True),
+        [Input(f"{cid}", "active_cell") for cid in table_id],
+        prevent_initial_call=True,
+    )
+    def _table_to_url(*active_cells):
+        logger.info(f"DETAIL DEBUG: Table click detected")
+        triggered = callback_context.triggered_id
+        cell = active_cells[
+            list(callback_context.inputs).index(f"{triggered}.active_cell")
+        ]
+
+        # ignore pagination clicks (active_cell will be {} or missing column_id)
+        if not cell or "column_id" not in cell:
+            return dash.no_update
+
+        return f"/details/{triggered}"
 
 
 def register_detail_page_callbacks(
@@ -64,25 +105,6 @@ def register_detail_page_callbacks(
     """
     # define var for each chart
     # PERIOD_BUTTON_TYPE = "period-button"
-    PERIOD_STORE_ID = (
-        "time-period-store"  # Ensure this matches the ID in mobile_dashboard_layout.py
-    )
-    table_id = ["chart-2"]
-    charts_var = {
-        "chart-1": {
-            "CHART_ID": "chart-1",
-            "chart_factory": MachineUsageChart(
-                {}, lang=lang
-            ).create_machine_usage_chart_mobile_all_machine,  # Create factory instance for callbacks
-            "chart_title": "Machine Usage",
-        },
-        # "chart2": {
-        #     "CHART_ID": "chart-2",
-        #     "PERIOD_STORE_ID": "selected-period-store-chart2",
-        #     "CHART_DATA_STORE_ID": "chart2-data-store",
-        #     "PERIOD_BUTTON_TYPE": "period-button",
-        # },
-    }
 
     # CHART_ID = charts_var[chart_id]["CHART_ID"]
 
@@ -109,9 +131,11 @@ def register_detail_page_callbacks(
             return html.Div()
 
         elif pathname and pathname.startswith("/details/"):
+            logger.info(f"DETAIL DEBUG: Details page path detected: {pathname}")
             chart_id = pathname.split("/details/")[-1]
             entry = charts_var.get(chart_id)
             if not entry:
+                logger.error(f"DETAIL DEBUG: Chart ID not found: {chart_id}")
                 return html.Div()
 
         chart_factory = entry["chart_factory"]
@@ -176,13 +200,32 @@ def register_detail_page_callbacks(
                     if isinstance(deserialized_chart_data, dict)
                     else "Data deserialization failed"
                 )
-                logger.warning(
-                    f"DETAIL DEBUG: Detail view for {chart_id}: Cannot update figure, data unavailable. Msg: {error_msg}"
+                logger.fatal(
+                    f"Detail view for {chart_id}: Cannot update figure, data unavailable. Msg: {error_msg}"
                 )
-                detail_figure = create_generic_placeholder_figure(f"Error: {error_msg}")
-                chart_title = "Data Error"
+                # detail_figure = create_generic_placeholder_figure(f"Error: {error_msg}")
+                # chart_title = "Data Error"
+            # * Table as graph
+            if chart_id in table_id:
+                logger.info(
+                    f"DETAIL DEBUG: Creating table component for {chart_id} with chart_factory"
+                )
+                logger.info(
+                    f"DETAIL DEBUG: Deserialized chart data: {deserialized_chart_data['desktop']}"
+                )
+                table_component = chart_factory(
+                    deserialized_chart_data["desktop"]["all_machine"]
+                )
+                graph_components = [
+                    dbc.Row(
+                        dbc.Col(
+                            table_component,
+                            width=12,
+                        ),
+                        className="mb-3",
+                    )
+                ]
             else:
-                # TODO handle tables
                 # Call the generator function with deserialized data
                 logger.info(
                     f"DETAIL DEBUG: Creating detail figure for {chart_id} with chart_factory"
@@ -191,20 +234,42 @@ def register_detail_page_callbacks(
                 logger.info(
                     f"DETAIL DEBUG: Got {len(figures) if isinstance(figures, list) else 1} figures"
                 )
-
-            # Handle multiple figures if returned as array
-            graph_components = []
-            if isinstance(figures, list):
-                # Create a graph component for each figure in the array
-                for i, fig in enumerate(figures):
-                    graph_components.append(
+                # * Charts as graph
+                # Handle multiple figures if returned as array
+                graph_components = []
+                if isinstance(figures, list):
+                    # Create a graph component for each figure in the array
+                    for i, fig in enumerate(figures):
+                        graph_components.append(
+                            dbc.Row(
+                                dbc.Col(
+                                    dcc.Graph(
+                                        id=f"mobile-detail-chart-{chart_id}-{i}",
+                                        figure=fig,
+                                        style={
+                                            "height": "45vh",
+                                            "width": "100%",
+                                        },
+                                        config={
+                                            "displayModeBar": False,
+                                            "responsive": True,
+                                        },
+                                    ),
+                                    width=12,
+                                ),
+                                className="mb-5",  # Add  bottom margin between charts
+                            )
+                        )
+                else:
+                    # Single figure case
+                    graph_components = [
                         dbc.Row(
                             dbc.Col(
                                 dcc.Graph(
-                                    id=f"mobile-detail-chart-{chart_id}-{i}",
-                                    figure=fig,
+                                    id=f"mobile-detail-chart-{chart_id}",
+                                    figure=figures,
                                     style={
-                                        "height": "45vh",
+                                        "height": "80vh",
                                         "width": "100%",
                                     },
                                     config={
@@ -214,31 +279,9 @@ def register_detail_page_callbacks(
                                 ),
                                 width=12,
                             ),
-                            className="mb-5",  # Add  bottom margin between charts
+                            className="mb-3",  # Add bottom margin
                         )
-                    )
-            else:
-                # Single figure case
-                graph_components = [
-                    dbc.Row(
-                        dbc.Col(
-                            dcc.Graph(
-                                id=f"mobile-detail-chart-{chart_id}",
-                                figure=figures,
-                                style={
-                                    "height": "80vh",
-                                    "width": "100%",
-                                },
-                                config={
-                                    "displayModeBar": False,
-                                    "responsive": True,
-                                },
-                            ),
-                            width=12,
-                        ),
-                        className="mb-3",  # Add bottom margin
-                    )
-                ]
+                    ]
 
             # Wrap all graph components in a scrollable container
             graphs_container = html.Div(

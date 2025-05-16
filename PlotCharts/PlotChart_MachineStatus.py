@@ -31,22 +31,12 @@ def create_chart2_layout(
     else:
         mobile_option = "desktop"
     df = dfs.get(mobile_option, None)
-
+    df = df.get("all_machine", None)
     if df is None or df.empty:
         return dbc.Col(
             html.Div("No data available", className="text-center p-4"),
             width=4,
             className="p-2",
-        )
-
-    # Calculate total number of pages
-    if not mobile:
-        total_pages = (len(df) // desktop_row_count) + (
-            1 if len(df) % desktop_row_count > 0 else 0
-        )
-    else:
-        total_pages = (len(df) // mobile_row_count) + (
-            1 if len(df) % mobile_row_count > 0 else 0
         )
 
     # Define theme-based styling
@@ -62,7 +52,6 @@ def create_chart2_layout(
         mobile,
         mobile_row_count,
         desktop_row_count,
-        total_pages,
         text_color,
         header_bg_color,
     )

@@ -87,7 +87,8 @@ def register_theme_callbacks(
         data = allchart_data["chart-2-data-store"]
         data = deserialize_dataframe_dict(data)
         status_column = ""
-        df = data.get("desktop", None)
+        df_all_machine = data.get("desktop", None)
+        df = df_all_machine.get("all_machine", None)
         column_names = [*df.keys()]
         status_column = column_names[1] if len(column_names) > 1 else None
 

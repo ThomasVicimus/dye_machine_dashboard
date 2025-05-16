@@ -144,7 +144,7 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
         Q = sql_file.read()
 
     df = db.execute_query(Q)
-    dfs["desktop"] = df
+    dfs["desktop"] = {"all_machine": df}
 
     # * Mobile version
     file = f"2_{chartname}_mobile.sql"
@@ -168,10 +168,11 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
         "steps",
         # "expected_finish_time",
     ]
-    dfs["mobile"] = df_mobile[cols]
+    dfs["mobile"] = {"all_machine": df_mobile[cols]}
 
-    for key, df in dfs.items():
-        df = df.rename(columns=col_rename[lang])
-        dfs[key] = df
+    for mobile_option, df_dict in dfs.items():
+        for key, df in df_dict.items():
+            df = df.rename(columns=col_rename[lang])
+            dfs[mobile_option][key] = df
 
     return dfs
