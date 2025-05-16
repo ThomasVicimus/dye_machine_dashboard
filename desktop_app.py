@@ -7,8 +7,11 @@ from user_agents import parse
 import logging
 import os
 from callbacks.select_time_period_callback import register_time_period_callbacks
-from callbacks.detail_page_callbacks import register_mobile_page_callbacks
+
+# from callbacks.detail_page_callbacks import register_mobile_page_callbacks
 from callbacks.select_theme_callback import register_theme_callbacks
+
+from callbacks.refresher_callback import register_chart2_page_turner
 from Database.fetch_all_charts_data import *
 from layouts.desktop_dashboard_layout import create_desktop_layout
 
@@ -26,7 +29,7 @@ socketio = SocketIO(server)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-mobile_app = Dash(
+desktop_app = Dash(
     __name__,
     server=server,
     url_base_pathname="/",
@@ -34,7 +37,7 @@ mobile_app = Dash(
     suppress_callback_exceptions=True,
 )
 
-mobile_app.layout = create_desktop_layout(
+desktop_app.layout = create_desktop_layout(
     initial_charts_data=data,
     color_theme="black",
     lang="zh_cn",
@@ -43,23 +46,24 @@ mobile_app.layout = create_desktop_layout(
 
 
 register_time_period_callbacks(
-    app=mobile_app,
-    chart_id="chart-1",
+    app=desktop_app,
+    # chart_id="chart-1",
     mobile=False,
     lang="zh_cn",
 )
 register_theme_callbacks(
-    app=mobile_app,
+    app=desktop_app,
     default_color="black",
     default_lang="zh_cn",
 )
+register_chart2_page_turner(desktop_app)
 
 # register_mobile_page_callbacks(
-#     app=mobile_app,
+#     app=desktop_app,
 #     chart_id="chart-1",
 #     default_period="今日",
 #     lang="zh_cn",
 # )
 if __name__ == "__main__":
-    logger.info("Starting mobile server...")
-    mobile_app.run(host="0.0.0.0", port=8051, debug=True)
+    logger.info("Starting desktop server...")
+    desktop_app.run(host="0.0.0.0", port=8051, debug=True)

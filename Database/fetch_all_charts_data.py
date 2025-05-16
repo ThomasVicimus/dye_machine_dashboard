@@ -14,7 +14,9 @@ def get_all_charts_data(db) -> dict:
     Get all charts data from the database.(unserialized dataframes// serializing in layout.py)
     """
     dfs = {
-        "chart1-data-store": get_MachineUsage_data(db),
+        "chart-1-data-store": get_MachineUsage_data(db),
+        "chart-2-data-store": get_MachineStatus_data(db),
+        "chart-3-data-store": get_MachineUsage_data(db),
     }
     # No serialization here, done inside get_MachineUsage_data
     return dfs
@@ -90,3 +92,87 @@ def get_avg_chart1(df):
     df_avg.loc[0, "period"] = df["period"].iloc[0]
     df_avg.loc[0, "machine_name"] = pd.NA
     return df_avg
+
+
+def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
+    """
+    Get machine usage data from the database.
+
+    Returns:
+        pd.DataFrame: DataFrame containing machine usage data
+    """
+    col_rename = {
+        "zh_hant": {
+            "machine_name": "機號",
+            "state": "狀態",
+            "user_prompt": "叫人",
+            "num_of_alarms": "警報",
+            "mt_temperature": "溫度C",
+            "batch_no": "批次號",
+            "program_name": "程序名",
+            "current_step": "當前步驟",
+            "next_step": "下一步",
+            "minutes_run": "運行(分鐘)",
+            "expected_finish_time": "預計完成時間",
+            "steps": "步驟",
+        },
+        "zh_cn": {
+            "machine_name": "机号",
+            "state": "状态",
+            "user_prompt": "叫人",
+            "num_of_alarms": "警报",
+            "mt_temperature": "温度C",
+            "batch_no": "批次号",
+            "program_name": "程序名",
+            "current_step": "当前步骤",
+            "next_step": "下一步",
+            "minutes_run": "运行(分钟)",
+            "expected_finish_time": "预计完成时间",
+            "steps": "步骤",
+        },
+        "en": {
+            "pass": "pass",
+        },
+    }
+    dfs = {}
+    # load chart 1 sql
+    chartname = "machine_status"
+    # * Desktop version
+    file = f"2_{chartname}_desktop.sql"
+    # replace period_replace in sql file
+    with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
+        Q = sql_file.read()
+
+    df = db.execute_query(Q)
+    dfs["desktop"] = {"all_machine": df}
+
+    # * Mobile version
+    file = f"2_{chartname}_mobile.sql"
+    # replace period_replace in sql file
+    with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
+        Q = sql_file.read()
+
+    df_mobile = db.execute_query(Q)
+    for col in [
+        "total_steps_cnt",
+        "current_step_cnt",
+    ]:
+        df_mobile[col] = df_mobile[col].astype(str)
+    df_mobile["steps"] = (
+        df_mobile["total_steps_cnt"] + "/" + df_mobile["current_step_cnt"]
+    )
+    cols = [
+        "machine_name",
+        "state",
+        "batch_no",
+        "steps",
+        # "expected_finish_time",
+    ]
+    dfs["mobile"] = {"all_machine": df_mobile[cols]}
+
+    for mobile_option, df_dict in dfs.items():
+        for key, df in df_dict.items():
+            df = df.rename(columns=col_rename[lang])
+            dfs[mobile_option][key] = df
+
+    return dfs
