@@ -26,37 +26,6 @@ def create_mobile_layout(
     serialized_initial_charts_data = {
         key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
     }
-    # charts = {
-    #     "mobile-chart-1": initial_charts_layout["machine_usage"],
-    #     "mobile-chart-2": initial_charts_layout["machine_usage"],
-    #     "mobile-chart-3": initial_charts_layout["machine_usage"],
-    #     "mobile-chart-4": initial_charts_layout["machine_usage"],
-    #     "mobile-chart-5": initial_charts_layout["machine_usage"],
-    #     "mobile-chart-6": initial_charts_layout["machine_usage"],
-    # }
-
-    # def create_chart_column(chart_id, figure):
-    #     """Helper to create a Bootstrap column containing a clickable chart graph."""
-    #     graph_component = dcc.Graph(
-    #         id=chart_id,
-    #         figure=figure,
-    #         style={"height": "20vh", "width": "95%"},
-    #         config={"displayModeBar": False},
-    #     )
-    #     return dbc.Col(
-    #         dcc.Link(
-    #             graph_component,
-    #             href=f"/details/{chart_id}",  # Link using the chart ID
-    #             id=f"link-{chart_id}",
-    #             style={
-    #                 "display": "block",
-    #                 "height": "100%",
-    #                 "width": "100%",
-    #             },  # Ensure link covers graph
-    #         ),
-    #         width=4,
-    #         className="p-0",
-    #     )
 
     return html.Div(
         id="dashboard-content",

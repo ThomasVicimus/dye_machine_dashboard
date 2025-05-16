@@ -210,9 +210,6 @@ def register_detail_page_callbacks(
                 logger.info(
                     f"DETAIL DEBUG: Creating table component for {chart_id} with chart_factory"
                 )
-                logger.info(
-                    f"DETAIL DEBUG: Deserialized chart data: {deserialized_chart_data['desktop']}"
-                )
                 table_component = chart_factory(
                     deserialized_chart_data["desktop"]["all_machine"]
                 )
