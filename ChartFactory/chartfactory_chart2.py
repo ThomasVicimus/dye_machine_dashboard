@@ -1,5 +1,8 @@
 # import dash_bootstrap_components as dbc
 from dash import dash_table
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_chart2_figure(
@@ -60,6 +63,7 @@ def create_chart2_figure(
                 "overflowX": "auto",
                 "width": "100%",
                 "height": "100%",
+                # "minHeight": "20vh",
                 # "tableLayout": "fixed",
             },
             style_cell={

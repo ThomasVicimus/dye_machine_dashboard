@@ -67,6 +67,7 @@ def create_chart1_layout(
             style={
                 "height": "100%",
                 "width": "100%",
+                "minHeight": "20vh",
             },  # Height adjusted
             config={"displayModeBar": False, "responsive": True},
         )
@@ -79,6 +80,7 @@ def create_chart1_layout(
                     "display": "block",
                     "height": "100%",
                     "width": "100%",
+                    "minHeight": "20vh",
                 },  # Ensure link covers graph
             ),
             width=4,

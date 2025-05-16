@@ -50,11 +50,12 @@ def create_chart2_layout(
     fig = create_chart2_figure(
         df,
         mobile,
-        mobile_row_count,
         desktop_row_count,
+        mobile_row_count,
         text_color,
         header_bg_color,
     )
+
     # Desktop table
     if not mobile:
         table_component = html.Div(
@@ -69,9 +70,7 @@ def create_chart2_layout(
         )
 
         return dbc.Col(
-            table_component,
-            width=4,
-            className="p-2",
+            table_component, width=4, className="p-2", style={"maxHeight": "25vh"}
         )
     else:
         # Mobile table with adjusted sizing
@@ -90,6 +89,7 @@ def create_chart2_layout(
             table_component,
             width=4,
             className="p-0",
+            # style={"height": "20vh"}
         )
 
 
