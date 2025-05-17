@@ -9,14 +9,11 @@ from dash import dcc
 
 logger = logging.getLogger(__name__)
 
-# CHART_ID = "chart-1"
-
 
 def create_chart1_layout(
     default_period: str,
     dfs: dict,
-    chart_id: str,
-    # = CHART_ID,  # TODO: to be removed
+    chart_id: str = "chart-1",
     mobile: bool = False,
 ):
     """Creates the dbc.Col layout containing just the graph for chart 1."""

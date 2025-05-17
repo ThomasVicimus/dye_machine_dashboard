@@ -91,30 +91,3 @@ def create_chart2_layout(
             className="p-0",
             # style={"height": "20vh"}
         )
-
-
-# def register_callbacks(app):
-#     """Register callbacks for the machine status table pagination.
-
-#     This function should be called after app initialization to set up the
-#     auto-pagination feature of the status table.
-
-#     Args:
-#         app: The Dash app instance.
-#     """
-
-#     def create_callback_for_table(chart_id):
-#         @app.callback(
-#             Output(chart_id, "page_current"),
-#             [
-#                 Input(f"{chart_id}-interval", "n_intervals"),
-#                 Input(chart_id, "page_count"),
-#             ],
-#         )
-#         def update_table_page(n_intervals, page_count):
-#             """Auto-paginate the table based on interval ticks."""
-#             if page_count <= 1:
-#                 return 0
-#             return n_intervals % page_count
-
-#         return update_table_page
