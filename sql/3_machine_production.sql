@@ -1,7 +1,8 @@
 select 
+    machine_name,
     date,
-    sum(weight_kg) as weight_kg
+    weight_kg
 from machine_production_waste
 where order_index = 1
-group by date
-order by date desc;
+-- group by date
+order by date desc, machine_name;
