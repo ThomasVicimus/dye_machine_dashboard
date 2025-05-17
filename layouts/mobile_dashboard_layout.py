@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
+from PlotCharts.PlotChart_chart3 import create_chart3_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -86,9 +87,9 @@ def create_mobile_layout(
                                 mobile=True,
                                 chart_id="chart-2",
                             ),
-                            create_chart1_layout(
+                            create_chart3_layout(
                                 default_period=default_period,
-                                dfs=initial_charts_data["chart-1-data-store"],
+                                dfs=initial_charts_data["chart-3-data-store"],
                                 mobile=True,
                                 chart_id="chart-3",
                             ),
