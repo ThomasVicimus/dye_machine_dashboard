@@ -34,6 +34,11 @@ charts_var = {
         "chart_factory": create_chart2_figure_detail,
         "chart_title": "总覽表",
     },
+    # "chart-3": {
+    #     "CHART_ID": "chart-3",
+    #     "chart_factory": create_chart3_figure_detail,
+    #     "chart_title": "生产量",
+    # },
 }
 
 
