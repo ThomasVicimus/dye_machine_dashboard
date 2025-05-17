@@ -2,6 +2,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from typing import Dict, Optional
 import logging
+from dash import html
+import dash_bootstrap_components as dbc
+
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +138,10 @@ def create_chart3_figure(
 
         # Calculate y-axis upper bound for padding
         max_y_value = df_copy["weight_kg"].max()
-        yaxis_upper_bound = (
-            max_y_value * 1.2 if max_y_value > 0 else 10
-        )  # Add 20% padding, handle case of all zeros
+        if pd.notna(max_y_value):
+            yaxis_upper_bound = max_y_value * 1.3 if max_y_value > 0 else 10.0
+        else:  # Fallback if max_y_value is NaN (e.g. df became all NaNs then empty)
+            yaxis_upper_bound = 10.0
 
     except Exception as e:
         logger.error(
@@ -147,14 +151,50 @@ def create_chart3_figure(
         _make_figure_empty_looking(fig)
         return fig
 
+    # Determine text labels based on number of data points
+    text_values = []  # Default to empty list
+    if not df_copy.empty:
+        if len(df_copy) > 7:
+            text_values = [""] * len(df_copy)  # Initialize with empty strings
+
+            current_max_val = df_copy["weight_kg"].max()
+            current_min_val = df_copy["weight_kg"].min()
+
+            max_indices = df_copy.index[
+                df_copy["weight_kg"] == current_max_val
+            ].tolist()
+            min_indices = df_copy.index[
+                df_copy["weight_kg"] == current_min_val
+            ].tolist()
+
+            if max_indices:  # If there are any max values
+                latest_max_idx = max_indices[
+                    -1
+                ]  # Get the index of the latest occurrence
+                if 0 <= latest_max_idx < len(text_values):
+                    text_values[latest_max_idx] = df_copy["weight_kg"].iloc[
+                        latest_max_idx
+                    ]
+
+            if min_indices:  # If there are any min values
+                latest_min_idx = min_indices[
+                    -1
+                ]  # Get the index of the latest occurrence
+                if 0 <= latest_min_idx < len(text_values):
+                    text_values[latest_min_idx] = df_copy["weight_kg"].iloc[
+                        latest_min_idx
+                    ]
+        else:
+            text_values = df_copy["weight_kg"].tolist()  # Show all texts
+
     fig.add_trace(
         go.Scatter(
             x=df_copy["mmdd"],
             y=df_copy["weight_kg"],
             mode="lines+markers+text",
-            text=df_copy["weight_kg"],
+            text=text_values,  # Use the conditionally generated text_values
             textposition="top right",
-            textfont=dict(size=12),
+            textfont=dict(color="#fdfefe", size=12),  # Ensure color and set size
         )
     )
     fig.update_layout(
@@ -178,3 +218,81 @@ def create_chart3_figure(
     )
 
     return fig
+
+
+def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
+
+    try:
+        if (
+            not isinstance(dfs, dict)
+            or period not in dfs
+            or not isinstance(dfs[period], dict)
+            or "all_machine" not in dfs[period]
+        ):
+            raise KeyError(
+                f"Expected path dfs[period]['all_machine'] not found or 'dfs' is not structured correctly.\n {type(dfs)=}"
+            )
+        df_period = dfs[period]
+        df = df_period["all_machine"]
+    except KeyError as e:
+        logger.error(
+            f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
+        )
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    if period == "今日":
+        df = df[df["date"] == df["date"].max()]
+    # * Card1
+    total_prod = df["weight_kg"].sum()
+    # * Card2
+    max_prod_machine = df.loc[df["weight_kg"].idxmax(), "machine_name"]
+    max_prod_value = df["weight_kg"].max()
+    # * Card3
+    min_prod_machine = df.loc[df["weight_kg"].idxmin(), "machine_name"]
+    min_prod_value = df["weight_kg"].min()
+
+    card1 = dbc.CardBody(
+        [
+            html.Div(f"{period} 總產量", style={"color": "#fdfefe"}),
+            html.Div(f"{round(total_prod)}kg", style={"color": "#2ecc71"}),
+        ],
+        style={
+            "textAlign": "center",
+            "backgroundColor": "#202020",
+            "fontSize": 14,
+            "maxHeight": "100px",
+            "height": "auto",
+            "padding": "10px",
+        },
+    )
+
+    card2 = dbc.CardBody(
+        [
+            html.Div(f"{period} 最高產量機台", style={"color": "#fdfefe"}),
+            html.Div(f"{max_prod_machine}", style={"color": "#2ecc71"}),
+            html.Div(f"{max_prod_value}kg", style={"color": "#3498db"}),
+        ],
+        style={
+            "textAlign": "right",
+            "backgroundColor": "#202020",
+            "fontSize": 14,
+            "maxHeight": "100px",
+            "height": "auto",
+            "padding": "10px",
+        },
+    )
+    card3 = dbc.CardBody(
+        [
+            html.Div(f"{period} 最低產量機台", style={"color": "#fdfefe"}),
+            html.Div(f"{min_prod_machine}", style={"color": "#f1c40f"}),
+            html.Div(f"{min_prod_value}kg", style={"color": "#3498db"}),
+        ],
+        style={
+            "textAlign": "right",
+            "backgroundColor": "#202020",
+            "fontSize": 14,
+            "maxHeight": "100px",
+            "height": "auto",
+            "padding": "10px",
+        },
+    )
+    return card1, card2, card3
