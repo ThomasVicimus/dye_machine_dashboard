@@ -41,7 +41,7 @@ def create_chart2_figure(
             },
             style_cell={
                 "textAlign": "left",
-                "padding": "8px",
+                "padding": "6px",
                 "color": text_color,
             },
             style_header={
@@ -68,8 +68,8 @@ def create_chart2_figure(
             },
             style_cell={
                 "textAlign": "left",
-                "padding": "5px",
-                "fontSize": "12px",
+                "padding": "4px",
+                "fontSize": "10px",
                 "color": text_color,
             },
             style_header={

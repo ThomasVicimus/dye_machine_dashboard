@@ -16,7 +16,7 @@ def create_chart1_layout(
     chart_id: str = "chart-1",
     mobile: bool = False,
 ):
-    """Creates the dbc.Col layout containing just the graph for chart 1."""
+    """Creates the layout containing just the graph for chart 1."""
     chart_factory = MachineUsageChart({}, lang="zh_cn")  # Create factory instance here
     # *Desktop Chart
     if not mobile:
@@ -32,17 +32,11 @@ def create_chart1_layout(
             margin=dict(l=10, r=10, t=90, b=10),
             # font=dict(size=10),
         )
-        return dbc.Col(
-            [
-                dcc.Graph(
-                    id=chart_id,
-                    figure=initial_figure,
-                    config={"displayModeBar": False, "responsive": True},
-                    style={"width": "100%", "height": "100%", "minHeight": "25vh"},
-                )
-            ],
-            width=4,
-            className="p-2",
+        return dcc.Graph(
+            id=chart_id,
+            figure=initial_figure,
+            config={"displayModeBar": False, "responsive": True},
+            style={"width": "100%", "height": "100%", "minHeight": "25vh"},
         )
     else:
         # *Mobile Chart
@@ -68,18 +62,14 @@ def create_chart1_layout(
             },  # Height adjusted
             config={"displayModeBar": False, "responsive": True},
         )
-        return dbc.Col(
-            dcc.Link(
-                graph_component,
-                href=f"/details/{chart_id}",  # Link using the chart ID
-                id=f"link-{chart_id}",
-                style={
-                    "display": "block",
-                    "height": "100%",
-                    "width": "100%",
-                    "minHeight": "20vh",
-                },  # Ensure link covers graph
-            ),
-            width=4,
-            className="p-0",
+        return dcc.Link(
+            graph_component,
+            href=f"/details/{chart_id}",  # Link using the chart ID
+            id=f"link-{chart_id}",
+            style={
+                "display": "block",
+                "height": "100%",
+                "width": "100%",
+                "minHeight": "20vh",
+            },  # Ensure link covers graph
         )

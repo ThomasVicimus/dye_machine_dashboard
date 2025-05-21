@@ -33,11 +33,7 @@ def create_chart2_layout(
     df = dfs.get(mobile_option, None)
     df = df.get("all_machine", None)
     if df is None or df.empty:
-        return dbc.Col(
-            html.Div("No data available", className="text-center p-4"),
-            width=4,
-            className="p-2",
-        )
+        return html.Div("No data available", className="text-center p-4")
 
     # Define theme-based styling
     if theme == "black":
@@ -66,12 +62,11 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 fig,
-            ]
+            ],
+            style={"height": "100%", "overflowY": "auto"},
         )
 
-        return dbc.Col(
-            table_component, width=4, className="p-2", style={"maxHeight": "25vh"}
-        )
+        return table_component
     else:
         # Mobile table with adjusted sizing
         table_component = html.Div(
@@ -82,12 +77,8 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 fig,
-            ]
+            ],
+            style={"height": "100%", "overflowY": "auto"},
         )
 
-        return dbc.Col(
-            table_component,
-            width=4,
-            className="p-0",
-            # style={"height": "20vh"}
-        )
+        return table_component

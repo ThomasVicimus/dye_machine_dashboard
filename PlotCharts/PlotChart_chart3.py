@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import dcc
 import logging
+from dash import html
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ def create_chart3_layout(
     chart_id: str = "chart-3",
     mobile: bool = False,
 ):
-    """Creates the dbc.Col layout containing just the graph for chart 3."""
+    """Creates the layout containing just the graph for chart 3."""
     txtcards_layout = create_chart3_txtcards_layout(default_period, dfs)
     # *Desktop Chart
     if not mobile:
@@ -29,18 +30,17 @@ def create_chart3_layout(
             height=None,
             margin=dict(l=10, r=10, t=10, b=10),
         )
-        return dbc.Col(
+        return html.Div(
             [
                 txtcards_layout,
                 dcc.Graph(
                     id=chart_id,
                     figure=initial_figure,
                     config={"displayModeBar": False, "responsive": True},
-                    style={"width": "100%", "height": "100%", "minHeight": "30vh"},
+                    style={"width": "100%", "height": "80%"},
                 ),
             ],
-            width=4,
-            className="px-2",
+            style={"height": "100%", "overflowY": "auto"},
         )
     else:
         # *Mobile Chart
@@ -51,34 +51,30 @@ def create_chart3_layout(
         initial_figure.update_layout(
             autosize=True,
             height=None,
+            margin=dict(l=10, r=10, t=10, b=10),
         )
         graph_component = dcc.Graph(
             id=chart_id,
             figure=initial_figure,
             style={
-                "height": "100%",
+                "height": "80%",
                 "width": "100%",
-                "minHeight": "20vh",
             },
             config={"displayModeBar": False, "responsive": True},
         )
-        return dbc.Col(
-            dcc.Link(
-                [
-                    txtcards_layout,
-                    graph_component,
-                ],
-                href=f"/details/{chart_id}",  # Link using the chart ID
-                id=f"link-{chart_id}",
-                style={
-                    "display": "block",
-                    "height": "100%",
-                    "width": "100%",
-                    "minHeight": "20vh",
-                },  # Ensure link covers graph
-            ),
-            width=4,
-            className="p-0",
+        return dcc.Link(
+            [
+                txtcards_layout,
+                graph_component,
+            ],
+            href=f"/details/{chart_id}",  # Link using the chart ID
+            id=f"link-{chart_id}",
+            style={
+                "display": "block",
+                "height": "100%",
+                "width": "100%",
+                "overflowY": "auto",
+            },  # Ensure link covers graph
         )
 
 
@@ -114,6 +110,6 @@ def create_chart3_txtcards_layout(period, dfs):
                 width=4,
             ),
         ],
-        className="mb-0 g-2",
+        className="mb-0 g-2 mt-n3 mx-n3",
     )
     return three_cards_row

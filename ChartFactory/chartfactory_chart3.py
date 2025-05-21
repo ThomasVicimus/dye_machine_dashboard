@@ -259,40 +259,70 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             "textAlign": "center",
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "maxHeight": "100px",
+            "maxHeight": "50px",
             "height": "auto",
-            "padding": "10px",
+            "padding": "4px",
         },
     )
 
     card2 = dbc.CardBody(
         [
-            html.Div(f"{period} 最高產量機台", style={"color": "#fdfefe"}),
-            html.Div(f"{max_prod_machine}", style={"color": "#2ecc71"}),
-            html.Div(f"{max_prod_value}kg", style={"color": "#3498db"}),
+            html.Div(
+                f"{period} 最高產量機台",
+                style={"color": "#fdfefe", "textAlign": "center"},
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(f"{max_prod_machine}", style={"color": "#2ecc71"}),
+                        width=6,
+                        className="text-start",
+                    ),
+                    dbc.Col(
+                        html.Div(f"{max_prod_value}kg", style={"color": "#3498db"}),
+                        width=6,
+                        className="text-end",
+                    ),
+                ],
+                className="gx-0",
+            ),
         ],
         style={
-            "textAlign": "right",
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "maxHeight": "100px",
+            "maxHeight": "50px",
             "height": "auto",
-            "padding": "10px",
+            "padding": "4px",
         },
     )
     card3 = dbc.CardBody(
         [
-            html.Div(f"{period} 最低產量機台", style={"color": "#fdfefe"}),
-            html.Div(f"{min_prod_machine}", style={"color": "#f1c40f"}),
-            html.Div(f"{min_prod_value}kg", style={"color": "#3498db"}),
+            html.Div(
+                f"{period} 最低產量機台",
+                style={"color": "#fdfefe", "textAlign": "center"},
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(f"{min_prod_machine}", style={"color": "#f1c40f"}),
+                        width=6,
+                        className="text-start",
+                    ),
+                    dbc.Col(
+                        html.Div(f"{min_prod_value}kg", style={"color": "#3498db"}),
+                        width=6,
+                        className="text-end",
+                    ),
+                ],
+                className="gx-0",
+            ),
         ],
         style={
-            "textAlign": "right",
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "maxHeight": "100px",
+            "maxHeight": "50px",
             "height": "auto",
-            "padding": "10px",
+            "padding": "4px",
         },
     )
     return card1, card2, card3
