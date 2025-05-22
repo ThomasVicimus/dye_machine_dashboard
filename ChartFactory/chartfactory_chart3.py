@@ -326,3 +326,148 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         },
     )
     return card1, card2, card3
+
+
+def create_chart3_figure_detail(
+    period: str,
+    dfs: Dict[str, Dict[str, pd.DataFrame]],
+) -> go.Figure:
+    """
+    Creates a line chart showing trend over time for 'weight_kg' against 'mmdd' for each machine.
+
+    Args:
+        period (str): The key for the period in the dfs dictionary (e.g., "last_7_days").
+        dfs (Dict[str, Dict[str, pd.DataFrame]]): A nested dictionary containing DataFrames.
+            Expected structure: dfs[period]['all_machine'] should be the target DataFrame.
+
+    Returns:
+        go.Figure: A Plotly graph object figure. If data is invalid or missing,
+                   an empty figure with an error message/note might be returned.
+    """
+    fig = go.Figure()  # Initialize an empty figure
+
+    try:
+        if (
+            not isinstance(dfs, dict)
+            or period not in dfs
+            or not isinstance(dfs[period], dict)
+            or "all_machine" not in dfs[period]
+        ):
+            raise KeyError(
+                f"Expected path dfs[period]['all_machine'] not found or 'dfs' is not structured correctly.\n {type(dfs)=}"
+            )
+        df_period = dfs[period]
+        df = df_period["all_machine"]
+    except KeyError as e:
+        logger.error(
+            f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
+        )
+        fig.update_layout(title_text=f"Data not available for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+    except TypeError as e:
+        logger.error(
+            f"Invalid structure for 'dfs' argument for period '{period}'. Expected Dict[str, Dict[str, pd.DataFrame]]. Error: {e}"
+        )
+        fig.update_layout(title_text=f"Invalid data structure for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    if not isinstance(df, pd.DataFrame):
+        logger.warning(
+            f"Data for period '{period}' and key 'all_machine' is not a DataFrame."
+        )
+        fig.update_layout(title_text=f"Invalid data format for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    if df.empty:
+        logger.warning(
+            f"DataFrame for period '{period}' and key 'all_machine' is empty."
+        )
+        fig.update_layout(title_text=f"No data to display for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    required_cols = ["mmdd", "weight_kg", "machine_name"]  # Added "machine_name"
+    if not all(col in df.columns for col in required_cols):
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        logger.error(
+            f"Missing required columns {missing_cols} in DataFrame for period '{period}'."
+        )
+        fig.update_layout(title_text=f"Error: Missing data columns for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    df_copy = df.copy()
+    try:
+        df_copy["weight_kg"] = pd.to_numeric(df_copy["weight_kg"], errors="coerce")
+        if df_copy["weight_kg"].isnull().all():
+            logger.error(
+                f"'weight_kg' column for period '{period}' contains no valid numeric data after conversion."
+            )
+            fig.update_layout(title_text=f"Invalid 'weight_kg' data for {period}")
+            _make_figure_empty_looking(fig)
+            return fig
+        df_copy.dropna(subset=["weight_kg"], inplace=True)
+        if df_copy.empty:
+            logger.warning(
+                f"DataFrame became empty after dropping NaNs in 'weight_kg' for period '{period}'."
+            )
+            fig.update_layout(title_text=f"No valid 'weight_kg' data for {period}")
+            _make_figure_empty_looking(fig)
+            return fig
+
+        # Calculate y-axis upper bound for padding based on overall max
+        max_y_value = df_copy["weight_kg"].max()
+        if pd.notna(max_y_value):
+            yaxis_upper_bound = max_y_value * 1.3 if max_y_value > 0 else 10.0
+        else:
+            yaxis_upper_bound = 10.0
+
+    except Exception as e:
+        logger.error(f"Error processing data for period '{period}': {e}")
+        fig.update_layout(title_text=f"Error in data processing for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    # Iterate through each machine and add a trace
+    machine_names = df_copy["machine_name"].unique()
+    for machine_name in machine_names:
+        machine_df = df_copy[df_copy["machine_name"] == machine_name]
+        # Sort by mmdd to ensure lines are drawn correctly
+        machine_df = machine_df.sort_values(by="mmdd")
+        fig.add_trace(
+            go.Scatter(
+                x=machine_df["mmdd"],
+                y=machine_df["weight_kg"],
+                mode="lines+markers",  # Removed text
+                name=machine_name,  # Use machine_name for legend
+                textfont=dict(color="#fdfefe", size=12),
+            )
+        )
+
+    fig.update_layout(
+        xaxis_title=None,
+        yaxis_title=None,
+        showlegend=True,  # Ensure legend is visible
+        legend_title_text="Machine",
+        legend_font_color="#fdfefe",
+        legend_bgcolor="rgba(32,32,32,0.8)",  # Semi-transparent background for legend
+        font_color="#fdfefe",
+        margin=dict(l=30, r=30, t=40, b=20),
+        xaxis_showgrid=False,
+        yaxis_showgrid=False,
+        xaxis_showline=True,
+        yaxis_showline=True,
+        xaxis_linecolor="#fdfefe",
+        yaxis_linecolor="#fdfefe",
+        xaxis_tickfont=dict(color="#fdfefe"),
+        yaxis_tickfont=dict(color="#fdfefe"),
+        yaxis_range=[0, yaxis_upper_bound],
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(type="category"),
+    )
+
+    return fig

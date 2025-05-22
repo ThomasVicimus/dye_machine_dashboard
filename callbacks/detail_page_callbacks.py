@@ -5,6 +5,7 @@ from dash import html, dcc, Output, Input, State
 import plotly.graph_objects as go  # Import go for placeholder
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
 from ChartFactory.chartfactory_chart2 import create_chart2_figure_detail
+from ChartFactory.chartfactory_chart3 import create_chart3_figure_detail
 from dash.dependencies import ALL
 from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
@@ -34,11 +35,11 @@ charts_var = {
         "chart_factory": create_chart2_figure_detail,
         "chart_title": "总覽表",
     },
-    # "chart-3": {
-    #     "CHART_ID": "chart-3",
-    #     "chart_factory": create_chart3_figure_detail,
-    #     "chart_title": "生产量",
-    # },
+    "chart-3": {
+        "CHART_ID": "chart-3",
+        "chart_factory": create_chart3_figure_detail,
+        "chart_title": "生产量",
+    },
 }
 
 
