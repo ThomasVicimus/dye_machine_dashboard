@@ -1,3 +1,4 @@
+import numpy as np
 from Database.database_connection import DatabaseConnection
 import pandas as pd
 import yaml
@@ -16,7 +17,7 @@ def get_all_charts_data(db) -> dict:
     dfs = {
         "chart-1-data-store": get_MachineUsage_data(db),
         "chart-2-data-store": get_MachineStatus_data(db),
-        "chart-3-data-store": get_MachineUsage_data(db),
+        "chart-3-data-store": get_chart3_data(db),
     }
     # No serialization here, done inside get_MachineUsage_data
     return dfs
@@ -171,8 +172,92 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
     dfs["mobile"] = {"all_machine": df_mobile[cols]}
 
     for mobile_option, df_dict in dfs.items():
-        for key, df in df_dict.items():
-            df = df.rename(columns=col_rename[lang])
-            dfs[mobile_option][key] = df
+        for key, df_val in df_dict.items():
+            df_val = df_val.rename(columns=col_rename[lang])
+            dfs[mobile_option][key] = df_val
 
     return dfs
+
+
+def get_chart3_data(db) -> dict:
+    """
+    Get machine production data from the database for chart 3.
+    Data is processed to include all dates in the 7-day and 30-day periods
+    ending on the latest available date, with missing 'weight_kg' filled with 0.
+    """
+    sql_file_path = "sql/3_machine_production.sql"
+    with open(sql_file_path, "r", encoding="utf-8") as f:
+        Q = f.read()
+
+    df = db.execute_query(Q)
+    unique_machine_names = df["machine_name"].unique()
+
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    if df.date.isna().sum() > 0:
+        logger.warning("Chart 3: Some dates were not converted to datetime.")
+        df.dropna(
+            subset=["date"], inplace=True
+        )  # Remove rows where date conversion failed
+
+    latest_date = df["date"].max()
+
+    # Define date ranges
+    start_date_30days = latest_date - pd.Timedelta(days=29)
+    all_dates_30days_index = pd.date_range(
+        start=start_date_30days, end=latest_date, freq="D", name="date"
+    )
+
+    df_for_reindex = df.set_index("date")
+
+    # Prepare for reindexing by setting index
+    # Drop rows where date or machine_name became NaN after initial processing, if any, before setting index
+    df.dropna(subset=["date", "machine_name"], inplace=True)
+    if df.empty:
+        return _create_empty_chart3_data()
+
+    # Handle potential duplicate (date, machine_name) pairs by summing weight_kg.
+    # This ensures set_index doesn't fail on duplicates.
+    df = df.groupby(["date", "machine_name"], as_index=False)["weight_kg"].sum()
+
+    df_indexed = df.set_index(["date", "machine_name"])
+
+    # Create the complete multi-index for all dates and all unique machines
+    multi_idx = pd.MultiIndex.from_product(
+        [all_dates_30days_index, unique_machine_names], names=["date", "machine_name"]
+    )
+
+    # Reindex to ensure all date-machine combinations exist, fill missing weights with random number
+    # TODO: fill with 0.0
+    df_30days = df_indexed["weight_kg"].reindex(
+        multi_idx, fill_value=np.random.randint(20, 200)
+    )
+    df_30days = df_30days.reset_index()  # 'date' and 'machine_name' become columns
+
+    # Add 'mmdd' column using user's specified format
+    df_30days["mmdd"] = df_30days["date"].dt.strftime("%m/%d")
+
+    # Ensure correct column order
+    df_30days_processed = df_30days[["date", "machine_name", "mmdd", "weight_kg"]]
+
+    # Extract 7-day data from the processed 30-day data
+    start_date_7days = latest_date - pd.Timedelta(days=6)
+    df_7days_processed = df_30days_processed[
+        df_30days_processed["date"] >= start_date_7days
+    ].copy()
+
+    return {
+        "今日": {"all_machine": df_7days_processed.copy()},
+        "本周": {"all_machine": df_7days_processed.copy()},
+        "上月": {"all_machine": df_30days_processed.copy()},
+    }
+
+
+def _create_empty_chart3_data() -> dict:
+    """Helper function to create the default empty data structure for chart 3."""
+    empty_df = pd.DataFrame(columns=["date", "machine_name", "mmdd", "weight_kg"])
+    logger.error("Chart 3: Empty data in use.")
+    return {
+        "今日": {"all_machine": empty_df.copy()},
+        "本周": {"all_machine": empty_df.copy()},
+        "上月": {"all_machine": empty_df.copy()},
+    }

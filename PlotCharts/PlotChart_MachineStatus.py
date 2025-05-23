@@ -33,11 +33,7 @@ def create_chart2_layout(
     df = dfs.get(mobile_option, None)
     df = df.get("all_machine", None)
     if df is None or df.empty:
-        return dbc.Col(
-            html.Div("No data available", className="text-center p-4"),
-            width=4,
-            className="p-2",
-        )
+        return html.Div("No data available", className="text-center p-4")
 
     # Define theme-based styling
     if theme == "black":
@@ -66,12 +62,11 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 fig,
-            ]
+            ],
+            style={"height": "100%", "overflowY": "auto"},
         )
 
-        return dbc.Col(
-            table_component, width=4, className="p-2", style={"maxHeight": "25vh"}
-        )
+        return table_component
     else:
         # Mobile table with adjusted sizing
         table_component = html.Div(
@@ -82,39 +77,8 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 fig,
-            ]
+            ],
+            style={"height": "100%", "overflowY": "auto"},
         )
 
-        return dbc.Col(
-            table_component,
-            width=4,
-            className="p-0",
-            # style={"height": "20vh"}
-        )
-
-
-# def register_callbacks(app):
-#     """Register callbacks for the machine status table pagination.
-
-#     This function should be called after app initialization to set up the
-#     auto-pagination feature of the status table.
-
-#     Args:
-#         app: The Dash app instance.
-#     """
-
-#     def create_callback_for_table(chart_id):
-#         @app.callback(
-#             Output(chart_id, "page_current"),
-#             [
-#                 Input(f"{chart_id}-interval", "n_intervals"),
-#                 Input(chart_id, "page_count"),
-#             ],
-#         )
-#         def update_table_page(n_intervals, page_count):
-#             """Auto-paginate the table based on interval ticks."""
-#             if page_count <= 1:
-#                 return 0
-#             return n_intervals % page_count
-
-#         return update_table_page
+        return table_component

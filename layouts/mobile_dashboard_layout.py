@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
+from PlotCharts.PlotChart_chart3 import create_chart3_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -75,27 +76,57 @@ def create_mobile_layout(
                     # Row 1 (Charts 1-3)
                     dbc.Row(
                         [
-                            create_chart1_layout(
-                                default_period=default_period,
-                                dfs=initial_charts_data["chart-1-data-store"],
-                                mobile=True,
-                                chart_id="chart-1",
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart1_layout(
+                                        default_period=default_period,
+                                        dfs=initial_charts_data["chart-1-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-1",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
                             ),
-                            create_chart2_layout(
-                                dfs=initial_charts_data["chart-2-data-store"],
-                                mobile=True,
-                                chart_id="chart-2",
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart2_layout(
+                                        dfs=initial_charts_data["chart-2-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-2",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
                             ),
-                            create_chart1_layout(
-                                default_period=default_period,
-                                dfs=initial_charts_data["chart-1-data-store"],
-                                mobile=True,
-                                chart_id="chart-3",
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart3_layout(
+                                        default_period=default_period,
+                                        dfs=initial_charts_data["chart-3-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-3",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
                             ),
                         ],
                         className="mb-1 g-0",
                         align="stretch",
-                        style={"height": "20vh"},
+                        # style={"height": "20vh"}, # Height is now on individual cards
                     ),
                     # Row 2 (Charts 4-6)
                     # dbc.Row(

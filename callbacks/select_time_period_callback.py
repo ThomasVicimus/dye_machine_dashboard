@@ -4,9 +4,10 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, Output, Input, State, callback_context, ALL
 import json
 import logging
+import pandas as pd
 from Database.serialize_df import deserialize_dataframe_dict
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
-import pandas as pd
+from ChartFactory.chartfactory_chart3 import create_chart3_figure
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                 {}, lang=lang
             ).create_machine_usage_chart_mobile_main,
             "chart_titles": "Machine Usage",
+            "margin": dict(l=10, r=10, t=90, b=10),
         },
         # "chart-2": {
         #     "CHART_ID": "chart-2",
@@ -35,13 +37,10 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
         # },
         "chart-3": {
             "CHART_ID": "chart-3",
-            "chart_factory_desktop": MachineUsageChart(
-                {}, lang=lang
-            ).create_machine_usage_chart,
-            "chart_factory_mobile": MachineUsageChart(
-                {}, lang=lang
-            ).create_machine_usage_chart_mobile_main,
-            "chart_titles": "Machine Usage",
+            "chart_factory_desktop": create_chart3_figure,
+            "chart_factory_mobile": create_chart3_figure,
+            "chart_titles": "Production Volume",
+            "margin": dict(l=10, r=10, t=10, b=10),
         },
     }
 
@@ -83,6 +82,9 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
     # Register callbacks for each chart in charts_var
     for chart_id, chart_config in charts_var.items():
         CHART_ID = chart_config["CHART_ID"]
+        current_chart_margin = chart_config[
+            "margin"
+        ]  # Extract margin for the current chart
         if mobile:
             chart_factory = chart_config["chart_factory_mobile"]
         else:
@@ -94,14 +96,20 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             Input("all-chart-data-store", "data"),
             prevent_initial_call=True,
         )
-        def update_chart_figure(selected_period, all_chart_data):
+        def update_chart_figure(
+            selected_period,
+            all_chart_data,
+            chart_id=CHART_ID,
+            chart_factory=chart_factory,
+            margin=current_chart_margin,  # Pass the specific margin as a default argument
+        ):
             # Get the specific chart's data from all_chart_data
             chart_specific_data_serialized = all_chart_data.get(
-                f"{chart_id}-data-store"
-            )  # Use chart_id from the loop
+                f"{chart_id}-data-store"  # Use chart_id from the function's default argument
+            )
 
             logger.info(
-                f"Chart {CHART_ID}: Serialized data received: {chart_specific_data_serialized.keys()}"
+                f"Chart {chart_id}: Serialized data received: {chart_specific_data_serialized.keys()}"
             )
 
             # Deserialize the specific chart's data
@@ -110,23 +118,23 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                 deserialized_chart_data = deserialize_dataframe_dict(
                     chart_specific_data_serialized
                 )
-                logger.info(f"Chart {CHART_ID}: Deserialization successful.")
+                logger.info(f"Chart {chart_id}: Deserialization successful.")
                 logger.debug(
-                    f"Chart {CHART_ID}: Deserialized data: {deserialized_chart_data.keys()}"
+                    f"Chart {chart_id}: Deserialized data: {deserialized_chart_data.keys()}"
                 )
             except Exception as e:
                 logger.error(
-                    f'Chart {CHART_ID}: Exception during deserialization for store key f"{chart_id}-data-store": {e}',
+                    f'Chart {chart_id}: Exception during deserialization for store key f"{chart_id}-data-store": {e}',
                     exc_info=True,
                 )
                 # Keep deserialized_chart_data as None or an error structure if preferred
                 # For now, it will remain None, and the existing error handling below will catch it.
 
             logger.info(
-                f"Chart {CHART_ID}: Updating figure for period: {selected_period} using initially loaded data."
+                f"Chart {chart_id}: Updating figure for period: {selected_period} using initially loaded data."
             )
             logger.debug(
-                f"Chart {CHART_ID}: Deserialized data: {deserialized_chart_data}"
+                f"Chart {chart_id}: Deserialized data: {deserialized_chart_data}"
             )
 
             # Handle cases where initial data loading might have failed or deserialization failed
@@ -149,17 +157,17 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                     else "Initial data load or deserialization failed"
                 )
                 logger.warning(
-                    f"Chart {CHART_ID}: Cannot update figure. Reason: {error_msg_detail}. Serialized data was: {chart_specific_data_serialized}"
+                    f"Chart {chart_id}: Cannot update figure. Reason: {error_msg_detail}. Serialized data was: {chart_specific_data_serialized}"
                 )
                 logger.warning(
-                    f"Chart {CHART_ID}: Cannot update figure, data unavailable. Msg: {error_msg}"
+                    f"Chart {chart_id}: Cannot update figure, data unavailable. Msg: {error_msg}"
                 )
                 return go.Figure().update_layout(title=f"Error: {error_msg}")
 
             # # Handle cases where the selected period itself is invalid
             # if not selected_period or selected_period in ["No Data", "Error"]:
             #     logger.warning(
-            #         f"Chart {CHART_ID}: Invalid period selected: {selected_period}"
+            #         f"Chart {chart_id}: Invalid period selected: {selected_period}"
             #     )
             #     return go.Figure().update_layout(
             #         title=f"Invalid Period Selected: {selected_period}"
@@ -168,7 +176,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             # # Check if the selected period exists within the chart data
             # if selected_period not in deserialized_chart_data:
             #     logger.warning(
-            #         f"Chart {CHART_ID}: Selected period '{selected_period}' not found in data for chart {chart_id}."
+            #         f"Chart {chart_id}: Selected period '{selected_period}' not found in data for chart {chart_id}."
             #     )
             #     available_periods = list(deserialized_chart_data.keys())
             #     return go.Figure().update_layout(
@@ -177,14 +185,14 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
 
             try:
                 if mobile:
-                    new_figure = chart_factory(
+                    new_figure = chart_factory(  # Use chart_factory from the function's default argument
                         selected_period,
                         deserialized_chart_data,  # Pass the chart-specific deserialized dataset
                     )
                     # No additional layout updates for mobile to preserve default styling
                 else:
                     # Create the chart using the deserialized data and the selected period
-                    new_figure = chart_factory(
+                    new_figure = chart_factory(  # Use chart_factory from the function's default argument
                         selected_period,
                         deserialized_chart_data,  # Pass the chart-specific deserialized dataset
                     )
@@ -192,13 +200,13 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                     new_figure.update_layout(
                         autosize=True,
                         height=None,
-                        margin=dict(l=10, r=10, t=90, b=10),
+                        margin=margin,  # Use the captured margin
                     )
                 return new_figure
 
             except Exception as e:
                 logger.error(
-                    f"Chart {CHART_ID}: Error generating figure for period {selected_period} from initial data: {e}",
+                    f"Chart {chart_id}: Error generating figure for period {selected_period} from initial data: {e}",
                     exc_info=True,
                 )
                 return go.Figure().update_layout(
