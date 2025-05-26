@@ -225,7 +225,7 @@ class MachineUsageChart:
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
-                    y=-0.2,
+                    y=-0.3,
                     xanchor="right",
                     x=1,
                     # font=dict(size=legend_font_size),
