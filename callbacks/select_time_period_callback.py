@@ -8,6 +8,10 @@ import pandas as pd
 from Database.serialize_df import deserialize_dataframe_dict
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
 from ChartFactory.chartfactory_chart3 import create_chart3_figure
+from ChartFactory.chartfactory_chart4 import (
+    create_chart4_figure,
+    create_chart4_figure_mobile,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +30,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                 {}, lang=lang
             ).create_machine_usage_chart_mobile_main,
             "chart_titles": "Machine Usage",
-            "margin": dict(l=10, r=10, t=90, b=10),
+            "margin": dict(l=10, r=10, t=55, b=10),
         },
         # "chart-2": {
         #     "CHART_ID": "chart-2",
@@ -41,6 +45,13 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "chart_factory_mobile": create_chart3_figure,
             "chart_titles": "Production Volume",
             "margin": dict(l=10, r=10, t=10, b=10),
+        },
+        "chart-4": {
+            "CHART_ID": "chart-4",
+            "chart_factory_desktop": create_chart4_figure,
+            "chart_factory_mobile": create_chart4_figure_mobile,
+            "chart_titles": "Machine Waste",
+            "margin": dict(l=10, r=10, t=55, b=10),
         },
     }
 
