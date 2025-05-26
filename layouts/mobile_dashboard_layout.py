@@ -3,6 +3,7 @@ from dash import html, dcc
 from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
 from PlotCharts.PlotChart_chart3 import create_chart3_layout
+from PlotCharts.PlotChart_chart4 import create_chart4_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -129,14 +130,28 @@ def create_mobile_layout(
                         # style={"height": "20vh"}, # Height is now on individual cards
                     ),
                     # Row 2 (Charts 4-6)
-                    # dbc.Row(
-                    #     [
-                    #         create_chart_column(cid, fig)
-                    #         for cid, fig in list(charts.items())[3:]
-                    #     ],
-                    #     className="mb-1 g-0",
-                    #     align="stretch",
-                    # ),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart4_layout(
+                                        default_period=default_period,
+                                        dfs=initial_charts_data["chart-4-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-4",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
+                            ),
+                        ],
+                        className="mb-1 g-2",
+                        align="stretch",
+                    ),
                     # Placeholder for potential future updates or controls
                     html.Div(id="mobile-dynamic-content", className="text-center"),
                     dcc.Interval(
