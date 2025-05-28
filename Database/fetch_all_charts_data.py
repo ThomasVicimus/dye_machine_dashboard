@@ -363,6 +363,7 @@ def get_chart5_data(db) -> dict:
         }
 
     results = {}
+    # TODO change back to now
     # now = datetime.now()
     now = datetime.strptime("2025-04-07 05:00:00", "%Y-%m-%d %H:%M:%S")
     # Standard SQL datetime format, ensure your database expects this format
