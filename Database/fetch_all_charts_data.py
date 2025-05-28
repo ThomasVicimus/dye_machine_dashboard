@@ -4,6 +4,7 @@ import pandas as pd
 import yaml
 import logging
 from Database.serialize_df import serialize_dataframe_dict
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ def get_all_charts_data(db) -> dict:
         "chart-2-data-store": get_MachineStatus_data(db),
         "chart-3-data-store": get_chart3_data(db),
         "chart-4-data-store": get_chart4_data(db),
+        "chart-5-data-store": get_chart5_data(db),
     }
     # No serialization here, done inside get_MachineUsage_data
     return dfs
@@ -335,3 +337,71 @@ def get_avg_chart4(df):
     df_avg.loc[0, "period"] = df["period"].iloc[0]
     df_avg.loc[0, "machine_name"] = pd.NA
     return df_avg
+
+
+def get_chart5_data(db) -> dict:
+    """
+    Get machine batch queued data from the database for different time windows.
+    The time windows are:
+    - 24_hrs: Current time +/- 12 hours.
+    - 48_hrs: Window starts 24 hours before current time, ends 24 hours after current time. (48h duration)
+    - 72_hrs: Window starts 24 hours before current time, ends 48 hours after current time. (72h duration)
+    """
+    sql_file_path = "sql/5_batch_queued.sql"
+    try:
+        with open(sql_file_path, "r", encoding="utf-8") as f:
+            Q_template = f.read()
+    except FileNotFoundError:
+        logger.error(f"SQL file not found: {sql_file_path}")
+        # Return empty data for all options if SQL file is missing
+        # pandas (pd) is imported at the module level
+        empty_df = pd.DataFrame()
+        return {
+            "24_hrs": {"all_machine": empty_df.copy()},
+            "48_hrs": {"all_machine": empty_df.copy()},
+            "72_hrs": {"all_machine": empty_df.copy()},
+        }
+
+    results = {}
+    # now = datetime.now()
+    now = datetime.strptime("2025-04-07 05:00:00", "%Y-%m-%d %H:%M:%S")
+    # Standard SQL datetime format, ensure your database expects this format
+    time_format = "%Y-%m-%d %H:%M:%S"
+
+    time_configs = {
+        "24_hrs": {  # current time +/- 12 hours
+            "min_offset_from_now": timedelta(hours=-12),
+            "max_offset_from_now": timedelta(hours=12),
+        },
+        "48_hrs": {  # starts 24 hours ago, duration 48 hours (ends +24h from now)
+            "min_offset_from_now": timedelta(hours=-24),
+            "max_offset_from_now": timedelta(hours=24),
+        },
+        "72_hrs": {  # starts 24 hours ago, duration 72 hours (ends +48h from now)
+            "min_offset_from_now": timedelta(hours=-24),
+            "max_offset_from_now": timedelta(hours=48),
+        },
+    }
+
+    for option, config in time_configs.items():
+        min_start_time_dt = now + config["min_offset_from_now"]
+        max_start_time_dt = now + config["max_offset_from_now"]
+
+        min_start_time_str = min_start_time_dt.strftime(time_format)
+        max_start_time_str = max_start_time_dt.strftime(time_format)
+
+        # Ensure the SQL template is correctly expecting these named placeholders
+        try:
+            Q = Q_template.format(
+                min_start_time=min_start_time_str, max_start_time=max_start_time_str
+            )
+        except KeyError as e:
+            logger.error(f"Missing placeholder in SQL template {sql_file_path}: {e}")
+            # Fallback to empty DataFrame for this option if formatting fails
+            df = pd.DataFrame()
+        else:
+            df = db.execute_query(Q)
+
+        results[option] = {"all_machine": df}
+
+    return results
