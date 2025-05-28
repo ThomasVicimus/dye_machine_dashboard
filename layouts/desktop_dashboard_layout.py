@@ -4,6 +4,7 @@ from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
 from PlotCharts.PlotChart_chart3 import create_chart3_layout
 from PlotCharts.PlotChart_chart4 import create_chart4_layout
+from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -151,6 +152,22 @@ def create_desktop_layout(
                                 ),
                                 width=4,
                             ),
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart5_layout(
+                                        default_period="24_hrs",
+                                        dfs=initial_charts_data["chart-5-data-store"],
+                                        mobile=False,
+                                        chart_id="chart-5",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
+                            ),
                         ],
                         className="mb-1 g-2",
                         align="stretch",
@@ -168,6 +185,11 @@ def create_desktop_layout(
                     dcc.Store(
                         id="time-period-store",
                         data=default_period,
+                        storage_type="session",
+                    ),
+                    dcc.Store(
+                        id="chart5-timeframe-store",
+                        data="24_hrs",
                         storage_type="session",
                     ),
                 ],

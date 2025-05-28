@@ -21,6 +21,31 @@ def create_period_button(periods):
     )
 
 
+def create_chart5_timeframe_buttons():
+    """Creates the ButtonGroup for timeframe selection for chart 5."""
+    timeframes = ["24_hrs", "48_hrs", "72_hrs"]
+    timeframe_labels = {
+        "24_hrs": "24小时",
+        "48_hrs": "48小时",
+        "72_hrs": "72小时",
+    }
+
+    return dbc.ButtonGroup(
+        [
+            dbc.Button(
+                timeframe_labels[timeframe],
+                id={"type": "chart5-timeframe-button", "index": timeframe},
+                color="primary",
+                outline=True,
+                size="sm",
+                style={"fontSize": "calc(0.7rem + 0.1vw)"},
+            )
+            for timeframe in timeframes
+        ],
+        className="mb-2",
+    )
+
+
 def create_theme_buttons():
     """Creates colored buttons for theme selection."""
     colors = {
