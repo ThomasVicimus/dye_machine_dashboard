@@ -168,6 +168,11 @@ def create_mobile_layout(
                         data=default_period,
                         storage_type="session",
                     ),
+                    dcc.Store(
+                        id="chart5-timeframe-store",
+                        data="24_hrs",
+                        storage_type="session",
+                    ),
                 ],
                 fluid=True,
             ),
