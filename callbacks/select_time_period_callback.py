@@ -12,11 +12,151 @@ from ChartFactory.chartfactory_chart4 import (
     create_chart4_figure,
     create_chart4_figure_mobile,
 )
+from ChartFactory.chart_factory_chart5 import create_chart5_figure
 
 logger = logging.getLogger(__name__)
 
 
 # ---- Callback Registration ----
+
+
+def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
+    """Registers callbacks for chart5 timeframe selection."""
+    CHART5_TIMEFRAME_BUTTON_TYPE = "chart5-timeframe-button"
+    CHART5_TIMEFRAME_STORE_ID = "chart5-timeframe-store"
+    CHART5_ID = "chart-5"
+
+    @app.callback(
+        Output(CHART5_TIMEFRAME_STORE_ID, "data"),
+        Input({"type": CHART5_TIMEFRAME_BUTTON_TYPE, "index": ALL}, "n_clicks"),
+        State(CHART5_TIMEFRAME_STORE_ID, "data"),
+        prevent_initial_call=True,
+    )
+    def update_selected_chart5_timeframe(n_clicks_list, current_timeframe):
+        ctx = callback_context
+        if not ctx.triggered:
+            return current_timeframe
+
+        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        if not button_id:
+            return current_timeframe
+
+        try:
+            button_info = json.loads(button_id)
+            selected_timeframe = button_info.get("index")
+            if selected_timeframe:
+                logger.info(
+                    f"Chart5 timeframe button clicked (updates {CHART5_TIMEFRAME_STORE_ID}): {selected_timeframe}"
+                )
+                return selected_timeframe
+        except json.JSONDecodeError:
+            logger.error(
+                f"Failed to parse button ID for {CHART5_TIMEFRAME_STORE_ID}: {button_id}"
+            )
+            return current_timeframe
+        return current_timeframe
+
+    @app.callback(
+        Output(CHART5_ID, "figure"),
+        Input(CHART5_TIMEFRAME_STORE_ID, "data"),
+        Input("all-chart-data-store", "data"),
+        prevent_initial_call=True,
+    )
+    def update_chart5_figure(selected_timeframe, all_chart_data):
+        # Get the chart5 specific data from all_chart_data
+        chart5_data_serialized = all_chart_data.get(f"{CHART5_ID}-data-store")
+
+        if not chart5_data_serialized:
+            logger.warning(
+                f"Chart5: No data found in store key '{CHART5_ID}-data-store'"
+            )
+            return go.Figure().update_layout(title="Chart5: No data available")
+
+        logger.info(
+            f"Chart5: Serialized data received: {chart5_data_serialized.keys()}"
+        )
+
+        # Deserialize the chart5 data
+        deserialized_chart5_data = None
+        try:
+            deserialized_chart5_data = deserialize_dataframe_dict(
+                chart5_data_serialized
+            )
+            logger.info("Chart5: Deserialization successful.")
+            logger.debug(
+                f"Chart5: Deserialized data: {deserialized_chart5_data.keys()}"
+            )
+        except Exception as e:
+            logger.error(
+                f"Chart5: Exception during deserialization for store key '{CHART5_ID}-data-store': {e}",
+                exc_info=True,
+            )
+
+        logger.info(
+            f"Chart5: Updating figure for timeframe: {selected_timeframe} using initially loaded data."
+        )
+
+        # Handle cases where data loading or deserialization failed
+        if deserialized_chart5_data is None or (
+            isinstance(deserialized_chart5_data, dict)
+            and "error" in deserialized_chart5_data
+        ):
+            error_msg_detail = (
+                "Deserialization resulted in None"
+                if deserialized_chart5_data is None
+                else deserialized_chart5_data.get(
+                    "error", "Unknown deserialization error"
+                )
+            )
+            error_msg = (
+                deserialized_chart5_data.get(
+                    "error", "Initial data load or deserialization failed"
+                )
+                if isinstance(deserialized_chart5_data, dict)
+                else "Initial data load or deserialization failed"
+            )
+            logger.warning(
+                f"Chart5: Cannot update figure. Reason: {error_msg_detail}. Serialized data was: {chart5_data_serialized}"
+            )
+            return go.Figure().update_layout(title=f"Chart5 Error: {error_msg}")
+
+        try:
+            if mobile:
+                # For mobile, use mobile-optimized parameters
+                new_figure = create_chart5_figure(
+                    selected_timeframe,
+                    deserialized_chart5_data,
+                    lang=lang,
+                    margin_top=40,
+                    margin_bottom=70,
+                    margin_left=80,
+                    margin_right=20,
+                )
+            else:
+                # For desktop
+                new_figure = create_chart5_figure(
+                    selected_timeframe,
+                    deserialized_chart5_data,
+                    lang=lang,
+                )
+                # Apply consistent layout updates
+                new_figure.update_layout(
+                    autosize=True,
+                    height=None,
+                    margin=dict(l=10, r=10, t=90, b=10),
+                )
+            return new_figure
+
+        except Exception as e:
+            logger.error(
+                f"Chart5: Error generating figure for timeframe {selected_timeframe}: {e}",
+                exc_info=True,
+            )
+            return go.Figure().update_layout(
+                title=f"Chart5: Error generating chart for {selected_timeframe}"
+            )
+
+    logger.info("Chart5 timeframe callbacks registered.")
 
 
 def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
