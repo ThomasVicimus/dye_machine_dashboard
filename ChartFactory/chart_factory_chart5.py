@@ -134,6 +134,7 @@ def create_chart5_figure(
             "start_time",
             "expected_run_minutes",
             "color",
+            "batch_no",
         ]
         if not all(col in df_orig.columns for col in required_cols):
             missing = [col for col in required_cols if col not in df_orig.columns]
@@ -209,25 +210,51 @@ def create_chart5_figure(
     now = pd.Timestamp("2025-04-07 05:00:00")
     # now = pd.Timestamp.now()
 
-    for index, row in df.iterrows():
-        hover_text = (
-            f"<b>{row['machine_name']}</b><br>"
-            f"Action: {row.get('action_name', 'N/A')}<br>"
-            f"Start: {_format_datetime_for_hover(row['start_time'])}<br>"
-            f"End: {_format_datetime_for_hover(row['expected_end_time'])}<br>"
-            f"Duration: {row['expected_run_minutes']:.0f} min"
-        )
+    # Group activities by machine and create one trace per machine
+    unique_machines = df["machine_name"].unique().tolist()
+
+    for machine_name in unique_machines:
+        machine_df = df[df["machine_name"] == machine_name].copy()
+        machine_df = machine_df.sort_values("start_time")
+
+        # Prepare arrays for this machine's segments
+        base_times = []
+        durations = []
+        colors = []
+        hover_texts = []
+        batch_texts = []
+
+        for _, row in machine_df.iterrows():
+            base_times.append(row["start_numeric"])
+            durations.append(row["duration_numeric"])
+            colors.append(row["hex_color"])
+            batch_texts.append(str(row.get("batch_no", "")))
+
+            hover_text = (
+                f"<b>{row['machine_name']}</b><br>"
+                f"Action: {row.get('action_name', 'N/A')}<br>"
+                f"Start: {_format_datetime_for_hover(row['start_time'])}<br>"
+                f"End: {_format_datetime_for_hover(row['expected_end_time'])}<br>"
+                f"Duration: {row['expected_run_minutes']:.0f} min"
+            )
+            hover_texts.append(hover_text)
+
+        # Create one Bar trace for this machine with multiple segments
         fig.add_trace(
             go.Bar(
-                y=[row["machine_name"]],
-                base=[row["start_numeric"]],
-                x=[row["duration_numeric"]],
+                y=[machine_name]
+                * len(base_times),  # Same machine name for all segments
+                base=base_times,  # Array of start times
+                x=durations,  # Array of durations
                 orientation="h",
-                marker_color=row["hex_color"],
-                name=str(row.get("action_name", f"Task {index}")),
-                text=str(row.get("action_name", "")),
-                hovertext=hover_text,
+                marker_color=colors,  # Array of colors for each segment
+                name=machine_name,
+                text=batch_texts,  # Array of batch numbers
+                textposition="inside",
+                insidetextanchor="middle",
+                hovertext=hover_texts,  # Array of hover texts
                 hoverinfo="text",
+                showlegend=False,  # Don't show in legend to avoid clutter
             )
         )
 
@@ -273,7 +300,6 @@ def create_chart5_figure(
         showlegend=False,
     )
 
-    unique_machines = df["machine_name"].unique().tolist()
     num_unique_machines = len(unique_machines)
 
     # Dynamic height calculation
