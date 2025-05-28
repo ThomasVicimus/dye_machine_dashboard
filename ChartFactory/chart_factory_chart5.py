@@ -135,6 +135,7 @@ def create_chart5_figure(
             "expected_run_minutes",
             "color",
             "batch_no",
+            "state",
         ]
         if not all(col in df_orig.columns for col in required_cols):
             missing = [col for col in required_cols if col not in df_orig.columns]
@@ -162,6 +163,7 @@ def create_chart5_figure(
                 "expected_run_minutes",
                 "machine_name",
                 "color",
+                "state",
             ],
             inplace=True,
         )
@@ -213,9 +215,34 @@ def create_chart5_figure(
     # Group activities by machine and create one trace per machine
     unique_machines = df["machine_name"].unique().tolist()
 
+    # Define state colors
+    state_colors = {
+        "行机": "#2ecc71",
+        "停机": "#e74c3c",
+        "暂停": "#f1c40f",
+        "关机": "#e74c3c",
+        "维修": "#3498db",
+    }
+
+    # Create machine display names with states and collect state colors
+    machine_display_names = []
+    machine_state_colors = []
+
     for machine_name in unique_machines:
         machine_df = df[df["machine_name"] == machine_name].copy()
+        # Use the first state for this machine
+        first_state = machine_df.iloc[0]["state"]
+        display_name = f"{machine_name} - {first_state}"
+        machine_display_names.append(display_name)
+
+        # Get color for this state, default to white if state not found
+        state_color = state_colors.get(first_state, "#ffffff")
+        machine_state_colors.append(state_color)
+
+    for i, machine_name in enumerate(unique_machines):
+        machine_df = df[df["machine_name"] == machine_name].copy()
         machine_df = machine_df.sort_values("start_time")
+        display_name = machine_display_names[i]
 
         # Prepare arrays for this machine's segments
         base_times = []
@@ -232,6 +259,7 @@ def create_chart5_figure(
 
             hover_text = (
                 f"<b>{row['machine_name']}</b><br>"
+                f"State: {row['state']}<br>"
                 f"Action: {row.get('action_name', 'N/A')}<br>"
                 f"Start: {_format_datetime_for_hover(row['start_time'])}<br>"
                 f"End: {_format_datetime_for_hover(row['expected_end_time'])}<br>"
@@ -242,14 +270,14 @@ def create_chart5_figure(
         # Create one Bar trace for this machine with multiple segments
         fig.add_trace(
             go.Bar(
-                y=[machine_name]
-                * len(base_times),  # Same machine name for all segments
+                y=[display_name] * len(base_times),  # Use display name with state
                 base=base_times,  # Array of start times
                 x=durations,  # Array of durations
                 orientation="h",
                 marker_color=colors,  # Array of colors for each segment
-                name=machine_name,
+                name=display_name,
                 text=batch_texts,  # Array of batch numbers
+                # textfont=dict(size=12),
                 textposition="inside",
                 insidetextanchor="middle",
                 hovertext=hover_texts,  # Array of hover texts
@@ -281,18 +309,18 @@ def create_chart5_figure(
         x=now_numeric,
         line_width=2,
         line_dash="dash",
-        line_color="red",
-        annotation_text=current_lang_opts["current_time_label"],
-        annotation_position="top right",
-        annotation_font_size=10,
-        annotation_font_color="red",
+        line_color="#fdfefe",
+        # annotation_text=current_lang_opts["current_time_label"],
+        # annotation_position="top right",
+        # annotation_font_size=10,
+        # annotation_font_color="red",
     )
 
     fig.update_layout(
         title_text=f"{current_lang_opts['main_title']} - {period}",
         title_x=0.5,
-        xaxis_title=current_lang_opts["time_axis_title"],
-        yaxis_title=current_lang_opts["machine_axis_title"],
+        # xaxis_title=current_lang_opts["time_axis_title"],
+        # yaxis_title=current_lang_opts["machine_axis_title"],
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#fdfefe",
@@ -394,12 +422,25 @@ def create_chart5_figure(
     fig.update_yaxes(
         type="category",
         categoryorder="array",
-        categoryarray=unique_machines[::-1],
+        categoryarray=machine_display_names[::-1],
         showline=True,
         linewidth=1,
         linecolor="#fdfefe",
         showgrid=False,
         tickfont=dict(color="#fdfefe", size=10),
+    )
+
+    # Update y-axis tick colors based on machine states
+    fig.update_layout(
+        yaxis=dict(
+            tickmode="array",
+            tickvals=list(range(len(machine_display_names))),
+            ticktext=[
+                f'<span style="color:{machine_state_colors[i]}">{name}</span>'
+                for i, name in enumerate(machine_display_names[::-1])
+            ],
+            tickfont=dict(size=14),
+        )
     )
 
     return fig
