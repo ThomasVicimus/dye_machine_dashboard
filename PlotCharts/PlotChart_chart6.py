@@ -30,7 +30,7 @@ def create_chart6_layout(
         )
         initial_figure.update_layout(
             autosize=True,
-            height=500,  # Much bigger height for the figure
+            height=None,
             margin=dict(l=10, r=10, t=10, b=80),  # More bottom margin for legend
             # Move legend to bottom
             legend=dict(
@@ -49,17 +49,17 @@ def create_chart6_layout(
                 # Row 1: Combined cards
                 html.Div(
                     combined_cards,
-                    style={"height": "60px", "marginBottom": "10px"},
+                    style={"marginBottom": "10px"},
                 ),
-                # Row 2: Figure (much bigger)
+                # Row 2: Figure (responsive)
                 html.Div(
                     dcc.Graph(
                         id=chart_id,
                         figure=initial_figure,
                         config={"displayModeBar": False, "responsive": True},
-                        style={"width": "100%", "height": "500px"},
+                        style={"width": "100%", "height": "100%"},
                     ),
-                    style={"height": "500px"},
+                    style={"height": "calc(100% - 80px)", "minHeight": "300px"},
                 ),
             ],
             style={"height": "100%"},
@@ -96,7 +96,7 @@ def create_chart6_layout(
         )
         initial_figure.update_layout(
             autosize=True,
-            height=400,  # Bigger height for mobile too
+            height=None,
             margin=dict(l=10, r=10, t=10, b=80),
             # Move legend to bottom for mobile
             legend=dict(
@@ -115,20 +115,21 @@ def create_chart6_layout(
                 # Card1
                 html.Div(
                     dbc.Card(card1, className="mb-2"),
-                    style={"height": "150px"},
+                    style={"minHeight": "150px"},
                 ),
                 # Combined cards
                 html.Div(
                     combined_cards,
-                    style={"height": "60px", "marginBottom": "10px"},
+                    style={"marginBottom": "10px"},
                 ),
                 # Figure
                 dcc.Graph(
                     id=chart_id,
                     figure=initial_figure,
                     style={
-                        "height": "400px",  # Bigger height for mobile
+                        "height": "100%",
                         "width": "100%",
+                        "minHeight": "300px",
                     },
                     config={"displayModeBar": False, "responsive": True},
                 ),
@@ -201,7 +202,7 @@ def create_chart6_detailed_layout(
     main_figure = create_chart6_figure(default_period, dfs)
     main_figure.update_layout(
         autosize=True,
-        height=240,  # Height for the subplot area
+        height=None,
         margin=dict(l=5, r=5, t=5, b=5),
     )
 
@@ -211,7 +212,7 @@ def create_chart6_detailed_layout(
             # Row 1: Combined cards
             html.Div(
                 combined_cards,
-                style={"height": "60px", "marginBottom": "10px"},
+                style={"marginBottom": "10px"},
             ),
             # Row 2: Main figure
             html.Div(
@@ -219,9 +220,9 @@ def create_chart6_detailed_layout(
                     id=f"{chart_id}-main",
                     figure=main_figure,
                     config={"displayModeBar": False, "responsive": True},
-                    style={"height": "230px", "width": "100%"},
+                    style={"height": "100%", "width": "100%"},
                 ),
-                style={"height": "230px"},
+                style={"height": "calc(100% - 80px)", "minHeight": "200px"},
             ),
         ],
         style={"height": "300px"},
