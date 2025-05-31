@@ -509,3 +509,101 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
         logger.info(
             f"Cards {chart_id} callbacks registered (using initially loaded data)."
         )
+
+
+def register_auto_refresh_callbacks(app, mobile=False, lang: str = "zh_cn"):
+    """Registers callbacks for automatic refresh of the data store every 60 seconds.
+    The existing callbacks will automatically update charts and text cards when the data store changes.
+    """
+    from Database.fetch_all_charts_data import get_all_charts_data
+    from Database.database_connection import db
+    from Database.serialize_df import serialize_dataframe_dict
+
+    INTERVAL_ID = "mobile-interval"
+    ALL_CHART_DATA_STORE_ID = "all-chart-data-store"
+
+    @app.callback(
+        # Only update the data store - let existing callbacks handle UI updates
+        Output(ALL_CHART_DATA_STORE_ID, "data"),
+        Input(INTERVAL_ID, "n_intervals"),
+        prevent_initial_call=True,
+    )
+    def auto_refresh_data_store(n_intervals):
+        """Auto refresh the data store with fresh data from database every 60 seconds.
+        This will trigger all existing callbacks to update their respective components.
+        """
+        logger.info(f"Auto refresh triggered - interval {n_intervals}")
+
+        try:
+            # Fetch fresh data from database
+            fresh_charts_data = get_all_charts_data(db)
+
+            # Serialize the fresh data for storage
+            serialized_fresh_data = {
+                key: serialize_dataframe_dict(df)
+                for key, df in fresh_charts_data.items()
+            }
+
+            logger.info("Fresh data fetched and serialized successfully")
+            logger.info(
+                "Data store updated - existing callbacks will handle UI updates"
+            )
+
+            return serialized_fresh_data
+
+        except Exception as e:
+            logger.error(
+                f"Auto refresh: Critical error during data fetch: {e}", exc_info=True
+            )
+
+            # Keep the existing data in store (don't update it)
+            from dash import no_update
+
+            return no_update
+
+    logger.info("Auto refresh data store callback registered.")
+
+
+def register_chart2_data_refresh_callback(app, mobile=False, lang: str = "zh_cn"):
+    """Registers callback for chart-2 DataTable data refresh when data store changes."""
+
+    @app.callback(
+        [Output("chart-2", "data"), Output("chart-2", "columns")],
+        Input("all-chart-data-store", "data"),
+        prevent_initial_call=True,
+    )
+    def update_chart2_data(all_chart_data):
+        """Update chart-2 DataTable data and columns when data store changes."""
+        try:
+            # Get chart-2 data from the store
+            chart2_data_serialized = all_chart_data.get("chart-2-data-store")
+
+            if not chart2_data_serialized:
+                logger.warning("Chart2 data refresh: No data found in store")
+                return [], []
+
+            # Deserialize the data
+            chart2_data = deserialize_dataframe_dict(chart2_data_serialized)
+
+            # Get the appropriate data for mobile/desktop
+            mobile_option = "mobile" if mobile else "desktop"
+            df = chart2_data.get(mobile_option, {}).get("all_machine", None)
+
+            if df is None or df.empty:
+                logger.warning("Chart2 data refresh: Empty dataframe")
+                return [], []
+
+            # Convert to table format
+            table_data = df.to_dict("records")
+            table_columns = [{"name": i, "id": i} for i in df.columns]
+
+            logger.info("Chart2 data refresh: Successfully updated data and columns")
+            return table_data, table_columns
+
+        except Exception as e:
+            logger.error(
+                f"Chart2 data refresh: Error updating data: {e}", exc_info=True
+            )
+            return [], []
+
+    logger.info("Chart2 data refresh callback registered.")

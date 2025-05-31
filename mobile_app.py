@@ -6,7 +6,11 @@ import dash_bootstrap_components as dbc
 from user_agents import parse
 import logging
 import os
-from callbacks.select_time_period_callback import register_time_period_callbacks
+from callbacks.select_time_period_callback import (
+    register_time_period_callbacks,
+    register_auto_refresh_callbacks,
+    register_chart2_data_refresh_callback,
+)
 from callbacks.select_theme_callback import register_theme_callbacks
 from Database.fetch_all_charts_data import *
 from layouts.mobile_dashboard_layout import create_mobile_layout
@@ -55,11 +59,21 @@ register_theme_callbacks(
     default_color="black",
     default_lang="zh_cn",
 )
+register_auto_refresh_callbacks(
+    app=mobile_app,
+    mobile=True,
+    lang="zh_cn",
+)
 register_table_click_url_push(app=mobile_app)
 register_detail_page_callbacks(
     app=mobile_app,
     # chart_id="chart-1",
     default_period="今日",
+    lang="zh_cn",
+)
+register_chart2_data_refresh_callback(
+    app=mobile_app,
+    mobile=True,
     lang="zh_cn",
 )
 # register_chart2_detail_callback(app=mobile_app)
