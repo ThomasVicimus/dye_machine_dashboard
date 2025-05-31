@@ -273,7 +273,7 @@ def create_chart6_figure(
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#fdfefe"),
-        height=500,
+        autosize=True,
     )
 
     # Find the maximum value across all data to ensure consistent y-axis scaling
@@ -286,17 +286,17 @@ def create_chart6_figure(
 
     # Update x and y axes for both subplots with consistent scaling
     fig.update_yaxes(
-        title_text="Hours",
-        title_font_color="#fdfefe",
-        tickfont=dict(color="#fdfefe"),
+        # title_text="Hours",
+        # title_font_color="#fdfefe",
+        # tickfont=dict(color="#fdfefe"),
         range=[0, y_max],  # Set same range for both subplots
         row=1,
         col=1,
     )
     fig.update_yaxes(
-        title_text="Hours",
-        title_font_color="#fdfefe",
-        tickfont=dict(color="#fdfefe"),
+        # title_text="Hours",
+        # title_font_color="#fdfefe",
+        # tickfont=dict(color="#fdfefe"),
         range=[0, y_max],  # Set same range for both subplots
         row=1,
         col=2,
@@ -435,7 +435,8 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             "textAlign": "center",
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "height": "300px",  # Large height to span full column
+            "height": "100%",
+            "minHeight": "200px",
             "padding": "20px",
             "display": "flex",
             "flexDirection": "column",
@@ -472,7 +473,8 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         style={
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "height": "50px",
+            "height": "auto",
+            "maxHeight": "50px",
             "padding": "4px",
         },
     )
@@ -506,7 +508,8 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         style={
             "backgroundColor": "#202020",
             "fontSize": 14,
-            "height": "50px",
+            "height": "auto",
+            "maxHeight": "50px",
             "padding": "4px",
         },
     )
@@ -524,7 +527,7 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             ),
         ],
         className="mb-2 g-2",
-        style={"height": "60px"},
+        style={"height": "auto", "maxHeight": "60px"},
     )
 
     return card1, combined_cards
