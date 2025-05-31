@@ -6,7 +6,11 @@ import dash_bootstrap_components as dbc
 from user_agents import parse
 import logging
 import os
-from callbacks.select_time_period_callback import register_time_period_callbacks
+from callbacks.select_time_period_callback import (
+    register_time_period_callbacks,
+    register_chart5_timeframe_callbacks,
+    register_txt_cards_callbacks,
+)
 
 # from callbacks.detail_page_callbacks import register_mobile_page_callbacks
 from callbacks.select_theme_callback import register_theme_callbacks
@@ -51,12 +55,23 @@ register_time_period_callbacks(
     mobile=False,
     lang="zh_cn",
 )
+register_chart5_timeframe_callbacks(
+    app=desktop_app,
+    mobile=False,
+    lang="zh_cn",
+)
 register_theme_callbacks(
     app=desktop_app,
     default_color="black",
     default_lang="zh_cn",
 )
 register_chart2_page_turner(desktop_app)
+
+register_txt_cards_callbacks(
+    app=desktop_app,
+    mobile=False,
+    lang="zh_cn",
+)
 
 # register_mobile_page_callbacks(
 #     app=desktop_app,
