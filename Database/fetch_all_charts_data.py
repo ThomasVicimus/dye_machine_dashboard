@@ -21,6 +21,7 @@ def get_all_charts_data(db) -> dict:
         "chart-3-data-store": get_chart3_data(db),
         "chart-4-data-store": get_chart4_data(db),
         "chart-5-data-store": get_chart5_data(db),
+        "chart-6-data-store": get_chart6_data(db),
     }
     # No serialization here, done inside get_MachineUsage_data
     return dfs
@@ -406,3 +407,189 @@ def get_chart5_data(db) -> dict:
         results[option] = {"all_machine": df}
 
     return results
+
+
+def get_chart6_data(db) -> dict:
+    """
+    Get stop reasons data from the database for chart 6.
+
+    For each period:
+    1. Drop columns: central_id, central_name, period, date, refresh_time, write_time, if exists
+    2. Pick the machine_avg, the machine with order_index = 1
+    3. For order_index = 0, pick the machine with highest sum_hour and lowest sum_hour
+    4. Also, get the count of machine with order_index = 0
+    5. df_overall is [machine_avg['sum_hour'], machine_avg['sum_hour']/machine_count]
+    6. For highest & lowest machine, pick the top 5 reason, among all columns starts with 'reason' of each machine, drop the rest of the
+    columns, except machine name and the top 5 reasons
+    7. Put them into {period: {avg: machine_avg, highest: machine_highest, lowest: machine_lowest}}
+    """
+    dfs = {}
+
+    # Load replace yml using unicode decode
+    with open("sql/1_machine_usage_replace.yml", "r", encoding="utf-8") as f:
+        replace_dict = yaml.safe_load(f)
+
+    # Load SQL file
+    sql_file_path = "sql/6_stop_reason.sql"
+    with open(sql_file_path, "r", encoding="utf-8") as f:
+        sql_commands = f.read()
+
+    # Process each period
+    for period in replace_dict["period_replace"]:
+        try:
+            # Replace period in SQL query
+            Q = sql_commands.format(period_replace=period)
+            df = db.execute_query(Q)
+
+            if df is None or df.empty:
+                logger.warning(f"Chart6: No data returned for period {period}")
+                continue
+
+            # Step 1: Drop specified columns if they exist
+            columns_to_drop = [
+                "central_id",
+                "central_name",
+                "period",
+                "date",
+                "refresh_time",
+                "write_time",
+            ]
+            existing_columns_to_drop = [
+                col for col in columns_to_drop if col in df.columns
+            ]
+            if existing_columns_to_drop:
+                df = df.drop(columns=existing_columns_to_drop)
+
+            # Step 2: Get machine_avg (order_index = 1)
+            machine_avg = (
+                df[df["order_index"] == 1].copy()
+                if "order_index" in df.columns
+                else df.copy()
+            )
+            machine_all = (
+                df[df["order_index"] == 0].copy()
+                if "order_index" in df.columns
+                else df.copy()
+            )
+
+            # Step 3 & 4: For order_index = 0, get highest and lowest sum_hour machines and count
+            if "order_index" in df.columns and 0 in df["order_index"].values:
+                order_0_machines = df[df["order_index"] == 0].copy()
+                machine_count = len(order_0_machines)
+
+                if (
+                    not order_0_machines.empty
+                    and "sum_hour" in order_0_machines.columns
+                ):
+                    # Highest sum_hour machine
+                    highest_machine = (
+                        order_0_machines.loc[order_0_machines["sum_hour"].idxmax()]
+                        .to_frame()
+                        .T
+                    )
+                    # Lowest sum_hour machine
+                    lowest_machine = (
+                        order_0_machines.loc[order_0_machines["sum_hour"].idxmin()]
+                        .to_frame()
+                        .T
+                    )
+                else:
+                    highest_machine = pd.DataFrame()
+                    lowest_machine = pd.DataFrame()
+            else:
+                machine_count = len(df) if not df.empty else 0
+                # If no order_index = 0, use the data as is for highest/lowest
+                if not df.empty and "sum_hour" in df.columns:
+                    highest_machine = df.loc[df["sum_hour"].idxmax()].to_frame().T
+                    lowest_machine = df.loc[df["sum_hour"].idxmin()].to_frame().T
+                else:
+                    highest_machine = pd.DataFrame()
+                    lowest_machine = pd.DataFrame()
+
+            # Step 5: Create df_overall
+            if not machine_avg.empty and "sum_hour" in machine_avg.columns:
+                avg_sum_hour = machine_avg["sum_hour"].mean()
+                avg_per_machine = (
+                    avg_sum_hour / machine_count if machine_count > 0 else 0
+                )
+                df_overall = pd.DataFrame(
+                    {
+                        "total_sum_hour": [avg_sum_hour],
+                        "avg_per_machine": [avg_per_machine],
+                        "machine_count": [machine_count],
+                    }
+                )
+            else:
+                df_overall = pd.DataFrame()
+
+            # Step 6: For highest & lowest machine, pick top 5 reasons
+            def process_machine_reasons(machine_df):
+                if machine_df.empty:
+                    return machine_df
+
+                # Find columns that start with 'reason'
+                reason_columns = [
+                    col for col in machine_df.columns if col.startswith("reason")
+                ]
+
+                if not reason_columns:
+                    # If no reason columns, return machine_name and sum_hour if available
+                    keep_cols = ["machine_name"]
+                    if "sum_hour" in machine_df.columns:
+                        keep_cols.append("sum_hour")
+                    return machine_df[keep_cols] if keep_cols else machine_df
+
+                # Get top 5 reasons by value for each machine
+                processed_machines = []
+                for idx, row in machine_df.iterrows():
+                    # Start with basic machine data
+                    machine_data = {"machine_name": row.get("machine_name", "Unknown")}
+                    if "sum_hour" in row:
+                        machine_data["sum_hour"] = row["sum_hour"]
+
+                    # Get reason values and sort them
+                    reason_values = {}
+                    for col in reason_columns:
+                        if pd.notna(row[col]) and row[col] != 0:
+                            reason_values[col] = row[col]
+
+                    # Sort by value and take top 5
+                    top_reasons = sorted(
+                        reason_values.items(), key=lambda x: x[1], reverse=True
+                    )[:5]
+
+                    # Add top 5 reason columns with their original names and values
+                    for reason_col, value in top_reasons:
+                        machine_data[reason_col] = value
+
+                    processed_machines.append(machine_data)
+
+                return pd.DataFrame(processed_machines)
+
+            highest_processed = process_machine_reasons(highest_machine)
+            lowest_processed = process_machine_reasons(lowest_machine)
+
+            # Step 7: Store in the result dictionary
+            dfs[period] = {
+                "all_machine": machine_all,
+                "highest": highest_processed,
+                "lowest": lowest_processed,
+                "overall": df_overall,
+            }
+
+            logger.info(f"Chart6: Successfully processed data for period {period}")
+
+        except Exception as e:
+            logger.error(
+                f"Chart6: Error processing data for period {period}: {str(e)}",
+                exc_info=True,
+            )
+            # Create empty dataframes for this period
+            dfs[period] = {
+                "all_machine": pd.DataFrame(),
+                "highest": pd.DataFrame(),
+                "lowest": pd.DataFrame(),
+                "overall": pd.DataFrame(),
+            }
+
+    return dfs
