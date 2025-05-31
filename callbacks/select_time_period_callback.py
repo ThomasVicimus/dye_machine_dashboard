@@ -7,12 +7,21 @@ import logging
 import pandas as pd
 from Database.serialize_df import deserialize_dataframe_dict
 from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
-from ChartFactory.chartfactory_chart3 import create_chart3_figure
+from ChartFactory.chartfactory_chart3 import (
+    create_chart3_figure,
+    create_chart3_txt_cards,
+)
 from ChartFactory.chartfactory_chart4 import (
     create_chart4_figure,
     create_chart4_figure_mobile,
 )
 from ChartFactory.chart_factory_chart5 import create_chart5_figure
+from ChartFactory.chartfactory_chart6 import (
+    create_chart6_figure,
+    create_chart6_figure_mobile,
+    create_chart6_txt_cards,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +202,13 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "chart_titles": "Machine Waste",
             "margin": dict(l=10, r=10, t=55, b=10),
         },
+        "chart-6": {
+            "CHART_ID": "chart-6",
+            "chart_factory_desktop": create_chart6_figure,
+            "chart_factory_mobile": create_chart6_figure_mobile,
+            "chart_titles": "Idle Time",
+            "margin": dict(l=10, r=10, t=55, b=10),
+        },
     }
 
     """Registers callbacks for all charts defined in charts_var."""
@@ -366,4 +382,130 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
 
         logger.info(
             f"Chart {CHART_ID} callbacks registered (using initially loaded data)."
+        )
+
+
+def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
+    """Registers callbacks for updating text cards when time period changes."""
+    PERIOD_STORE_ID = "time-period-store"
+
+    # Configuration for charts with text cards
+    txt_cards_config = {
+        "chart-3": {
+            "card_ids": ["chart3-card-1", "chart3-card-2", "chart3-card-3"],
+            "card_factory": create_chart3_txt_cards,
+            "num_cards": 3,
+        },
+        "chart-6": {
+            "card_ids": ["chart6-card-1"],  # Only chart6-card-1 exists in the layout
+            "card_factory": create_chart6_txt_cards,
+            "num_cards": 1,  # Only updating 1 card (the large card1)
+        },
+    }
+
+    # Register callbacks for each chart's text cards
+    for chart_id, config in txt_cards_config.items():
+        card_factory = config["card_factory"]
+        card_ids = config["card_ids"]
+        num_cards = config["num_cards"]
+
+        @app.callback(
+            [Output(card_id, "children") for card_id in card_ids],
+            Input(PERIOD_STORE_ID, "data"),
+            Input("all-chart-data-store", "data"),
+            prevent_initial_call=True,
+        )
+        def update_txt_cards(
+            selected_period,
+            all_chart_data,
+            chart_id=chart_id,
+            card_factory=card_factory,
+            num_cards=num_cards,
+        ):
+            # Get the specific chart's data from all_chart_data
+            chart_specific_data_serialized = all_chart_data.get(
+                f"{chart_id}-data-store"
+            )
+
+            if not chart_specific_data_serialized:
+                logger.warning(
+                    f"Cards {chart_id}: No data found in store key '{chart_id}-data-store'"
+                )
+                error_card = html.Div("No data available")
+                return [error_card] * num_cards
+
+            logger.info(
+                f"Cards {chart_id}: Serialized data received: {chart_specific_data_serialized.keys()}"
+            )
+
+            # Deserialize the specific chart's data
+            deserialized_chart_data = None
+            try:
+                deserialized_chart_data = deserialize_dataframe_dict(
+                    chart_specific_data_serialized
+                )
+                logger.info(f"Cards {chart_id}: Deserialization successful.")
+                logger.debug(
+                    f"Cards {chart_id}: Deserialized data: {deserialized_chart_data.keys()}"
+                )
+            except Exception as e:
+                logger.error(
+                    f'Cards {chart_id}: Exception during deserialization for store key "{chart_id}-data-store": {e}',
+                    exc_info=True,
+                )
+
+            logger.info(
+                f"Cards {chart_id}: Updating cards for period: {selected_period} using initially loaded data."
+            )
+
+            # Handle cases where initial data loading might have failed or deserialization failed
+            if deserialized_chart_data is None or (
+                isinstance(deserialized_chart_data, dict)
+                and "error" in deserialized_chart_data
+            ):
+                error_msg_detail = (
+                    "Deserialization resulted in None"
+                    if deserialized_chart_data is None
+                    else deserialized_chart_data.get(
+                        "error", "Unknown deserialization error"
+                    )
+                )
+                error_msg = (
+                    deserialized_chart_data.get(
+                        "error", "Initial data load or deserialization failed"
+                    )
+                    if isinstance(deserialized_chart_data, dict)
+                    else "Initial data load or deserialization failed"
+                )
+                logger.warning(
+                    f"Cards {chart_id}: Cannot update cards. Reason: {error_msg_detail}. Serialized data was: {chart_specific_data_serialized}"
+                )
+                error_card = html.Div(f"Error: {error_msg}")
+                return [error_card] * num_cards
+
+            try:
+                # Create the updated cards using the deserialized data and the selected period
+                updated_cards = card_factory(
+                    selected_period,
+                    deserialized_chart_data,
+                )
+
+                # Handle chart-6 special case: factory returns 2 cards but we only update 1
+                if chart_id == "chart-6":
+                    # Return only the first card (card1 - the large overview card)
+                    return [updated_cards[0]]
+                else:
+                    # Return all cards as a list (they come as tuple from factory functions)
+                    return list(updated_cards)
+
+            except Exception as e:
+                logger.error(
+                    f"Cards {chart_id}: Error generating cards for period {selected_period} from initial data: {e}",
+                    exc_info=True,
+                )
+                error_card = html.Div(f"Error generating cards for {selected_period}")
+                return [error_card] * num_cards
+
+        logger.info(
+            f"Cards {chart_id} callbacks registered (using initially loaded data)."
         )
