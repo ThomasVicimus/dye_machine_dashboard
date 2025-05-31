@@ -1,0 +1,25 @@
+# Minimal requirements for Dye Machine Dashboard
+# This file contains only the main packages - dependencies will be installed automatically
+
+# Web Framework
+dash==3.0.2
+dash-bootstrap-components==2.0.0
+flask-socketio==5.5.1
+
+# Data Processing
+pandas==2.2.3
+plotly==6.0.1
+
+# Database
+pymysql==1.1.1
+sqlalchemy==2.0.40
+
+# Scheduling
+apscheduler==3.11.0
+
+# Utilities
+user-agents==2.2.0
+pyyaml==6.0.2
+
+# Windows-specific (if needed)
+win-inet-pton==1.1.0; sys_platform == "win32" 
