@@ -10,6 +10,8 @@ from callbacks.select_time_period_callback import (
     register_time_period_callbacks,
     register_chart5_timeframe_callbacks,
     register_txt_cards_callbacks,
+    register_auto_refresh_callbacks,
+    register_chart2_data_refresh_callback,
 )
 
 # from callbacks.detail_page_callbacks import register_mobile_page_callbacks
@@ -68,6 +70,18 @@ register_theme_callbacks(
 register_chart2_page_turner(desktop_app)
 
 register_txt_cards_callbacks(
+    app=desktop_app,
+    mobile=False,
+    lang="zh_cn",
+)
+
+register_auto_refresh_callbacks(
+    app=desktop_app,
+    mobile=False,
+    lang="zh_cn",
+)
+
+register_chart2_data_refresh_callback(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
