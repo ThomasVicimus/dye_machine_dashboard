@@ -185,6 +185,32 @@ def create_chart4_figure(
         )
         return _create_error_figure(f"Unexpected Data Error for Chart4: {period}")
 
+    # Calculate maximum y-value across all categories for unified y-axis scaling
+    metrics_db_keys = ["water_ton", "power_kwh", "steam_ton"]
+    max_y_value_overall = 0.0
+
+    for df in [avg_df, best_df, worst_df]:
+        if (
+            df is not None
+            and not df.empty
+            and all(col in df.columns for col in metrics_db_keys)
+        ):
+            try:
+                for key in metrics_db_keys:
+                    raw_value = df[key].iloc[0]
+                    val = pd.to_numeric(raw_value, errors="coerce")
+                    if pd.notna(val):
+                        max_y_value_overall = max(max_y_value_overall, val)
+            except (IndexError, Exception) as e:
+                logger.debug(f"Error processing values for y-axis scaling: {e}")
+                continue
+
+    # Add 10% padding to the maximum value for better visualization
+    if max_y_value_overall > 0:
+        max_y_value_overall *= 1.1
+    else:
+        max_y_value_overall = 1.0  # Default minimum range if no valid data
+
     # Construct subplot titles, adding machine names if available
     subplot_titles_text = [
         f"{period} {current_lang_opts['subplot_title'][0]}",  # Average
@@ -283,11 +309,7 @@ def create_chart4_figure(
     # Update subplot titles appearance
     fig.update_annotations(font_family="Arial, sans-serif")
 
-    # Style axes for all subplots
-    max_y_value_overall = 0  # To potentially unify y-axes if desired, though not strictly required by prompt
-    # Find max y value for consistent y-axis scaling if desired in future
-    # For now, each subplot y-axis will autorange based on its data.
-
+    # Style axes for all subplots with unified y-axis range
     for i in range(1, 4):  # For columns 1, 2, 3
         fig.update_xaxes(
             row=1,
@@ -312,13 +334,8 @@ def create_chart4_figure(
             zerolinewidth=1,
             zerolinecolor="rgba(128,128,128,0.2)",
             tickfont=dict(color="#fdfefe"),
-            rangemode="tozero",  # Ensure y-axis starts at 0
+            range=[0, max_y_value_overall],  # Unified y-axis range
         )
-
-    # If a shared y-axis range is desired, calculate max_y_value_overall
-    # from all 'values' in _add_bar_traces_for_category_subplot calls
-    # and then use fig.update_yaxes(range=[0, max_y_value_overall * 1.1]) for all subplots.
-    # For now, using autorange per subplot.
 
     return fig
 
@@ -550,6 +567,31 @@ def create_chart4_figure_detail(
     if legend_font_size:
         summary_fig_height += legend_font_size + 30  # Add space for legend at bottom
 
+    # Calculate maximum y-value across all categories for unified y-axis scaling in summary
+    max_y_value_summary = 0.0
+
+    for df in [avg_df, best_df, worst_df]:
+        if (
+            df is not None
+            and not df.empty
+            and all(col in df.columns for col in metrics_db_keys)
+        ):
+            try:
+                for key in metrics_db_keys:
+                    raw_value = df[key].iloc[0]
+                    val = pd.to_numeric(raw_value, errors="coerce")
+                    if pd.notna(val):
+                        max_y_value_summary = max(max_y_value_summary, val)
+            except (IndexError, Exception) as e:
+                logger.debug(f"Error processing values for summary y-axis scaling: {e}")
+                continue
+
+    # Add 10% padding to the maximum value for better visualization
+    if max_y_value_summary > 0:
+        max_y_value_summary *= 1.1
+    else:
+        max_y_value_summary = 1.0  # Default minimum range if no valid data
+
     s_title_avg = f"{period} {current_lang_opts['subplot_title'][0]}"
     s_title_best = f"{period} {current_lang_opts['subplot_title'][1]}"
     s_title_worst = f"{period} {current_lang_opts['subplot_title'][2]}"
@@ -613,7 +655,7 @@ def create_chart4_figure_detail(
     fig_summary.update_annotations(
         font_size=subplot_title_font_size
     )  # For subplot titles
-    for c_idx in range(1, 4):  # Axes for summary fig
+    for c_idx in range(1, 4):  # Axes for summary fig with unified y-axis scaling
         fig_summary.update_xaxes(
             row=1,
             col=c_idx,
@@ -633,7 +675,7 @@ def create_chart4_figure_detail(
             gridcolor="rgba(128,128,128,0.2)",
             zeroline=True,
             tickfont=dict(color="#fdfefe"),
-            rangemode="tozero",
+            range=[0, max_y_value_summary],  # Unified y-axis range for summary
         )
     output_figures.append(fig_summary)
 
