@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class DatabaseConnection:
     def __init__(self, credentials_path="env/db_credentials.yml"):
-        """Initialize database connection with credentials from YAML file."""
+        """Initialize MS SQL Server database connection with credentials from YAML file."""
         self.credentials = self._load_credentials(credentials_path)
         self.engine = self._create_engine()
 
@@ -35,105 +35,100 @@ class DatabaseConnection:
             raise
 
     def _create_engine(self):
-        """Create SQLAlchemy engine with connection pooling for MySQL or SQL Server."""
+        """Create SQLAlchemy engine with connection pooling for MS SQL Server."""
         try:
-            db_type = self.credentials.get("database_type", "mysql").lower()
+            # Get ODBC driver preference from credentials, default to ODBC Driver 18
+            driver = self.credentials.get("driver", "ODBC Driver 18 for SQL Server")
 
-            if db_type == "sqlserver" or db_type == "mssql":
-                connection_string = self._create_sqlserver_connection_string()
-                connect_args = {
-                    "timeout": 30,
-                    "autocommit": True,
-                    "fast_executemany": True,  # Improves performance for bulk operations
-                }
-            else:  # Default to MySQL
-                connection_string = self._create_mysql_connection_string()
-                connect_args = {"charset": "utf8mb4", "use_unicode": True}
+            # Build connection string for SQL Server
+            server = self.credentials["host"]
+            port = self.credentials.get("port", 1433)
+            database = self.credentials["database"]
+            username = self.credentials["username"]
+            password = self.credentials["password"]
+
+            # Additional connection parameters to handle WinError 10054
+            connection_params = {
+                "DRIVER": driver,
+                "SERVER": f"{server},{port}",
+                "DATABASE": database,
+                "UID": username,
+                "PWD": password,
+                "TrustServerCertificate": "yes",  # Important for TLS issues
+                "Connection Timeout": "30",
+                "Command Timeout": "30",
+                "ApplicationIntent": "ReadWrite",
+                "ConnectRetryCount": "3",
+                "ConnectRetryInterval": "10",
+                "Encrypt": "yes",  # Force encryption
+                "MultipleActiveResultSets": "False",
+                "Packet Size": "4096",
+            }
+
+            # Add authentication method
+            auth_method = self.credentials.get("authentication", "sql")
+            if auth_method.lower() == "windows":
+                connection_params["Trusted_Connection"] = "yes"
+                # Remove username/password for Windows auth
+                del connection_params["UID"]
+                del connection_params["PWD"]
+
+            # Build connection string
+            connection_string_parts = []
+            for key, value in connection_params.items():
+                connection_string_parts.append(f"{key}={value}")
+
+            connection_string = ";".join(connection_string_parts)
+            quoted_conn_str = urllib.parse.quote_plus(connection_string)
+
+            # Create SQLAlchemy connection URL
+            sqlalchemy_url = f"mssql+pyodbc:///?odbc_connect={quoted_conn_str}"
+
+            logger.info(
+                f"Connecting to SQL Server: {server}:{port}, Database: {database}"
+            )
 
             return create_engine(
-                connection_string,
+                sqlalchemy_url,
                 poolclass=QueuePool,
                 pool_size=5,
                 max_overflow=10,
                 pool_timeout=30,
-                pool_recycle=1800,
-                pool_pre_ping=True,  # Important for detecting stale connections
-                echo=self.credentials.get("echo", False),
-                connect_args=connect_args,
+                pool_recycle=1800,  # Recycle connections every 30 minutes
+                pool_pre_ping=True,  # Verify connections before use
+                echo=False,
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30,
+                },
+                execution_options={"isolation_level": "READ_COMMITTED"},
             )
         except Exception as e:
-            logger.error(f"Error creating database engine: {e}")
+            logger.error(f"Error creating SQL Server database engine: {e}")
             raise
-
-    def _create_mysql_connection_string(self):
-        """Create MySQL connection string."""
-        return (
-            f"mysql+pymysql://{self.credentials['username']}:{self.credentials['password']}@"
-            f"{self.credentials['host']}:{self.credentials.get('port', 3306)}/"
-            f"{self.credentials['database']}?charset=utf8mb4"
-        )
-
-    def _create_sqlserver_connection_string(self):
-        """Create SQL Server connection string with proper error handling for WinError 10054."""
-        driver = self.credentials.get("driver", "ODBC Driver 18 for SQL Server")
-        port = self.credentials.get("port", 1433)
-
-        # Handle different authentication methods
-        if self.credentials.get("trusted_connection", False):
-            # Windows Authentication
-            connection_params = (
-                f"DRIVER={{{driver}}};"
-                f"SERVER={self.credentials['host']},{port};"
-                f"DATABASE={self.credentials['database']};"
-                f"Trusted_Connection=yes;"
-            )
-        else:
-            # SQL Server Authentication
-            connection_params = (
-                f"DRIVER={{{driver}}};"
-                f"SERVER={self.credentials['host']},{port};"
-                f"DATABASE={self.credentials['database']};"
-                f"UID={self.credentials['username']};"
-                f"PWD={self.credentials['password']};"
-            )
-
-        # Add additional parameters to prevent WinError 10054
-        additional_params = [
-            "TrustServerCertificate=yes",  # Bypass certificate validation
-            "Encrypt=yes",  # Force encryption
-            "Connection Timeout=30",  # Connection timeout
-            "Command Timeout=30",  # Command timeout
-            "APP=SQLAlchemy",  # Application name for monitoring
-        ]
-
-        # Add optional parameters from credentials
-        if self.credentials.get("mars_connection", True):
-            additional_params.append("MARS_Connection=yes")
-
-        connection_params += ";".join(additional_params)
-
-        # URL encode the connection string
-        quoted = urllib.parse.quote_plus(connection_params)
-        return f"mssql+pyodbc:///?odbc_connect={quoted}"
 
     def connect(self):
         """Establish database connection and return a connection object."""
         try:
             conn = self.engine.connect()
-            db_type = self.credentials.get("database_type", "mysql").lower()
-            logger.info(f"Connected to {db_type} database successfully")
+            logger.info("Connected to SQL Server database successfully")
             return conn
         except SQLAlchemyError as e:
-            logger.error(f"Error while connecting to database: {e}")
-            # Add specific handling for WinError 10054
-            if "10054" in str(e) or "Connection reset by peer" in str(e):
+            logger.error(f"Error while connecting to SQL Server database: {e}")
+            # Log specific error codes that might help with debugging
+            if "10054" in str(e):
                 logger.error(
-                    "Connection reset error (10054) detected. This may be due to:"
+                    "WinError 10054 detected - Connection was forcibly closed by remote host"
                 )
-                logger.error("1. TLS/SSL protocol mismatch")
-                logger.error("2. Outdated ODBC driver")
-                logger.error("3. Network connectivity issues")
-                logger.error("Consider updating to ODBC Driver 18 for SQL Server")
+                logger.error(
+                    "This may be due to TLS/SSL configuration, firewall, or network issues"
+                )
+            elif "18456" in str(e):
+                logger.error("SQL Server login failed - Check username/password")
+            elif "2" in str(e):
+                logger.error(
+                    "SQL Server not found - Check server name and network connectivity"
+                )
             raise
 
     def close(self, conn):
@@ -141,9 +136,23 @@ class DatabaseConnection:
         try:
             if conn:
                 conn.close()
-                logger.info("Database connection closed")
+                logger.info("SQL Server database connection closed")
         except SQLAlchemyError as e:
-            logger.error(f"Error closing database connection: {e}")
+            logger.error(f"Error closing SQL Server database connection: {e}")
+
+    @contextmanager
+    def get_connection(self):
+        """Context manager for database connections."""
+        conn = None
+        try:
+            conn = self.connect()
+            yield conn
+        except Exception as e:
+            logger.error(f"Error in database connection context: {e}")
+            raise
+        finally:
+            if conn:
+                self.close(conn)
 
     def execute_sql_file(self, sql_filepath_or_query, params=None):
         """Execute SQL commands from a file or raw query and return results as a DataFrame."""
@@ -160,17 +169,15 @@ class DatabaseConnection:
             if params:
                 sql_commands = sql_commands.format(**params)
 
-            with self.engine.connect() as conn:
-                result = pd.read_sql(text(sql_commands), conn)
+            with self.get_connection() as conn:
+                result = pd.read_sql(text(sql_commands), conn, params=params)
                 return result
 
         except SQLAlchemyError as e:
             logger.error(f"Error executing SQL: {e}")
-            if "10054" in str(e):
-                logger.error(
-                    "Connection reset during SQL execution. Retrying with new connection..."
-                )
-                # Optionally implement retry logic here
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error executing SQL: {e}")
             raise
 
     def comment_out_line(self, sql_filepath, keyword):
@@ -194,41 +201,50 @@ class DatabaseConnection:
     def execute_query(self, query, params=None):
         """Execute a raw SQL query and return results as a DataFrame."""
         try:
-            with self.engine.connect() as conn:
+            with self.get_connection() as conn:
                 result = pd.read_sql(text(query), conn, params=params)
                 return result
         except SQLAlchemyError as e:
             logger.error(f"Error executing query: {e}")
-            if "10054" in str(e):
-                logger.error(
-                    "Connection reset during query execution. Check network stability and TLS configuration."
-                )
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error executing query: {e}")
+            raise
+
+    def execute_non_query(self, query, params=None):
+        """Execute a non-query SQL command (INSERT, UPDATE, DELETE) and return affected rows."""
+        try:
+            with self.get_connection() as conn:
+                result = conn.execute(text(query), params or {})
+                conn.commit()
+                return result.rowcount
+        except SQLAlchemyError as e:
+            logger.error(f"Error executing non-query: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error executing non-query: {e}")
             raise
 
     def test_connection(self):
-        """Test database connection and return connection info."""
+        """Test the database connection and return connection info."""
         try:
-            with self.engine.connect() as conn:
-                db_type = self.credentials.get("database_type", "mysql").lower()
-
-                if db_type in ["sqlserver", "mssql"]:
-                    # Test query for SQL Server
-                    result = conn.execute(
-                        text("SELECT @@VERSION as version, @@SERVERNAME as server_name")
+            with self.get_connection() as conn:
+                result = conn.execute(
+                    text(
+                        "SELECT @@VERSION as version, @@SERVERNAME as server_name, DB_NAME() as database_name"
                     )
-                    row = result.fetchone()
-                    logger.info(f"SQL Server Version: {row.version}")
-                    logger.info(f"Server Name: {row.server_name}")
-                else:
-                    # Test query for MySQL
-                    result = conn.execute(text("SELECT VERSION() as version"))
-                    row = result.fetchone()
-                    logger.info(f"MySQL Version: {row.version}")
-
-                return True
+                )
+                info = result.fetchone()
+                logger.info(f"Connection test successful: {info}")
+                return {
+                    "version": info[0],
+                    "server_name": info[1],
+                    "database_name": info[2],
+                    "status": "Connected",
+                }
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
-            return False
+            return {"status": "Failed", "error": str(e)}
 
 
 # Create a singleton instance
@@ -236,48 +252,45 @@ db = DatabaseConnection()
 
 # Example usage:
 if __name__ == "__main__":
-    conn = None
     try:
         # Test connection first
-        if db.test_connection():
-            logger.info("Database connection test successful")
+        connection_info = db.test_connection()
+        print("Connection Info:", connection_info)
 
-        # Connect to database
-        conn = db.connect()
+        if connection_info["status"] == "Connected":
+            dfs = {}
 
-        dfs = {}
-        # Check if sql directory exists
-        if os.path.exists("sql"):
-            # load all sql files that start with a number
-            for file in os.listdir("sql"):
-                if re.match(r"^\d+", file) and file.endswith(".sql"):
-                    file_name = file.split(".")[0]
+            # Check if sql directory exists
+            if os.path.exists("sql"):
+                # Load all SQL files that start with a number
+                for file in os.listdir("sql"):
+                    if re.match(r"^\d+", file) and file.endswith(".sql"):
+                        file_name = file.split(".")[0]
 
-                    # Check if replace file exists
-                    replace_file = f"sql/{file_name}_replace.yml"
-                    if os.path.exists(replace_file):
-                        # load replace yml using unicode decode
-                        with open(replace_file, "r", encoding="utf-8") as f:
-                            replace_dict = yaml.safe_load(f)
+                        # Check if replace file exists
+                        replace_file = f"sql/{file_name}_replace.yml"
+                        if os.path.exists(replace_file):
+                            # Load replace dictionary
+                            with open(replace_file, "r", encoding="utf-8") as f:
+                                replace_dict = yaml.safe_load(f)
 
-                        # replace parameters in sql file
-                        with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
-                            sql_commands = sql_file.read()
-                        sql_commands = sql_commands.format(**replace_dict)
-                    else:
-                        # Load SQL file without parameter replacement
-                        with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
-                            sql_commands = sql_file.read()
+                            # Load and process SQL file
+                            with open(f"sql/{file}", "r", encoding="utf-8") as sql_file:
+                                sql_commands = sql_file.read()
 
-                    dfs[file] = db.execute_query(sql_commands)
-                    logger.info(f"Executed SQL file: {file}")
+                            sql_commands = sql_commands.format(**replace_dict)
+                            dfs[file] = db.execute_query(sql_commands)
+                        else:
+                            # Execute SQL file without replacements
+                            dfs[file] = db.execute_sql_file(f"sql/{file}")
 
-            print(f"Processed {len(dfs)} SQL files")
+                print("Query results:", dfs)
+            else:
+                logger.warning("SQL directory not found. Skipping SQL file execution.")
         else:
-            logger.warning("SQL directory not found")
+            logger.error(
+                "Database connection failed. Please check your credentials and server configuration."
+            )
 
     except Exception as e:
         logger.error(f"Error in database operations: {e}")
-    finally:
-        if conn:
-            db.close(conn)
