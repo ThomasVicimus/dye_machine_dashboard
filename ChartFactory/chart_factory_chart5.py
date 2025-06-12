@@ -209,8 +209,8 @@ def create_chart5_figure(
 
     fig = go.Figure()
     # TODO change back to now
-    # now = pd.Timestamp("2025-04-07 05:00:00")
-    now = pd.Timestamp.now()
+    now = pd.Timestamp("2025-04-07 05:00:00")
+    # now = pd.Timestamp.now()
 
     # Group activities by machine and create one trace per machine
     unique_machines = df["machine_name"].unique().tolist()
@@ -274,6 +274,7 @@ def create_chart5_figure(
                 base=base_times,  # Array of start times
                 x=durations,  # Array of durations
                 orientation="h",
+                width=0.7,
                 marker_color=colors,  # Array of colors for each segment
                 name=display_name,
                 text=batch_texts,  # Array of batch numbers
