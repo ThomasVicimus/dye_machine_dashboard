@@ -209,8 +209,8 @@ def create_chart5_figure(
 
     fig = go.Figure()
     # TODO change back to now
-    now = pd.Timestamp("2025-04-07 05:00:00")
-    # now = pd.Timestamp.now()
+    # now = pd.Timestamp("2025-04-07 05:00:00")
+    now = pd.Timestamp.now()
 
     # Group activities by machine and create one trace per machine
     unique_machines = df["machine_name"].unique().tolist()
