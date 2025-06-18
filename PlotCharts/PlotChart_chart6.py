@@ -97,44 +97,62 @@ def create_chart6_layout(
         initial_figure.update_layout(
             autosize=True,
             height=None,
-            margin=dict(l=10, r=10, t=10, b=80),
-            # Move legend to bottom for mobile
+            margin=dict(l=10, r=10, t=10, b=80),  # More bottom margin for legend
+            # Move legend to bottom
             legend=dict(
-                orientation="h",
+                orientation="h",  # Horizontal orientation
                 yanchor="top",
-                y=-0.2,
+                y=-0.2,  # Position below the plot
                 xanchor="center",
                 x=0.5,
                 font=dict(color="#fdfefe"),
             ),
         )
 
-        # For mobile, stack everything vertically
-        mobile_layout = html.Div(
+        # Create the combined right side (cards + figure)
+        combined_fig = html.Div(
             [
-                # Card1
-                html.Div(
-                    dbc.Card(card1, className="mb-2"),
-                    style={"minHeight": "150px"},
-                ),
-                # Combined cards
+                # Row 1: Combined cards
                 html.Div(
                     combined_cards,
                     style={"marginBottom": "10px"},
                 ),
-                # Figure
-                dcc.Graph(
-                    id=chart_id,
-                    figure=initial_figure,
-                    style={
-                        "height": "100%",
-                        "width": "100%",
-                        "minHeight": "300px",
-                    },
-                    config={"displayModeBar": False, "responsive": True},
+                # Row 2: Figure (responsive)
+                html.Div(
+                    dcc.Graph(
+                        id=chart_id,
+                        figure=initial_figure,
+                        config={"displayModeBar": False, "responsive": True},
+                        style={"width": "100%", "height": "100%"},
+                    ),
+                    style={"height": "calc(100% - 80px)", "minHeight": "300px"},
                 ),
             ],
-            style={"height": "100%", "overflowY": "auto"},
+            style={"height": "100%"},
+        )
+
+        # Create the main 2-column layout
+        mobile_layout = dbc.Row(
+            [
+                # Column 1: Large card1
+                dbc.Col(
+                    dbc.Card(
+                        card1,
+                        id="chart6-card-1",
+                        className="h-100",
+                    ),
+                    width=4,
+                    style={"height": "100%"},
+                ),
+                # Column 2: Combined cards + figure
+                dbc.Col(
+                    combined_fig,
+                    width=8,
+                    style={"height": "100%"},
+                ),
+            ],
+            className="h-100 g-2",
+            style={"height": "100%"},
         )
 
         return dcc.Link(
