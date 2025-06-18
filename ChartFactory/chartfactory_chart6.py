@@ -161,7 +161,7 @@ def create_chart6_figure(
             else "Unknown"
         )
 
-        # Get all reason columns (excluding machine_name and sum_hour)
+        # Get all reason columns (excluding machine_name and idle_hour)
         reason_columns = [col for col in df_highest.columns if col.startswith("reason")]
 
         for reason_col in reason_columns:
@@ -185,7 +185,7 @@ def create_chart6_figure(
             else "Unknown"
         )
 
-        # Get all reason columns (excluding machine_name and sum_hour)
+        # Get all reason columns (excluding machine_name and idle_hour)
         reason_columns = [col for col in df_lowest.columns if col.startswith("reason")]
 
         for reason_col in reason_columns:
@@ -354,11 +354,11 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         )
 
     # Extract data for card1 from overall dataframe
-    total_sum_hour = 0
-    avg_per_machine = 0
+    # total_idle_hour = 0
+    # avg_per_machine = 0
 
     if not df_overall.empty:
-        total_sum_hour = df_overall.iloc[0].get("total_sum_hour", 0)
+        total_idle_hour = df_overall.iloc[0].get("total_idle_hour", 0)
         avg_per_machine = df_overall.iloc[0].get("avg_per_machine", 0)
 
     # Extract data for cards 2 and 3
@@ -368,14 +368,14 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     lowest_machine_hours = 0
 
     # Get data from highest machine
-    if not df_highest.empty and "sum_hour" in df_highest.columns:
+    if not df_highest.empty and "idle_hour" in df_highest.columns:
         highest_machine_name = df_highest.iloc[0].get("machine_name", "Unknown")
-        highest_machine_hours = df_highest.iloc[0].get("sum_hour", 0)
+        highest_machine_hours = df_highest.iloc[0].get("idle_hour", 0)
 
     # Get data from lowest machine
-    if not df_lowest.empty and "sum_hour" in df_lowest.columns:
+    if not df_lowest.empty and "idle_hour" in df_lowest.columns:
         lowest_machine_name = df_lowest.iloc[0].get("machine_name", "Unknown")
-        lowest_machine_hours = df_lowest.iloc[0].get("sum_hour", 0)
+        lowest_machine_hours = df_lowest.iloc[0].get("idle_hour", 0)
 
     # * Card1 - Overall Statistics (Large card)
     card1 = dbc.CardBody(
@@ -400,7 +400,7 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
                         },
                     ),
                     html.Div(
-                        f"{round(total_sum_hour, 1)}h",
+                        f"{round(total_idle_hour, 1)}h",
                         style={
                             "color": "#2ecc71",
                             "fontSize": 24,
@@ -678,10 +678,10 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
     # ----- Subsequent Figures : Machines (3 per row) ----- #
     machines_per_row_fig = 3
 
-    # Sort machines – by 'sum_hour' descending if available, else by name
-    if "sum_hour" in df_all_machine.columns:
+    # Sort machines – by 'idle_hour' descending if available, else by name
+    if "idle_hour" in df_all_machine.columns:
         df_sorted = df_all_machine.sort_values(
-            by=["sum_hour", "machine_name"], ascending=[False, True]
+            by=["idle_hour", "machine_name"], ascending=[False, True]
         ).reset_index(drop=True)
     else:
         df_sorted = df_all_machine.sort_values(by=["machine_name"]).reset_index(

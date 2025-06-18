@@ -467,6 +467,8 @@ def get_chart6_data(db) -> dict:
             if existing_columns_to_drop:
                 df = df.drop(columns=existing_columns_to_drop)
 
+            df["idle_hour"] = df["sum_hour"] - df["run_hour"]
+
             # Step 2: Get machine_avg (order_index = 1)
             machine_avg = (
                 df[df["order_index"] == 1].copy()
@@ -479,24 +481,24 @@ def get_chart6_data(db) -> dict:
                 else df.copy()
             )
 
-            # Step 3 & 4: For order_index = 0, get highest and lowest sum_hour machines and count
+            # Step 3 & 4: For order_index = 0, get highest and lowest idle_hour machines and count
             if "order_index" in df.columns and 0 in df["order_index"].values:
                 order_0_machines = df[df["order_index"] == 0].copy()
                 machine_count = len(order_0_machines)
 
                 if (
                     not order_0_machines.empty
-                    and "sum_hour" in order_0_machines.columns
+                    and "idle_hour" in order_0_machines.columns
                 ):
-                    # Highest sum_hour machine
+                    # Highest idle_hour machine
                     highest_machine = (
-                        order_0_machines.loc[order_0_machines["sum_hour"].idxmax()]
+                        order_0_machines.loc[order_0_machines["idle_hour"].idxmax()]
                         .to_frame()
                         .T
                     )
-                    # Lowest sum_hour machine
+                    # Lowest idle_hour machine
                     lowest_machine = (
-                        order_0_machines.loc[order_0_machines["sum_hour"].idxmin()]
+                        order_0_machines.loc[order_0_machines["idle_hour"].idxmin()]
                         .to_frame()
                         .T
                     )
@@ -506,23 +508,25 @@ def get_chart6_data(db) -> dict:
             else:
                 machine_count = len(df) if not df.empty else 0
                 # If no order_index = 0, use the data as is for highest/lowest
-                if not df.empty and "sum_hour" in df.columns:
-                    highest_machine = df.loc[df["sum_hour"].idxmax()].to_frame().T
-                    lowest_machine = df.loc[df["sum_hour"].idxmin()].to_frame().T
+                if not df.empty and "idle_hour" in df.columns:
+                    highest_machine = df.loc[df["idle_hour"].idxmax()].to_frame().T
+                    lowest_machine = df.loc[df["idle_hour"].idxmin()].to_frame().T
                 else:
                     highest_machine = pd.DataFrame()
                     lowest_machine = pd.DataFrame()
 
             # Step 5: Create df_overall
-            if not machine_avg.empty and "sum_hour" in machine_avg.columns:
-                avg_sum_hour = machine_avg["sum_hour"].mean()
-                avg_per_machine = (
-                    avg_sum_hour / machine_count if machine_count > 0 else 0
-                )
+            if not machine_avg.empty and "idle_hour" in machine_avg.columns:
+                total_idle_hour = order_0_machines["idle_hour"].sum()
+                avg_idle_hour = total_idle_hour / machine_count
+                # avg_idle_hour = machine_avg["idle_hour"].mean()
+                # avg_per_machine = (
+                #     avg_idle_hour / machine_count if machine_count > 0 else 0
+                # )
                 df_overall = pd.DataFrame(
                     {
-                        "total_sum_hour": [avg_sum_hour],
-                        "avg_per_machine": [avg_per_machine],
+                        "total_idle_hour": [total_idle_hour],
+                        "avg_per_machine": [avg_idle_hour],
                         "machine_count": [machine_count],
                     }
                 )
@@ -540,10 +544,10 @@ def get_chart6_data(db) -> dict:
                 ]
 
                 if not reason_columns:
-                    # If no reason columns, return machine_name and sum_hour if available
+                    # If no reason columns, return machine_name and idle_hour if available
                     keep_cols = ["machine_name"]
-                    if "sum_hour" in machine_df.columns:
-                        keep_cols.append("sum_hour")
+                    if "idle_hour" in machine_df.columns:
+                        keep_cols.append("idle_hour")
                     return machine_df[keep_cols] if keep_cols else machine_df
 
                 # Get top 5 reasons by value for each machine
@@ -551,8 +555,8 @@ def get_chart6_data(db) -> dict:
                 for idx, row in machine_df.iterrows():
                     # Start with basic machine data
                     machine_data = {"machine_name": row.get("machine_name", "Unknown")}
-                    if "sum_hour" in row:
-                        machine_data["sum_hour"] = row["sum_hour"]
+                    if "idle_hour" in row:
+                        machine_data["idle_hour"] = row["idle_hour"]
 
                     # Get reason values and sort them
                     reason_values = {}
