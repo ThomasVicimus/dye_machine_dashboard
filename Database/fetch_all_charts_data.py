@@ -250,9 +250,9 @@ def get_chart3_data(db) -> dict:
     ].copy()
 
     return {
-        "今日": {"all_machine": df_7days_processed.copy()},
+        "今天": {"all_machine": df_7days_processed.copy()},
         "本周": {"all_machine": df_7days_processed.copy()},
-        "上月": {"all_machine": df_30days_processed.copy()},
+        "本月": {"all_machine": df_30days_processed.copy()},
     }
 
 
@@ -261,9 +261,9 @@ def _create_empty_chart3_data() -> dict:
     empty_df = pd.DataFrame(columns=["date", "machine_name", "mmdd", "weight_kg"])
     logger.error("Chart 3: Empty data in use.")
     return {
-        "今日": {"all_machine": empty_df.copy()},
+        "今天": {"all_machine": empty_df.copy()},
         "本周": {"all_machine": empty_df.copy()},
-        "上月": {"all_machine": empty_df.copy()},
+        "本月": {"all_machine": empty_df.copy()},
     }
 
 

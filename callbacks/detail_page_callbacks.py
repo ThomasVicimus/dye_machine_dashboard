@@ -32,7 +32,7 @@ charts_var = {
             {}, lang=lang
         ).create_machine_usage_chart_mobile_all_machine,  # Create factory instance for callbacks
         "chart_title": "设备使用率",
-        "default_period": "今日",
+        "default_period": "今天",
     },
     "chart-2": {
         "CHART_ID": "chart-2",
@@ -44,13 +44,13 @@ charts_var = {
         "CHART_ID": "chart-3",
         "chart_factory": create_chart3_figure_detail,
         "chart_title": "生产量",
-        "default_period": "今日",
+        "default_period": "今天",
     },
     "chart-4": {
         "CHART_ID": "chart-4",
         "chart_factory": create_chart4_figure_detail,
         "chart_title": "资源消耗",
-        "default_period": "今日",
+        "default_period": "今天",
     },
     "chart-5": {
         "CHART_ID": "chart-5",
@@ -62,7 +62,7 @@ charts_var = {
         "CHART_ID": "chart-6",
         "chart_factory": create_chart6_figure_detail,
         "chart_title": "设备停机原因",
-        "default_period": "今日",
+        "default_period": "今天",
     },
 }
 

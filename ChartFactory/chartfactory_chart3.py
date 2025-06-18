@@ -239,7 +239,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
         )
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    if period == "今日":
+    if period == "今天":
         df = df[df["date"] == df["date"].max()]
     # * Card1
     total_prod = df["weight_kg"].sum()

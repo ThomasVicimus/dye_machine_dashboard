@@ -81,7 +81,7 @@ def create_chart6_figure(
     Creates two side-by-side vertical bar charts showing stop reasons for highest and lowest machines.
 
     Args:
-        period (str): The key for the period in the dfs dictionary (e.g., "今日").
+        period (str): The key for the period in the dfs dictionary (e.g., "今天").
         dfs (Dict[str, Dict[str, pd.DataFrame]]): A nested dictionary containing DataFrames.
             Expected structure: dfs[period]['highest'] and dfs[period]['lowest'] should be the target DataFrames.
 
