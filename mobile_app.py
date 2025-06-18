@@ -8,6 +8,8 @@ import logging
 import os
 from callbacks.select_time_period_callback import (
     register_time_period_callbacks,
+    register_chart5_timeframe_callbacks,
+    register_txt_cards_callbacks,
     register_auto_refresh_callbacks,
     register_chart2_data_refresh_callback,
 )
@@ -68,10 +70,20 @@ register_table_click_url_push(app=mobile_app)
 register_detail_page_callbacks(
     app=mobile_app,
     # chart_id="chart-1",
-    default_period="今日",
+    # default_period="今日",
     lang="zh_cn",
 )
 register_chart2_data_refresh_callback(
+    app=mobile_app,
+    mobile=True,
+    lang="zh_cn",
+)
+register_chart5_timeframe_callbacks(
+    app=mobile_app,
+    mobile=True,
+    lang="zh_cn",
+)
+register_txt_cards_callbacks(
     app=mobile_app,
     mobile=True,
     lang="zh_cn",
