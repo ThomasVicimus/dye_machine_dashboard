@@ -304,17 +304,21 @@ def get_chart4_data(db) -> pd.DataFrame:
 
         best = (
             df[df["order_index"] == 1]
-            .sort_values(by="water_ton", ascending=False)
+            .sort_values(by=["steam_ton", "power_kwh", "water_ton"], ascending=True)
             .iloc[0:1]
         )
         worst = (
             df[df["order_index"] == 1]
-            .sort_values(by="water_ton", ascending=True)
+            .sort_values(by=["steam_ton", "power_kwh", "water_ton"], ascending=False)
             .iloc[0:1]
         )
         all_machine = df[df["order_index"] == 1].sort_values(
-            by="water_ton", ascending=True
+            by=["steam_ton", "power_kwh", "water_ton"], ascending=True
         )
+        for col in ["water_ton", "power_kwh", "steam_ton"]:
+            for df_label in [best, worst, all_machine]:
+                df_label[col] = df_label[col].fillna(0)
+
         dfs[period] = {
             "avg": avg,
             "best": best,
@@ -329,6 +333,8 @@ def get_avg_chart4(df):
     # * calculate the average of each cols in the df in form of df
     mask = df["order_index"] == 1
     _df = df[mask]
+    for col in ["water_ton", "power_kwh", "steam_ton"]:
+        _df[col] = _df[col].fillna(0)
     df_avg = pd.DataFrame(
         columns=["water_ton", "power_kwh", "steam_ton", "period", "machine_name"]
     )
