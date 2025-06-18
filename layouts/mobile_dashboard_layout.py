@@ -4,6 +4,8 @@ from PlotCharts.PlotChart_MachineUsage import create_chart1_layout
 from PlotCharts.PlotChart_MachineStatus import create_chart2_layout
 from PlotCharts.PlotChart_chart3 import create_chart3_layout
 from PlotCharts.PlotChart_chart4 import create_chart4_layout
+from PlotCharts.PlotChart_chart5 import create_chart5_layout
+from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -48,15 +50,15 @@ def create_mobile_layout(
             dbc.Container(
                 id="mobile-rotated-content",
                 children=[
-                    dbc.Row(
-                        dbc.Col(
-                            html.H2(
-                                "Mobile Dashboard",
-                                className="text-center pt-1 pb-0",
-                            ),
-                            width=12,
-                        )
-                    ),
+                    # dbc.Row(
+                    #     dbc.Col(
+                    #         html.H2(
+                    #             "Mobile Dashboard",
+                    #             className="text-center pt-1 pb-0",
+                    #         ),
+                    #         width=12,
+                    #     )
+                    # ),
                     dbc.Row(
                         [
                             dbc.Col(
@@ -139,6 +141,38 @@ def create_mobile_layout(
                                         dfs=initial_charts_data["chart-4-data-store"],
                                         mobile=True,
                                         chart_id="chart-4",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
+                            ),
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart5_layout(
+                                        default_period="24_hrs",
+                                        dfs=initial_charts_data["chart-5-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-5",
+                                    ),
+                                    body=True,
+                                    style={
+                                        "height": "40vh",
+                                        "backgroundColor": "transparent",
+                                    },
+                                ),
+                                width=4,
+                            ),
+                            dbc.Col(
+                                dbc.Card(
+                                    create_chart6_layout(
+                                        default_period=default_period,
+                                        dfs=initial_charts_data["chart-6-data-store"],
+                                        mobile=True,
+                                        chart_id="chart-6",
                                     ),
                                     body=True,
                                     style={

@@ -207,7 +207,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "chart_factory_desktop": create_chart6_figure,
             "chart_factory_mobile": create_chart6_figure_mobile,
             "chart_titles": "Idle Time",
-            "margin": dict(l=10, r=10, t=55, b=10),
+            "margin": dict(l=10, r=10, t=10, b=80),
         },
     }
 
@@ -369,6 +369,18 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
                         height=None,
                         margin=margin,  # Use the captured margin
                     )
+                    # Ensure legend placement for chart-6 matches the initial configuration
+                    if chart_id == "chart-6":
+                        new_figure.update_layout(
+                            legend=dict(
+                                orientation="h",
+                                yanchor="top",
+                                y=-0.2,  # Match initial layout legend position
+                                xanchor="center",
+                                x=0.5,
+                                font=dict(color="#fdfefe"),
+                            )
+                        )
                 return new_figure
 
             except Exception as e:
