@@ -231,9 +231,10 @@ def get_chart3_data(db) -> dict:
     )
 
     # Reindex to ensure all date-machine combinations exist, fill missing weights with random number
-    # TODO: fill with 0.0
     df_30days = df_indexed["weight_kg"].reindex(
-        multi_idx, fill_value=np.random.randint(20, 200)
+        # multi_idx, fill_value=np.random.randint(20, 200)
+        multi_idx,
+        fill_value=0,
     )
     df_30days = df_30days.reset_index()  # 'date' and 'machine_name' become columns
 
