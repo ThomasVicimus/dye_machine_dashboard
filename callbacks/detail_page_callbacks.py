@@ -7,6 +7,8 @@ from ChartFactory.chart_factory_MachineUasge import MachineUsageChart
 from ChartFactory.chartfactory_chart2 import create_chart2_figure_detail
 from ChartFactory.chartfactory_chart3 import create_chart3_figure_detail
 from ChartFactory.chartfactory_chart4 import create_chart4_figure_detail
+from ChartFactory.chart_factory_chart5 import create_chart5_figure
+from ChartFactory.chartfactory_chart6 import create_chart6_figure_detail
 from dash.dependencies import ALL
 from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
@@ -30,21 +32,37 @@ charts_var = {
             {}, lang=lang
         ).create_machine_usage_chart_mobile_all_machine,  # Create factory instance for callbacks
         "chart_title": "设备使用率",
+        "default_period": "今日",
     },
     "chart-2": {
         "CHART_ID": "chart-2",
         "chart_factory": create_chart2_figure_detail,
         "chart_title": "总覽表",
+        "default_period": "desktop",
     },
     "chart-3": {
         "CHART_ID": "chart-3",
         "chart_factory": create_chart3_figure_detail,
         "chart_title": "生产量",
+        "default_period": "今日",
     },
     "chart-4": {
         "CHART_ID": "chart-4",
         "chart_factory": create_chart4_figure_detail,
         "chart_title": "资源消耗",
+        "default_period": "今日",
+    },
+    "chart-5": {
+        "CHART_ID": "chart-5",
+        "chart_factory": create_chart5_figure,
+        "chart_title": "设备活动时间线",
+        "default_period": "48_hrs",
+    },
+    "chart-6": {
+        "CHART_ID": "chart-6",
+        "chart_factory": create_chart6_figure_detail,
+        "chart_title": "设备停机原因",
+        "default_period": "今日",
     },
 }
 
@@ -93,7 +111,7 @@ def register_table_click_url_push(app, url_id="mobile-url"):
 
 def register_detail_page_callbacks(
     app,
-    default_period,
+    # default_period,
     lang: str = "zh_cn",
 ):
     """Registers callbacks for mobile page routing and detailed chart display.
@@ -124,9 +142,10 @@ def register_detail_page_callbacks(
         Output("mobile-page-content", "children"),
         Input("mobile-url", "pathname"),
         State(PERIOD_STORE_ID, "data"),  # Must match the store ID in the layout
+        State("chart5-timeframe-store", "data"),
         State("all-chart-data-store", "data"),
     )
-    def display_page(pathname, period_data, all_chart_data):
+    def display_page(pathname, period_data, chart5_timeframe_data, all_chart_data):
         """
         Handle URL routing to display different pages based on pathname
 
@@ -152,12 +171,27 @@ def register_detail_page_callbacks(
 
         chart_factory = entry["chart_factory"]
         chart_title = entry["chart_title"]
+        # default_period = entry["default_period"]
         # IMPORTANT: Period data debugging
         if period_data is None:
             logger.fatal(
                 f"DETAIL DEBUG: ⚠️ CRITICAL: period_data is None! This indicates a store access issue."
             )
+        if chart5_timeframe_data is None:
+            logger.fatal(
+                f"DETAIL DEBUG: ⚠️ CRITICAL: chart5_timeframe_data is None! This indicates a store access issue."
+            )
+        if all_chart_data is None:
+            logger.fatal(
+                f"DETAIL DEBUG: ⚠️ CRITICAL: all_chart_data is None! This indicates a store access issue."
+            )
 
+        if chart_id == "chart-5":
+            data_key = chart5_timeframe_data
+        elif chart_id == "chart-2":
+            data_key = "desktop"
+        else:
+            data_key = period_data
         # Check if we have the expected PERIOD_STORE_ID in the layout
         logger.info(
             f"DETAIL DEBUG: Using PERIOD_STORE_ID={PERIOD_STORE_ID} to access store data"
@@ -172,31 +206,31 @@ def register_detail_page_callbacks(
 
         # --- Generic Detailed View ---
         try:
-            if "desktop" in chart_data.keys():
-                period = "desktop"
-            elif period_data in chart_data.keys():
-                period = period_data
-            # IMPORTANT: Always check if the period exists in the data
-            if chart_data and isinstance(chart_data, dict) and period not in chart_data:
-                logger.fatal(
-                    f"DETAIL DEBUG: Selected period {period} not found in chart_data! Available periods: {list(chart_data.keys())}"
-                )
-                # If the selected period doesn't exist in the data, use the first available period
-                if chart_data and isinstance(chart_data, dict) and len(chart_data) > 0:
-                    period = list(chart_data.keys())[0]
-                    logger.warning(
-                        f"DETAIL DEBUG: Falling back to first available period: {period}"
-                    )
-                else:
-                    # Last resort fallback
-                    period = default_period
-                    logger.warning(
-                        f"DETAIL DEBUG: Falling back to default period: {period}"
-                    )
+            # if "desktop" in chart_data.keys():
+            #     period = "desktop"
+            # elif period_data in chart_data.keys():
+            #     period = period_data
+            # # IMPORTANT: Always check if the period exists in the data
+            # if chart_data and isinstance(chart_data, dict) and period not in chart_data:
+            #     logger.fatal(
+            #         f"DETAIL DEBUG: Selected period {period} not found in chart_data! Available periods: {list(chart_data.keys())}"
+            #     )
+            #     # If the selected period doesn't exist in the data, use the first available period
+            #     if chart_data and isinstance(chart_data, dict) and len(chart_data) > 0:
+            #         period = list(chart_data.keys())[0]
+            #         logger.warning(
+            #             f"DETAIL DEBUG: Falling back to first available period: {period}"
+            #         )
+            #     else:
+            #         # Last resort fallback
+            #         period = default_period
+            #         logger.warning(
+            #             f"DETAIL DEBUG: Falling back to default period: {period}"
+            #         )
 
-            logger.info(
-                f"DETAIL DEBUG: Final period being used={period}, from store={period_data}, default={default_period}"
-            )
+            # logger.info(
+            #     f"DETAIL DEBUG: Final period being used={period}, from store={period_data}, default={default_period}"
+            # )
 
             # Deserialize the chart data
 
@@ -223,7 +257,7 @@ def register_detail_page_callbacks(
                     f"DETAIL DEBUG: Creating table component for {chart_id} with chart_factory"
                 )
                 table_component = chart_factory(
-                    deserialized_chart_data["desktop"]["all_machine"]
+                    deserialized_chart_data[data_key]["all_machine"]
                 )
                 graph_components = [
                     dbc.Row(
@@ -239,7 +273,7 @@ def register_detail_page_callbacks(
                 logger.info(
                     f"DETAIL DEBUG: Creating detail figure for {chart_id} with chart_factory"
                 )
-                figures = chart_factory(period=period, dfs=deserialized_chart_data)
+                figures = chart_factory(period=data_key, dfs=deserialized_chart_data)
                 logger.info(
                     f"DETAIL DEBUG: Got {len(figures) if isinstance(figures, list) else 1} figures"
                 )
