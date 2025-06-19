@@ -327,6 +327,7 @@ def create_chart5_figure(
         font_color="#fdfefe",
         margin=dict(t=margin_top, b=margin_bottom, l=margin_left, r=margin_right),
         showlegend=False,
+        barcornerradius=50,
     )
 
     num_unique_machines = len(unique_machines)
