@@ -47,7 +47,7 @@ mobile_app.layout = create_mobile_layout(
     initial_charts_data=data,
     color_theme="black",
     lang="zh_cn",
-    default_period="今日",
+    default_period="今天",
 )
 
 
@@ -70,7 +70,7 @@ register_table_click_url_push(app=mobile_app)
 register_detail_page_callbacks(
     app=mobile_app,
     # chart_id="chart-1",
-    # default_period="今日",
+    # default_period="今天",
     lang="zh_cn",
 )
 register_chart2_data_refresh_callback(

@@ -327,6 +327,7 @@ def create_chart5_figure(
         font_color="#fdfefe",
         margin=dict(t=margin_top, b=margin_bottom, l=margin_left, r=margin_right),
         showlegend=False,
+        barcornerradius=50,
     )
 
     num_unique_machines = len(unique_machines)
@@ -387,15 +388,70 @@ def create_chart5_figure(
         if min_time_boundary <= t <= max_time_boundary
     ]
 
-    # Ensure the range itself is covered if ticks are sparse
-    if not custom_tickvals or custom_tickvals[0] > min_time_numeric:
-        custom_tickvals.insert(0, min_time_numeric)
-        custom_ticktext.insert(0, min_time_boundary.strftime(tick_format_str))
-    if (
+    # Helper to determine if a datetime is aligned to the current tick frequency
+    def _is_boundary_aligned(dt: datetime, freq_str: str) -> bool:
+        """Return True if *dt* falls exactly on a tick boundary determined by *freq_str*."""
+        try:
+            freq_str = freq_str.strip()
+            # Minute-based frequency, e.g. "15min"
+            if freq_str.lower().endswith("min"):
+                interval_min = int(freq_str[:-3])
+                return (
+                    dt.second == 0
+                    and dt.microsecond == 0
+                    and dt.minute % interval_min == 0
+                )
+            # Hour-based frequency, e.g. "H", "2H", "3H", "6H", "12H"
+            if freq_str.upper().endswith("H"):
+                hours_part = freq_str[:-1]
+                interval_hr = int(hours_part) if hours_part else 1
+                return (
+                    dt.minute == 0
+                    and dt.second == 0
+                    and dt.microsecond == 0
+                    and dt.hour % interval_hr == 0
+                )
+        except Exception:
+            # Any parsing issue → treat as not aligned
+            pass
+        return False
+
+    include_max_boundary = _is_boundary_aligned(max_time_boundary, tick_freq_str)
+
+    # ----- MIN BOUNDARY TICK HANDLING -----
+    # Always consider the min boundary tick (e.g. 12 h before *now*). Add it unless the
+    # next tick is closer than 1 hour, in which case we skip it to avoid overlapping labels.
+    ONE_HOUR_MS = 3600 * 1000
+
+    if min_time_numeric not in custom_tickvals:
+        if not custom_tickvals:
+            # No other ticks – simply add the boundary tick.
+            custom_tickvals.insert(0, min_time_numeric)
+            custom_ticktext.insert(0, min_time_boundary.strftime(tick_format_str))
+        else:
+            distance_to_next = custom_tickvals[0] - min_time_numeric
+            if distance_to_next >= ONE_HOUR_MS:
+                custom_tickvals.insert(0, min_time_numeric)
+                custom_ticktext.insert(0, min_time_boundary.strftime(tick_format_str))
+
+    # ----- MAX BOUNDARY TICK HANDLING -----
+    # Keep existing behaviour: add only if boundary aligns with tick frequency & it's missing.
+    if include_max_boundary and (
         not custom_tickvals or custom_tickvals[-1] < max_time_numeric
-    ):  # check custom_tickvals again
+    ):
         custom_tickvals.append(max_time_numeric)
         custom_ticktext.append(max_time_boundary.strftime(tick_format_str))
+
+    # Ensure at least one tick exists; if the list became empty for some reason, fall back to
+    # the nearest aligned tick after the min boundary to guarantee visible ticks.
+    if not custom_tickvals:
+        fallback_tick = (
+            min_time_boundary + (max_time_boundary - min_time_boundary) / 2
+        ).timestamp() * 1000
+        custom_tickvals = [fallback_tick]
+        custom_ticktext = [
+            datetime.fromtimestamp(fallback_tick / 1000).strftime(tick_format_str)
+        ]
 
     # Remove duplicate tick values that might arise from adding boundaries
     final_ticks = {}

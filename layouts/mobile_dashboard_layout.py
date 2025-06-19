@@ -16,7 +16,7 @@ def create_mobile_layout(
     initial_charts_data: dict,
     color_theme,
     lang,
-    default_period: str = "今日",
+    default_period: str = "今天",
 ):
     """Creates the main mobile dashboard layout structure with clickable charts.
 

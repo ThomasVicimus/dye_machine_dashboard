@@ -47,7 +47,7 @@ desktop_app.layout = create_desktop_layout(
     initial_charts_data=data,
     color_theme="black",
     lang="zh_cn",
-    default_period="今日",
+    default_period="今天",
 )
 
 
@@ -90,7 +90,7 @@ register_chart2_data_refresh_callback(
 # register_mobile_page_callbacks(
 #     app=desktop_app,
 #     chart_id="chart-1",
-#     default_period="今日",
+#     default_period="今天",
 #     lang="zh_cn",
 # )
 if __name__ == "__main__":
