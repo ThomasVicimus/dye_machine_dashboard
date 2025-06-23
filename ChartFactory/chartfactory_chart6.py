@@ -518,11 +518,11 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     combined_cards = dbc.Row(
         [
             dbc.Col(
-                dbc.Card(card2_content, className="h-100"),
+                dbc.Card(card3_content, className="h-100"),
                 width=6,
             ),
             dbc.Col(
-                dbc.Card(card3_content, className="h-100"),
+                dbc.Card(card2_content, className="h-100"),
                 width=6,
             ),
         ],
@@ -645,8 +645,8 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
 
         # Coordinates are approximate: x=0.25 (first subplot center), x=0.75 (second)
         fig_summary.add_annotation(
-            text=highest_title,
-            x=0.25,
+            text=lowest_title,
+            x=0.75,
             y=1.08,
             xref="paper",
             yref="paper",
@@ -654,8 +654,8 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
             font=dict(size=subplot_title_font_size, color="#fdfefe"),
         )
         fig_summary.add_annotation(
-            text=lowest_title,
-            x=0.75,
+            text=highest_title,
+            x=0.25,
             y=1.08,
             xref="paper",
             yref="paper",
