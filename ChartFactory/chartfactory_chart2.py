@@ -49,6 +49,12 @@ def create_chart2_figure(
                 "fontWeight": "bold",
                 "color": "#ffffff",
             },
+            css=[
+                {
+                    "selector": ".previous-next-container",
+                    "rule": "display: none;",
+                }
+            ],
         )
     else:
         fig = dash_table.DataTable(
