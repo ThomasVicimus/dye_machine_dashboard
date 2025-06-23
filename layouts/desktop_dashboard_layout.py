@@ -52,16 +52,16 @@ def create_desktop_layout(
                 fluid=True,
                 className="px-2 py-3",
                 children=[
-                    dbc.Row(
-                        dbc.Col(
-                            html.H2(
-                                "Desktop Dashboard",
-                                className="text-center my-3",
-                                style={"fontSize": "calc(1.3rem + 0.6vw)"},
-                            ),
-                            width=12,
-                        )
-                    ),
+                    # dbc.Row(
+                    #     dbc.Col(
+                    #         html.H2(
+                    #             "Desktop Dashboard",
+                    #             className="text-center my-3",
+                    #             style={"fontSize": "calc(1.3rem + 0.6vw)"},
+                    #         ),
+                    #         width=12,
+                    #     )
+                    # ),
                     dbc.Row(
                         [
                             dbc.Col(
