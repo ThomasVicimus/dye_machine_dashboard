@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 def create_chart2_figure(
     df,
     mobile,
-    desktop_row_count: int = 6,
+    desktop_row_count: int = 4,
+    # desktop_row_count: int = 6,
     mobile_row_count: int = 4,
     header_bg_color="#999999",
     text_color="#fdfefe",
@@ -46,7 +47,7 @@ def create_chart2_figure(
             },
             style_header={
                 "backgroundColor": header_bg_color,
-                "fontWeight": "bold",
+                # "fontWeight": "bold",
                 "color": "#ffffff",
             },
         )
@@ -74,7 +75,7 @@ def create_chart2_figure(
             },
             style_header={
                 "backgroundColor": header_bg_color,
-                "fontWeight": "bold",
+                # "fontWeight": "bold",
                 "color": "#ffffff",
             },
         )
