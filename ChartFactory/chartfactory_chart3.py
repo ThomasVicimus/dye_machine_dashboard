@@ -252,7 +252,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
 
     card1 = dbc.CardBody(
         [
-            html.Div(f"{period} 總產量", style={"color": "#fdfefe"}),
+            html.Div(f"{period} 总产量", style={"color": "#fdfefe"}),
             html.Div(f"{round(total_prod)}kg", style={"color": "#2ecc71"}),
         ],
         style={
@@ -268,7 +268,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card2 = dbc.CardBody(
         [
             html.Div(
-                f"{period} 最高產量機台",
+                f"{period} 最高产量机台",
                 style={"color": "#fdfefe", "textAlign": "center"},
             ),
             dbc.Row(
@@ -298,7 +298,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card3 = dbc.CardBody(
         [
             html.Div(
-                f"{period} 最低產量機台",
+                f"{period} 最低产量机台",
                 style={"color": "#fdfefe", "textAlign": "center"},
             ),
             dbc.Row(
