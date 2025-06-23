@@ -223,23 +223,6 @@ def create_chart6_figure(
     for reason_display, values in all_reasons.items():
         color = color_mapping[reason_display]
 
-        # Add bar for highest machine (only if value > 0)
-        if values["highest"] > 0:
-            fig.add_trace(
-                go.Bar(
-                    x=[reason_display],
-                    y=[values["highest"]],
-                    name=reason_display,
-                    marker_color=color,
-                    text=[values["highest"]],
-                    textposition="auto",
-                    legendgroup=reason_display,  # Group legend entries
-                    showlegend=True,
-                ),
-                row=1,
-                col=1,
-            )
-
         # Add bar for lowest machine (only if value > 0)
         if values["lowest"] > 0:
             fig.add_trace(
@@ -252,6 +235,22 @@ def create_chart6_figure(
                     textposition="auto",
                     legendgroup=reason_display,  # Group legend entries
                     showlegend=False,  # Don't show duplicate legend
+                ),
+                row=1,
+                col=1,
+            )
+        # Add bar for highest machine (only if value > 0)
+        if values["highest"] > 0:
+            fig.add_trace(
+                go.Bar(
+                    x=[reason_display],
+                    y=[values["highest"]],
+                    name=reason_display,
+                    marker_color=color,
+                    text=[values["highest"]],
+                    textposition="auto",
+                    legendgroup=reason_display,  # Group legend entries
+                    showlegend=True,
                 ),
                 row=1,
                 col=2,
