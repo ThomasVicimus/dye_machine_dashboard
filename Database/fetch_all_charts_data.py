@@ -164,7 +164,7 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
     ]:
         df_mobile[col] = df_mobile[col].astype(str)
     df_mobile["steps"] = (
-        df_mobile["total_steps_cnt"] + "/" + df_mobile["current_step_cnt"]
+        (df_mobile["total_steps_cnt"]) + "/" + (df_mobile["current_step_cnt"])
     )
     cols = [
         "machine_name",
@@ -174,6 +174,7 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
         # "expected_finish_time",
     ]
     dfs["mobile"] = {"all_machine": df_mobile[cols]}
+    dfs["desktop"] = {"all_machine": df_mobile[cols]}
 
     for mobile_option, df_dict in dfs.items():
         for key, df_val in df_dict.items():
