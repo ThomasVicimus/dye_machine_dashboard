@@ -8,10 +8,10 @@ logger = logging.getLogger(__name__)
 def create_chart2_figure(
     df,
     mobile,
-    desktop_row_count: int = 4,
-    # desktop_row_count: int = 6,
+    # desktop_row_count: int = 4,
+    desktop_row_count: int = 6,
     mobile_row_count: int = 4,
-    header_bg_color="#999999",
+    header_bg_color="#2774a7",
     text_color="#fdfefe",
 ):
     chart_id = "chart-2"
@@ -41,14 +41,22 @@ def create_chart2_figure(
                 "minHeight": "25vh",
             },
             style_cell={
-                "textAlign": "left",
+                "textAlign": "center",
                 "padding": "6px",
                 "color": text_color,
+                "fontFamily": "Microsoft YaHei",
+                "width": "auto",
+                "minWidth": "80px",
+                "whiteSpace": "normal",
             },
             style_header={
                 "backgroundColor": header_bg_color,
-                # "fontWeight": "bold",
+                "fontWeight": "normal",
                 "color": "#ffffff",
+                "fontFamily": "Microsoft YaHei",
+                "textAlign": "center",
+                "width": "auto",
+                "minWidth": "80px",
             },
         )
     else:
@@ -68,22 +76,31 @@ def create_chart2_figure(
                 # "tableLayout": "fixed",
             },
             style_cell={
-                "textAlign": "left",
+                "textAlign": "center",
                 "padding": "4px",
                 "fontSize": "10px",
                 "color": text_color,
+                "fontFamily": "Microsoft YaHei",
+                "width": "auto",
+                "minWidth": "60px",
+                "whiteSpace": "normal",
             },
             style_header={
                 "backgroundColor": header_bg_color,
-                # "fontWeight": "bold",
+                "fontSize": "9px",
+                "fontWeight": "normal",
                 "color": "#ffffff",
+                "fontFamily": "Microsoft YaHei",
+                "textAlign": "center",
+                "width": "auto",
+                "minWidth": "60px",
             },
         )
     return fig
 
 
 def create_chart2_figure_detail(df):
-    header_bg_color = "#999999"
+    header_bg_color = "#2774a7"
     text_color = "#fdfefe"
     chart_id = "mobile-detail-chart-chart-2-0"
 
@@ -98,14 +115,22 @@ def create_chart2_figure_detail(df):
             "minHeight": "25vh",
         },
         style_cell={
-            "textAlign": "left",
+            "textAlign": "center",
             "padding": "8px",
             "color": text_color,
+            "fontFamily": "Microsoft YaHei",
+            "width": "auto",
+            "minWidth": "100px",
+            "whiteSpace": "normal",
         },
         style_header={
             "backgroundColor": header_bg_color,
-            "fontWeight": "bold",
+            "fontWeight": "normal",
             "color": "#ffffff",
+            "fontFamily": "Microsoft YaHei",
+            "textAlign": "center",
+            "width": "auto",
+            "minWidth": "100px",
         },
     )
     return fig

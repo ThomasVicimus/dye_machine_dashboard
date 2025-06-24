@@ -162,16 +162,32 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
         "total_steps_cnt",
         "current_step_cnt",
     ]:
-        df_mobile[col] = df_mobile[col].astype(str)
+        df_mobile[col] = df_mobile[col].astype("Int64").astype(str)
     df_mobile["steps"] = (
         (df_mobile["total_steps_cnt"]) + "/" + (df_mobile["current_step_cnt"])
     )
+
+    # Truncate batch_no if length > 5, keep last 4 characters with "..." prefix
+    if "batch_no" in df_mobile.columns:
+        df_mobile["batch_no"] = df_mobile["batch_no"].apply(
+            lambda x: f"...{str(x)[-6:]}" if pd.notna(x) and len(str(x)) > 6 else x
+        )
+
+    # Also apply the same logic to desktop dataframe
+    # if "batch_no" in df.columns:
+    #     df["batch_no"] = df["batch_no"].apply(
+    #         lambda x: f"...{str(x)[-6:]}" if pd.notna(x) and len(str(x)) > 6 else x
+    #     )
+    # transform datetime
+    date_col = "expected_finish_time"
+    df_mobile[date_col] = pd.to_datetime(df_mobile[date_col]).dt.strftime("%m-%d %H:%M")
+
     cols = [
         "machine_name",
         "state",
         "batch_no",
         "steps",
-        # "expected_finish_time",
+        "expected_finish_time",
     ]
     dfs["mobile"] = {"all_machine": df_mobile[cols]}
     dfs["desktop"] = {"all_machine": df_mobile[cols]}
