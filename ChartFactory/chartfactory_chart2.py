@@ -35,6 +35,12 @@ def create_chart2_figure(
             page_current=0,
             page_count=total_pages,
             page_action="native",
+            css=[
+                {
+                    "selector": ".previous-next-container",
+                    "rule": "display: none !important;",
+                }
+            ],
             style_table={
                 "overflowX": "auto",
                 "height": "100%",
