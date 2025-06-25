@@ -40,7 +40,7 @@ def create_chart3_layout(
                     style={"width": "100%", "height": "80%"},
                 ),
             ],
-            style={"height": "100%", "overflowY": "auto"},
+            style={"height": "100%", "overflow": "hidden"},
         )
     else:
         # *Mobile Chart
@@ -87,7 +87,7 @@ def create_chart3_txtcards_layout(period, dfs):
                 dbc.Card(
                     card1,
                     id="chart3-card-1",  # Unique ID for callbacks
-                    className="h-100",
+                    style={"height": "auto", "overflow": "hidden"},
                 ),
                 width=4,
             ),
@@ -96,7 +96,7 @@ def create_chart3_txtcards_layout(period, dfs):
                 dbc.Card(
                     card2,
                     id="chart3-card-2",  # Unique ID for callbacks
-                    className="h-100",
+                    style={"height": "auto", "overflow": "hidden"},
                 ),
                 width=4,
             ),
@@ -105,11 +105,12 @@ def create_chart3_txtcards_layout(period, dfs):
                 dbc.Card(
                     card3,
                     id="chart3-card-3",  # Unique ID for callbacks
-                    className="h-100",
+                    style={"height": "auto", "overflow": "hidden"},
                 ),
                 width=4,
             ),
         ],
         className="mb-0 g-2",
+        style={"height": "auto"},
     )
     return three_cards_row

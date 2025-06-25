@@ -441,6 +441,8 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "center",
+            "borderRadius": "0.375rem",
+            "overflow": "hidden",
         },
     )
 
@@ -449,33 +451,49 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         [
             html.Div(
                 f"最长待机机台",
-                style={"color": "#fdfefe", "textAlign": "center"},
+                style={
+                    "color": "#fdfefe",
+                    "textAlign": "center",
+                    "fontSize": "12px",
+                    "lineHeight": "1.2",
+                },
             ),
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{highest_machine_name}", style={"color": "#f1c40f"}),
+                        html.Div(
+                            f"{highest_machine_name}",
+                            style={
+                                "color": "#f1c40f",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-start",
                     ),
                     dbc.Col(
                         html.Div(
                             f"{round(highest_machine_hours, 1)}h",
-                            style={"color": "#3498db"},
+                            style={
+                                "color": "#3498db",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
                         ),
                         width=6,
                         className="text-end",
                     ),
                 ],
                 className="gx-0",
+                style={"margin": "0"},
             ),
         ],
         style={
             "backgroundColor": "#202020",
-            "fontSize": 14,
             "height": "auto",
-            "maxHeight": "50px",
-            "padding": "4px",
+            "padding": "8px 4px",
+            "overflow": "hidden",
         },
     )
 
@@ -484,33 +502,49 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         [
             html.Div(
                 f"最短待机机台",
-                style={"color": "#fdfefe", "textAlign": "center"},
+                style={
+                    "color": "#fdfefe",
+                    "textAlign": "center",
+                    "fontSize": "12px",
+                    "lineHeight": "1.2",
+                },
             ),
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{lowest_machine_name}", style={"color": "#2ecc71"}),
+                        html.Div(
+                            f"{lowest_machine_name}",
+                            style={
+                                "color": "#2ecc71",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-start",
                     ),
                     dbc.Col(
                         html.Div(
                             f"{round(lowest_machine_hours, 1)}h",
-                            style={"color": "#3498db"},
+                            style={
+                                "color": "#3498db",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
                         ),
                         width=6,
                         className="text-end",
                     ),
                 ],
                 className="gx-0",
+                style={"margin": "0"},
             ),
         ],
         style={
             "backgroundColor": "#202020",
-            "fontSize": 14,
             "height": "auto",
-            "maxHeight": "50px",
-            "padding": "4px",
+            "padding": "8px 4px",
+            "overflow": "hidden",
         },
     )
 
@@ -518,16 +552,16 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     combined_cards = dbc.Row(
         [
             dbc.Col(
-                dbc.Card(card3_content, className="h-100"),
+                dbc.Card(card3_content, style={"height": "auto", "overflow": "hidden"}),
                 width=6,
             ),
             dbc.Col(
-                dbc.Card(card2_content, className="h-100"),
+                dbc.Card(card2_content, style={"height": "auto", "overflow": "hidden"}),
                 width=6,
             ),
         ],
         className="mb-2 g-2",
-        style={"height": "auto", "maxHeight": "60px"},
+        style={"height": "auto"},
     )
 
     return card1, combined_cards
