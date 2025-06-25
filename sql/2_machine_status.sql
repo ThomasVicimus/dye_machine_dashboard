@@ -9,4 +9,5 @@ select
     next_step,
     minutes_run,
     expected_finish_time
-from machine_status;
+from machine_status
+order by machine_name;

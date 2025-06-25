@@ -10,3 +10,4 @@ SELECT
     expected_run_minutes
 from batch_queued
 where start_time >= '{min_start_time}' and start_time < '{max_start_time}'
+order by machine_name;
