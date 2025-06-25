@@ -302,20 +302,16 @@ def create_chart6_figure(
         col=2,
     )
 
-    # fig.update_xaxes(
-    #     title_text="Stop Reasons",
-    #     title_font_color="#fdfefe",
-    #     tickfont=dict(color="#fdfefe"),
-    #     row=1,
-    #     col=1,
-    # )
-    # fig.update_xaxes(
-    #     title_text="Stop Reasons",
-    #     title_font_color="#fdfefe",
-    #     tickfont=dict(color="#fdfefe"),
-    #     row=1,
-    #     col=2,
-    # )
+    fig.update_xaxes(
+        showticklabels=False,
+        row=1,
+        col=1,
+    )
+    fig.update_xaxes(
+        showticklabels=False,
+        row=1,
+        col=2,
+    )
 
     # If no reasons found, show empty state
     if not all_reasons:
