@@ -59,7 +59,7 @@ def create_chart6_layout(
                         config={"displayModeBar": False, "responsive": True},
                         style={"width": "100%", "height": "100%"},
                     ),
-                    style={"height": "calc(100% - 80px)", "minHeight": "300px"},
+                    style={"height": "calc(100% - 80px)", "minHeight": "240px"},
                 ),
             ],
             style={"height": "100%"},
