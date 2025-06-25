@@ -454,7 +454,7 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{highest_machine_name}", style={"color": "#2ecc71"}),
+                        html.Div(f"{highest_machine_name}", style={"color": "#f1c40f"}),
                         width=6,
                         className="text-start",
                     ),
@@ -489,7 +489,7 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{lowest_machine_name}", style={"color": "#f1c40f"}),
+                        html.Div(f"{lowest_machine_name}", style={"color": "#2ecc71"}),
                         width=6,
                         className="text-start",
                     ),
