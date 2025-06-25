@@ -46,13 +46,13 @@ def _add_bar_traces_for_category_subplot(
     to a specified subplot in the figure.
     """
     current_lang_opts = lang_option_chart4.get(lang, lang_option_chart4["zh_cn"])
-    metrics_db_keys = ["water_ton", "power_kwh", "steam_ton"]
+    metrics_db_keys = ["steam_ton", "power_kwh", "water_ton"]
     metric_display_names = current_lang_opts["metrics"]
     # Distinct colors for each metric, consistent with other charts if possible
     metric_colors = [
-        "#2ecc71",
-        "#3498db",
         "#f1c40f",
+        "#3498db",
+        "#2ecc71",
     ]  # Green (Water), Blue (Power), Yellow (Steam)
 
     values = [0.0] * len(metrics_db_keys)  # Default to zeros
