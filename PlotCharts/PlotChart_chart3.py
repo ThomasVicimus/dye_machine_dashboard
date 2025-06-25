@@ -110,6 +110,6 @@ def create_chart3_txtcards_layout(period, dfs):
                 width=4,
             ),
         ],
-        className="mb-0 g-2 mt-n3 mx-n3",
+        className="mb-0 g-2",
     )
     return three_cards_row

@@ -202,7 +202,7 @@ def create_chart3_figure(
         yaxis_title=None,
         showlegend=False,
         font_color="#fdfefe",  # General text color
-        margin=dict(l=30, r=30, t=40, b=20),
+        margin=dict(l=10, r=10, t=40, b=20),
         xaxis_showgrid=False,  # Remove x-axis grid
         yaxis_showgrid=False,  # Remove y-axis grid
         xaxis_showline=True,  # Show x-axis line
@@ -455,7 +455,7 @@ def create_chart3_figure_detail(
         legend_font_color="#fdfefe",
         legend_bgcolor="rgba(32,32,32,0.8)",  # Semi-transparent background for legend
         font_color="#fdfefe",
-        margin=dict(l=30, r=30, t=40, b=20),
+        margin=dict(l=10, r=10, t=40, b=20),
         xaxis_showgrid=False,
         yaxis_showgrid=False,
         xaxis_showline=True,
