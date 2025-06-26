@@ -17,7 +17,9 @@ from callbacks.select_time_period_callback import (
 # from callbacks.detail_page_callbacks import register_mobile_page_callbacks
 from callbacks.select_theme_callback import register_theme_callbacks
 
-from callbacks.refresher_callback import register_chart2_page_turner
+from callbacks.refresher_callback import (
+    register_chart2_page_turner,
+)
 from Database.fetch_all_charts_data import *
 from layouts.desktop_dashboard_layout import create_desktop_layout
 
@@ -95,4 +97,8 @@ register_chart2_data_refresh_callback(
 # )
 if __name__ == "__main__":
     logger.info("Starting desktop server...")
-    desktop_app.run(host="0.0.0.0", port=8051, debug=True)
+    desktop_app.run(
+        host="0.0.0.0",
+        port=8051,
+    )
+    # debug=True)
