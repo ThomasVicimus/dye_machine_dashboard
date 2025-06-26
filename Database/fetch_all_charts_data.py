@@ -181,6 +181,7 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
     # transform datetime
     date_col = "expected_finish_time"
     df_mobile[date_col] = pd.to_datetime(df_mobile[date_col]).dt.strftime("%m-%d %H:%M")
+    df_mobile = df_mobile.sort_values(by="machine_name", ascending=True)
 
     cols = [
         "machine_name",
@@ -389,8 +390,8 @@ def get_chart5_data(db) -> dict:
 
     results = {}
     # TODO change back to now
-    now = datetime.now()
-    # now = datetime.strptime("2025-04-07 05:00:00", "%Y-%m-%d %H:%M:%S")
+    # now = datetime.now()
+    now = datetime.strptime("2025-04-07 05:00:00", "%Y-%m-%d %H:%M:%S")
     # Standard SQL datetime format, ensure your database expects this format
     time_format = "%Y-%m-%d %H:%M:%S"
 
@@ -427,6 +428,7 @@ def get_chart5_data(db) -> dict:
             df = pd.DataFrame()
         else:
             df = db.execute_query(Q)
+        df = df.sort_values(by="machine_name", ascending=True)
 
         results[option] = {"all_machine": df}
 
