@@ -202,7 +202,7 @@ def create_chart3_figure(
         yaxis_title=None,
         showlegend=False,
         font_color="#fdfefe",  # General text color
-        margin=dict(l=30, r=30, t=40, b=20),
+        margin=dict(l=10, r=10, t=40, b=20),
         xaxis_showgrid=False,  # Remove x-axis grid
         yaxis_showgrid=False,  # Remove y-axis grid
         xaxis_showline=True,  # Show x-axis line
@@ -252,16 +252,21 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
 
     card1 = dbc.CardBody(
         [
-            html.Div(f"{period} 总产量", style={"color": "#fdfefe"}),
-            html.Div(f"{round(total_prod)}kg", style={"color": "#2ecc71"}),
+            html.Div(
+                f"{period} 总产量",
+                style={"color": "#fdfefe", "fontSize": "12px", "lineHeight": "1.2"},
+            ),
+            html.Div(
+                f"{round(total_prod)}kg",
+                style={"color": "#2ecc71", "fontSize": "14px", "lineHeight": "1.2"},
+            ),
         ],
         style={
             "textAlign": "center",
             "backgroundColor": "#202020",
-            "fontSize": 14,
-            "maxHeight": "50px",
             "height": "auto",
-            "padding": "4px",
+            "padding": "8px 4px",
+            "overflow": "hidden",
         },
     )
 
@@ -269,60 +274,98 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         [
             html.Div(
                 f"{period} 最高产量机台",
-                style={"color": "#fdfefe", "textAlign": "center"},
+                style={
+                    "color": "#fdfefe",
+                    "textAlign": "center",
+                    "fontSize": "12px",
+                    "lineHeight": "1.2",
+                },
             ),
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{max_prod_machine}", style={"color": "#2ecc71"}),
+                        html.Div(
+                            f"{max_prod_machine}",
+                            style={
+                                "color": "#2ecc71",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-start",
                     ),
                     dbc.Col(
-                        html.Div(f"{max_prod_value}kg", style={"color": "#3498db"}),
+                        html.Div(
+                            f"{max_prod_value}kg",
+                            style={
+                                "color": "#3498db",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-end",
                     ),
                 ],
                 className="gx-0",
+                style={"margin": "0"},
             ),
         ],
         style={
             "backgroundColor": "#202020",
-            "fontSize": 14,
-            "maxHeight": "50px",
             "height": "auto",
-            "padding": "4px",
+            "padding": "8px 4px",
+            "overflow": "hidden",
         },
     )
     card3 = dbc.CardBody(
         [
             html.Div(
                 f"{period} 最低产量机台",
-                style={"color": "#fdfefe", "textAlign": "center"},
+                style={
+                    "color": "#fdfefe",
+                    "textAlign": "center",
+                    "fontSize": "12px",
+                    "lineHeight": "1.2",
+                },
             ),
             dbc.Row(
                 [
                     dbc.Col(
-                        html.Div(f"{min_prod_machine}", style={"color": "#f1c40f"}),
+                        html.Div(
+                            f"{min_prod_machine}",
+                            style={
+                                "color": "#f1c40f",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-start",
                     ),
                     dbc.Col(
-                        html.Div(f"{min_prod_value}kg", style={"color": "#3498db"}),
+                        html.Div(
+                            f"{min_prod_value}kg",
+                            style={
+                                "color": "#3498db",
+                                "fontSize": "12px",
+                                "lineHeight": "1.2",
+                            },
+                        ),
                         width=6,
                         className="text-end",
                     ),
                 ],
                 className="gx-0",
+                style={"margin": "0"},
             ),
         ],
         style={
             "backgroundColor": "#202020",
-            "fontSize": 14,
-            "maxHeight": "50px",
             "height": "auto",
-            "padding": "4px",
+            "padding": "8px 4px",
+            "overflow": "hidden",
         },
     )
     return card1, card2, card3
@@ -455,7 +498,7 @@ def create_chart3_figure_detail(
         legend_font_color="#fdfefe",
         legend_bgcolor="rgba(32,32,32,0.8)",  # Semi-transparent background for legend
         font_color="#fdfefe",
-        margin=dict(l=30, r=30, t=40, b=20),
+        margin=dict(l=10, r=10, t=40, b=20),
         xaxis_showgrid=False,
         yaxis_showgrid=False,
         xaxis_showline=True,

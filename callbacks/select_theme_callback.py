@@ -78,8 +78,8 @@ def register_theme_callbacks(
     def _get_common_theme_styles(theme):
         if theme == "black":
             header_style = {
-                "backgroundColor": "#999999",
-                "fontWeight": "bold",
+                "backgroundColor": "#2774a7",
+                # "fontWeight": "bold",
                 "color": "#ffffff",
             }
             row_conditional_styling = [
@@ -93,14 +93,18 @@ def register_theme_callbacks(
                 },
             ]
             cell_style = {
-                "textAlign": "left",
+                "textAlign": "center",
+                # "textAlign": "left",
+                "whiteSpace": "normal",
+                "fontFamily": "Microsoft YaHei",
+                "width": "auto",
                 "padding": "8px",
                 "color": "#fdfefe",
             }
         else:  # dark_blue or default
             header_style = {
-                "backgroundColor": "#16213e",
-                "fontWeight": "bold",
+                "backgroundColor": "#2774a7",
+                # "fontWeight": "bold",
                 "color": "#ffffff",
             }
             row_conditional_styling = [

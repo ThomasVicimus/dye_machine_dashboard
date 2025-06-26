@@ -21,6 +21,7 @@ from ChartFactory.chartfactory_chart6 import (
     create_chart6_figure_mobile,
     create_chart6_txt_cards,
 )
+import math  # Needed for ceiling division when paging machines for chart-5
 
 
 logger = logging.getLogger(__name__)
@@ -69,9 +70,12 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
         Output(CHART5_ID, "figure"),
         Input(CHART5_TIMEFRAME_STORE_ID, "data"),
         Input("all-chart-data-store", "data"),
+        Input(
+            "chart-2-interval", "n_intervals"
+        ),  # reuse existing timer for auto page turning
         prevent_initial_call=True,
     )
-    def update_chart5_figure(selected_timeframe, all_chart_data):
+    def update_chart5_figure(selected_timeframe, all_chart_data, n_intervals):
         # Get the chart5 specific data from all_chart_data
         chart5_data_serialized = all_chart_data.get(f"{CHART5_ID}-data-store")
 
@@ -130,11 +134,42 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
             return go.Figure().update_layout(title=f"Chart5 Error: {error_msg}")
 
         try:
+            # ---------------- Pagination-by-slicing logic ----------------
+            PAGE_SIZE = 6
+
+            # Safely extract the raw dataframe for the currently selected timeframe
+            df_all = deserialized_chart5_data.get(selected_timeframe, {}).get(
+                "all_machine"
+            )
+
+            if df_all is not None and not df_all.empty:
+                unique_machines = df_all["machine_name"].unique().tolist()
+
+                page_count = max(1, math.ceil(len(unique_machines) / PAGE_SIZE))
+
+                # n_intervals may be None when the callback fires from timeframe button change
+                current_interval = n_intervals or 0
+                current_page_idx = current_interval % page_count
+
+                start_idx = current_page_idx * PAGE_SIZE
+                end_idx = start_idx + PAGE_SIZE
+                machines_subset = unique_machines[start_idx:end_idx]
+
+                df_subset = df_all[df_all["machine_name"].isin(machines_subset)].copy()
+
+                # Build a minimal data structure expected by chart factory
+                data_for_fig = {selected_timeframe: {"all_machine": df_subset}}
+            else:
+                # Fall back to original data if dataframe missing/empty
+                data_for_fig = deserialized_chart5_data
+
+            # -------------------------------------------------------------
+
             if mobile:
                 # For mobile, use mobile-optimized parameters
                 new_figure = create_chart5_figure(
                     selected_timeframe,
-                    deserialized_chart5_data,
+                    data_for_fig,
                     lang=lang,
                     margin_top=40,
                     margin_bottom=70,
@@ -145,7 +180,7 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
                 # For desktop
                 new_figure = create_chart5_figure(
                     selected_timeframe,
-                    deserialized_chart5_data,
+                    data_for_fig,
                     lang=lang,
                 )
                 # Apply consistent layout updates
