@@ -7,7 +7,8 @@ from PlotCharts.PlotChart_chart4 import create_chart4_layout
 from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
-from layouts.create_buttons import create_period_button, create_theme_buttons
+
+# from layouts.create_buttons import create_period_button, create_theme_buttons
 
 # Note: Figures are passed from mobile_app.py
 
@@ -62,24 +63,24 @@ def create_desktop_layout(
                     #         width=12,
                     #     )
                     # ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                # Call the imported button creation function
-                                create_period_button(periods=periods),
-                                width=4,  # Align with first chart column
-                                className="d-flex align-items-center",
-                            ),
-                            dbc.Col(width=4),  # Empty space in middle
-                            dbc.Col(
-                                # Add color theme buttons on the right
-                                create_theme_buttons(),
-                                width=4,
-                                className="d-flex justify-content-end align-items-center",  # Align to the right
-                            ),
-                        ],
-                        className="mb-2 g-2",
-                    ),
+                    # dbc.Row(
+                    #     [
+                    #         dbc.Col(
+                    #             # Call the imported button creation function
+                    #             create_period_button(periods=periods),
+                    #             width=4,  # Align with first chart column
+                    #             className="d-flex align-items-center",
+                    #         ),
+                    #         dbc.Col(width=4),  # Empty space in middle
+                    #         dbc.Col(
+                    #             # Add color theme buttons on the right
+                    #             create_theme_buttons(),
+                    #             width=4,
+                    #             className="d-flex justify-content-end align-items-center",  # Align to the right
+                    #         ),
+                    #     ],
+                    #     className="mb-2 g-2",
+                    # ),
                     # Row 1 (Charts 1-3)
                     dbc.Row(
                         [
@@ -93,7 +94,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -108,7 +109,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -124,7 +125,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -147,7 +148,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -163,7 +164,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -179,7 +180,7 @@ def create_desktop_layout(
                                     ),
                                     body=True,
                                     style={
-                                        "height": "40vh",
+                                        "height": "45vh",
                                         "backgroundColor": "transparent",
                                     },
                                 ),
@@ -209,6 +210,107 @@ def create_desktop_layout(
                         data="24_hrs",
                         storage_type="session",
                     ),
+                    # --------------------------------------------
+                    # Startup selection modals
+                    # 1) Time period selection
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(
+                                "选择期间"
+                                if lang.startswith("zh")
+                                else "Select Time Period"
+                            ),
+                            dbc.ModalBody(
+                                dbc.RadioItems(
+                                    id="period-radio",
+                                    options=[{"label": p, "value": p} for p in periods],
+                                    value=default_period,
+                                    inline=False,
+                                ),
+                            ),
+                            dbc.ModalFooter(
+                                dbc.Button(
+                                    "OK",
+                                    id="period-modal-ok",
+                                    color="primary",
+                                    className="ms-auto",
+                                ),
+                            ),
+                        ],
+                        id="period-modal",
+                        is_open=True,
+                        backdrop="static",
+                        centered=True,
+                        keyboard=False,
+                    ),
+                    # 2) Chart5 timeframe selection
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(
+                                "Chart 5 时间范围"
+                                if lang.startswith("zh")
+                                else "Select Chart 5 Timeframe"
+                            ),
+                            dbc.ModalBody(
+                                dbc.RadioItems(
+                                    id="timeframe-radio",
+                                    options=[
+                                        {"label": "24小时", "value": "24_hrs"},
+                                        {"label": "48小时", "value": "48_hrs"},
+                                        {"label": "72小时", "value": "72_hrs"},
+                                    ],
+                                    value="24_hrs",
+                                    inline=False,
+                                ),
+                            ),
+                            dbc.ModalFooter(
+                                dbc.Button(
+                                    "OK",
+                                    id="timeframe-modal-ok",
+                                    color="primary",
+                                    className="ms-auto",
+                                ),
+                            ),
+                        ],
+                        id="timeframe-modal",
+                        is_open=False,
+                        backdrop="static",
+                        centered=True,
+                        keyboard=False,
+                    ),
+                    # 3) Theme selection
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(
+                                "选择主题" if lang.startswith("zh") else "Select Theme"
+                            ),
+                            dbc.ModalBody(
+                                dbc.RadioItems(
+                                    id="theme-radio",
+                                    options=[
+                                        {"label": "黑色", "value": "black"},
+                                        {"label": "深蓝", "value": "dark_blue"},
+                                    ],
+                                    value=color_theme,
+                                    inline=False,
+                                ),
+                            ),
+                            dbc.ModalFooter(
+                                dbc.Button(
+                                    "OK",
+                                    id="theme-modal-ok",
+                                    color="primary",
+                                    className="ms-auto",
+                                ),
+                            ),
+                        ],
+                        id="theme-modal",
+                        is_open=False,
+                        backdrop="static",
+                        centered=True,
+                        keyboard=False,
+                    ),
+                    # --------------------------------------------
                 ],
                 style={
                     "width": "100%",

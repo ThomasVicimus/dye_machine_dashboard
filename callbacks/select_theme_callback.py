@@ -32,7 +32,7 @@ def register_theme_callbacks(
 
     # Add callback for theme buttons
     @app.callback(
-        Output("theme-store", "data"),
+        Output("theme-store", "data", allow_duplicate=True),
         Input({"type": "theme-button", "index": ALL}, "n_clicks"),
         State("theme-store", "data"),
         prevent_initial_call=True,

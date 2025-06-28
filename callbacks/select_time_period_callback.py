@@ -37,7 +37,7 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
     CHART5_ID = "chart-5"
 
     @app.callback(
-        Output(CHART5_TIMEFRAME_STORE_ID, "data"),
+        Output(CHART5_TIMEFRAME_STORE_ID, "data", allow_duplicate=True),
         Input({"type": CHART5_TIMEFRAME_BUTTON_TYPE, "index": ALL}, "n_clicks"),
         State(CHART5_TIMEFRAME_STORE_ID, "data"),
         prevent_initial_call=True,
@@ -251,7 +251,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
     PERIOD_STORE_ID = "time-period-store"
 
     @app.callback(
-        Output(PERIOD_STORE_ID, "data"),
+        Output(PERIOD_STORE_ID, "data", allow_duplicate=True),
         Input({"type": PERIOD_BUTTON_TYPE, "index": ALL}, "n_clicks"),
         State(PERIOD_STORE_ID, "data"),
         prevent_initial_call=True,

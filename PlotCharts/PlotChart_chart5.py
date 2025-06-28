@@ -18,7 +18,7 @@ def create_chart5_layout(
 ):
     """Creates the layout containing the timeframe buttons and graph for chart 5."""
     # Create the timeframe buttons
-    timeframe_buttons = create_chart5_timeframe_buttons()
+    # timeframe_buttons = create_chart5_timeframe_buttons()
 
     # *Desktop Chart
     if not mobile:
@@ -43,7 +43,7 @@ def create_chart5_layout(
         )
 
         return html.Div(
-            [timeframe_buttons, chart_component],
+            [chart_component],
             style={"height": "100%", "width": "100%"},
         )
 
@@ -87,5 +87,7 @@ def create_chart5_layout(
         )
 
         return html.Div(
-            [timeframe_buttons, chart_link], style={"height": "100%", "width": "100%"}
+            # [timeframe_buttons, chart_link], style={"height": "100%", "width": "100%"}
+            [chart_link],
+            style={"height": "100%", "width": "100%"},
         )
