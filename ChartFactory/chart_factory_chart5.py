@@ -232,7 +232,7 @@ def create_chart5_figure(
         machine_df = df[df["machine_name"] == machine_name].copy()
         # Use the first state for this machine
         first_state = machine_df.iloc[0]["state"]
-        display_name = f"{machine_name} - {first_state}"
+        display_name = f"{machine_name}"
         machine_display_names.append(display_name)
 
         # Get color for this state, default to white if state not found
