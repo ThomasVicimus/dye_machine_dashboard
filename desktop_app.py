@@ -22,6 +22,7 @@ from callbacks.refresher_callback import (
 )
 from Database.fetch_all_charts_data import *
 from layouts.desktop_dashboard_layout import create_desktop_layout
+from callbacks.startup_modal_callbacks import register_startup_modal_callbacks
 
 db = DatabaseConnection()
 conn = db.connect()
@@ -88,6 +89,9 @@ register_chart2_data_refresh_callback(
     mobile=False,
     lang="zh_cn",
 )
+
+# Register startup modals (must be after stores are included in layout)
+register_startup_modal_callbacks(desktop_app)
 
 # register_mobile_page_callbacks(
 #     app=desktop_app,
