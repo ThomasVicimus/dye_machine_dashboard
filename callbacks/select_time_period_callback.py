@@ -135,7 +135,7 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
 
         try:
             # ---------------- Pagination-by-slicing logic ----------------
-            PAGE_SIZE = 6
+            PAGE_SIZE = 8
 
             # Safely extract the raw dataframe for the currently selected timeframe
             df_all = deserialized_chart5_data.get(selected_timeframe, {}).get(
