@@ -11,21 +11,21 @@ lang_option_chart4 = {
     "en": {
         "main_title": "Machine Resource Consumption",
         "subplot_title": ["Average", "Best", "Worst"],
-        "metrics": ["Water (ton)", "Power (kWh)", "Steam (ton)"],
+        "metrics": ["Steam (ton)", "Power (kWh)", "Water (ton)"],
         # "y_axis_title": "Consumption",
         # "machine_prefix": "Machine",
     },
     "zh_hk": {
         "main_title": "能耗/KG",
         "subplot_title": ["平均", "最佳", "最差"],
-        "metrics": ["用水量 (噸)", "用電量 (kWh)", "蒸汽量 (噸)"],
+        "metrics": ["蒸汽量 (噸)", "用電量 (kWh)", "用水量 (噸)"],
         # "y_axis_title": "消耗量",
         # "machine_prefix": "設備",
     },
     "zh_cn": {
         "main_title": "能耗/KG",
         "subplot_title": ["平均", "最佳", "最差"],
-        "metrics": ["水", "电", "汽"],
+        "metrics": ["汽", "电", "水"],
         # "y_axis_title": "消耗量",
         # "machine_prefix": "设备",
     },
@@ -53,7 +53,7 @@ def _add_bar_traces_for_category_subplot(
         "#f1c40f",
         "#3498db",
         "#2ecc71",
-    ]  # Green (Water), Blue (Power), Yellow (Steam)
+    ]  # Yellow (Steam), Blue (Power), Green (Water)
 
     values = [0.0] * len(metrics_db_keys)  # Default to zeros
 
@@ -186,7 +186,7 @@ def create_chart4_figure(
         return _create_error_figure(f"Unexpected Data Error for Chart4: {period}")
 
     # Calculate maximum y-value across all categories for unified y-axis scaling
-    metrics_db_keys = ["water_ton", "power_kwh", "steam_ton"]
+    metrics_db_keys = ["steam_ton", "power_kwh", "water_ton"]
     max_y_value_overall = 0.0
 
     for df in [avg_df, best_df, worst_df]:
@@ -496,7 +496,7 @@ def create_chart4_figure_detail(
     """
     output_figures: List[go.Figure] = []
     current_lang_opts = lang_option_chart4.get(lang, lang_option_chart4["zh_cn"])
-    metrics_db_keys = ["water_ton", "power_kwh", "steam_ton"]
+    metrics_db_keys = ["steam_ton", "power_kwh", "water_ton"]
     machines_per_row_fig = 3
 
     # --- Error Figure Creation (returns a list with one error figure) ---
