@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
+# * Chart 5 Page size has to be Edit in select_time_period_callback.py
+# * Look for PAGE_SIZE
+
 # Language options for titles and labels
 lang_option_chart5 = {
     "en": {
