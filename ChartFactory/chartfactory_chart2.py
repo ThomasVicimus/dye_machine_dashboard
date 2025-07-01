@@ -9,8 +9,8 @@ def create_chart2_figure(
     df,
     mobile,
     # desktop_row_count: int = 4,
-    desktop_row_count: int = 6,
-    mobile_row_count: int = 4,
+    desktop_row_count: int = 8,  # * has to be Edit in PlotChart
+    mobile_row_count: int = 4,  # * has to be Edit in PlotChart
     header_bg_color="#2774a7",
     text_color="#fdfefe",
 ):
