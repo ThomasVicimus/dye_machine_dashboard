@@ -132,8 +132,12 @@ def create_desktop_layout(
                                 width=4,
                             ),
                         ],
-                        className="mb-1 g-2",
+                        className="g-2",
                         align="stretch",
+                        style={
+                            "marginTop": "5vh",
+                            "marginBottom": "2vh",
+                        },
                     ),
                     # Row 2 (Charts 4-6)
                     dbc.Row(
@@ -187,8 +191,12 @@ def create_desktop_layout(
                                 width=4,
                             ),
                         ],
-                        className="mb-1 g-2",
+                        className="g-2",
                         align="stretch",
+                        style={
+                            "marginTop": "2vh",
+                            "marginBottom": "5vh",
+                        },
                     ),
                     # Placeholder for potential future updates or controls
                     html.Div(id="mobile-dynamic-content", className="text-center"),

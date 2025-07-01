@@ -175,9 +175,9 @@ class MachineUsageChart:
                 cols=3,
                 specs=[[{"type": "pie"}, {"type": "pie"}, {"type": "pie"}]],
                 subplot_titles=(
-                    f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
-                    f"{period}-{lang_option[self.lang]['subplot_title'][1]}",
-                    f"{period}-{lang_option[self.lang]['subplot_title'][2]}",
+                    f"{period} {lang_option[self.lang]['subplot_title'][0]}",
+                    f"{period} {lang_option[self.lang]['subplot_title'][1]} - ({best_df['machine_name'].iloc[0] if 'machine_name' in best_df.columns else lang_option[self.lang]['subplot_title'][1]})",
+                    f"{period} {lang_option[self.lang]['subplot_title'][2]} - ({worst_df['machine_name'].iloc[0] if 'machine_name' in worst_df.columns else lang_option[self.lang]['subplot_title'][2]})",
                 ),
             )
 

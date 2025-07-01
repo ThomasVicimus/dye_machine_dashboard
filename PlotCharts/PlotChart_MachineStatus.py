@@ -11,7 +11,7 @@ def create_chart2_layout(
     dfs: dict,
     chart_id: str = "chart-2",
     page_interval: int = 15,
-    desktop_row_count: int = 6,
+    desktop_row_count: int = 8,
     mobile_row_count: int = 4,
     mobile: bool = False,
     theme: str = "black",
