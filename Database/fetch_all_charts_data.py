@@ -204,9 +204,16 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
 def get_chart3_data(db) -> dict:
     """
     Get machine production data from the database for chart 3.
-    Data is processed to include all dates in the 7-day and 30-day periods
+    Data is processed to include all dates in the 7-day, 30-day, and 180-day periods
     ending on the latest available date, with missing 'weight_kg' filled with 0.
     """
+    data_point_num = 7
+    # Configurable date ranges (days to go back from latest date)
+    days_config = [1, 7, 30]
+    DAYS_7 = data_point_num * days_config[0] - 1  # 7 days total (6 days back + today)
+    DAYS_30 = data_point_num * days_config[1] - 1
+    DAYS_180 = data_point_num * days_config[2] - 1
+
     sql_file_path = "sql/3_machine_production.sql"
     with open(sql_file_path, "r", encoding="utf-8") as f:
         Q = f.read()
@@ -221,15 +228,28 @@ def get_chart3_data(db) -> dict:
             subset=["date"], inplace=True
         )  # Remove rows where date conversion failed
 
-    latest_date = df["date"].max()
+    # Always use today as the end date, not the latest date in data
+    from datetime import datetime
 
-    # Define date ranges
-    start_date_30days = latest_date - pd.Timedelta(days=29)
-    all_dates_30days_index = pd.date_range(
-        start=start_date_30days, end=latest_date, freq="D", name="date"
+    # today = pd.to_datetime(datetime.now().date())  # Get today's date without time
+    # max date in df as today
+    today = df["date"].max()
+
+    # Define date ranges using configurable variables - all ending on today
+    start_date_7days = today - pd.Timedelta(days=DAYS_7)
+    start_date_30days = today - pd.Timedelta(days=DAYS_30)
+    start_date_180days = today - pd.Timedelta(days=DAYS_180)
+
+    # Create date ranges for all periods - all ending on today
+    all_dates_7days_index = pd.date_range(
+        start=start_date_7days, end=today, freq="D", name="date"
     )
-
-    df_for_reindex = df.set_index("date")
+    all_dates_30days_index = pd.date_range(
+        start=start_date_30days, end=today, freq="D", name="date"
+    )
+    all_dates_180days_index = pd.date_range(
+        start=start_date_180days, end=today, freq="D", name="date"
+    )
 
     # Prepare for reindexing by setting index
     # Drop rows where date or machine_name became NaN after initial processing, if any, before setting index
@@ -243,35 +263,80 @@ def get_chart3_data(db) -> dict:
 
     df_indexed = df.set_index(["date", "machine_name"])
 
-    # Create the complete multi-index for all dates and all unique machines
-    multi_idx = pd.MultiIndex.from_product(
-        [all_dates_30days_index, unique_machine_names], names=["date", "machine_name"]
+    # Helper function to process data for each time period
+    def process_period_data(date_range_index, period_name, total_days):
+        # Create the complete multi-index for all dates and all unique machines
+        multi_idx = pd.MultiIndex.from_product(
+            [date_range_index, unique_machine_names], names=["date", "machine_name"]
+        )
+
+        # Reindex to ensure all date-machine combinations exist, fill missing weights with 0
+        df_period = df_indexed["weight_kg"].reindex(
+            multi_idx,
+            fill_value=0,
+        )
+        df_period = df_period.reset_index()  # 'date' and 'machine_name' become columns
+
+        # Group data into exactly data_point_num (7) rows
+        # Calculate days per group
+        days_per_group = total_days // data_point_num
+        remainder_days = total_days % data_point_num
+
+        # Create group assignments for each date
+        df_period = df_period.sort_values(["date", "machine_name"])
+        date_to_group = {}
+
+        current_group = 0
+        days_in_current_group = 0
+        target_days_for_current_group = days_per_group + (
+            1 if current_group < remainder_days else 0
+        )
+
+        for date in sorted(date_range_index):
+            date_to_group[date] = current_group
+            days_in_current_group += 1
+
+            if days_in_current_group >= target_days_for_current_group:
+                current_group += 1
+                days_in_current_group = 0
+                if current_group < data_point_num:
+                    target_days_for_current_group = days_per_group + (
+                        1 if current_group < remainder_days else 0
+                    )
+
+        # Add group column to dataframe
+        df_period["group"] = df_period["date"].map(date_to_group)
+
+        # Aggregate by group and machine_name
+        df_grouped = df_period.groupby(["group", "machine_name"], as_index=False).agg(
+            {
+                "weight_kg": "sum",
+                "date": "max",  # Use the latest date in each group as representative
+            }
+        )
+
+        # Add 'mmdd' column using the representative date
+        df_grouped["mmdd"] = df_grouped["date"].dt.strftime("%m/%d")
+
+        # Ensure correct column order
+        df_period_processed = df_grouped[["date", "machine_name", "mmdd", "weight_kg"]]
+
+        return df_period_processed
+
+    # Process data for all three periods
+    df_7days_processed = process_period_data(all_dates_7days_index, "7days", DAYS_7 + 1)
+    df_30days_processed = process_period_data(
+        all_dates_30days_index, "30days", DAYS_30 + 1
     )
-
-    # Reindex to ensure all date-machine combinations exist, fill missing weights with random number
-    df_30days = df_indexed["weight_kg"].reindex(
-        # multi_idx, fill_value=np.random.randint(20, 200)
-        multi_idx,
-        fill_value=0,
+    df_180days_processed = process_period_data(
+        all_dates_180days_index, "180days", DAYS_180 + 1
     )
-    df_30days = df_30days.reset_index()  # 'date' and 'machine_name' become columns
-
-    # Add 'mmdd' column using user's specified format
-    df_30days["mmdd"] = df_30days["date"].dt.strftime("%m/%d")
-
-    # Ensure correct column order
-    df_30days_processed = df_30days[["date", "machine_name", "mmdd", "weight_kg"]]
-
-    # Extract 7-day data from the processed 30-day data
-    start_date_7days = latest_date - pd.Timedelta(days=6)
-    df_7days_processed = df_30days_processed[
-        df_30days_processed["date"] >= start_date_7days
-    ].copy()
 
     return {
         "今天": {"all_machine": df_7days_processed.copy()},
-        "本周": {"all_machine": df_7days_processed.copy()},
-        "本月": {"all_machine": df_30days_processed.copy()},
+        "本周": {"all_machine": df_30days_processed.copy()},
+        "本月": {"all_machine": df_180days_processed.copy()},
+        # "半年": {"all_machine": df_180days_processed.copy()},
     }
 
 
@@ -283,6 +348,7 @@ def _create_empty_chart3_data() -> dict:
         "今天": {"all_machine": empty_df.copy()},
         "本周": {"all_machine": empty_df.copy()},
         "本月": {"all_machine": empty_df.copy()},
+        "半年": {"all_machine": empty_df.copy()},
     }
 
 

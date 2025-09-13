@@ -112,10 +112,12 @@ def create_chart3_figure(
         _make_figure_empty_looking(fig)
         return fig
 
-    # Ensure 'weight_kg' is numeric
-    df_copy = df.copy()  # Work on a copy to avoid SettingWithCopyWarning
-    # * Process df
+    # Data is already pre-processed in get_chart3_data, so we work directly with it
+    df_copy = df.copy()
+
+    # Group by mmdd to sum weight_kg across all machines for the total trend
     df_copy = df_copy.groupby(["mmdd"])["weight_kg"].sum().reset_index()
+
     try:
         df_copy["weight_kg"] = pd.to_numeric(df_copy["weight_kg"], errors="coerce")
         if df_copy["weight_kg"].isnull().all():
@@ -125,8 +127,7 @@ def create_chart3_figure(
             fig.update_layout(title_text=f"Invalid 'weight_kg' data for {period}")
             _make_figure_empty_looking(fig)
             return fig
-        # Drop rows where 'weight_kg' became NaN if partial data is acceptable,
-        # or handle as per application requirements.
+
         df_copy.dropna(subset=["weight_kg"], inplace=True)
         if df_copy.empty:
             logger.warning(
@@ -140,7 +141,7 @@ def create_chart3_figure(
         max_y_value = df_copy["weight_kg"].max()
         if pd.notna(max_y_value):
             yaxis_upper_bound = max_y_value * 1.3 if max_y_value > 0 else 10.0
-        else:  # Fallback if max_y_value is NaN (e.g. df became all NaNs then empty)
+        else:
             yaxis_upper_bound = 10.0
 
     except Exception as e:
@@ -151,41 +152,8 @@ def create_chart3_figure(
         _make_figure_empty_looking(fig)
         return fig
 
-    # Determine text labels based on number of data points
-    text_values = []  # Default to empty list
-    if not df_copy.empty:
-        if len(df_copy) > 7:
-            text_values = [""] * len(df_copy)  # Initialize with empty strings
-
-            current_max_val = df_copy["weight_kg"].max()
-            current_min_val = df_copy["weight_kg"].min()
-
-            max_indices = df_copy.index[
-                df_copy["weight_kg"] == current_max_val
-            ].tolist()
-            min_indices = df_copy.index[
-                df_copy["weight_kg"] == current_min_val
-            ].tolist()
-
-            if max_indices:  # If there are any max values
-                latest_max_idx = max_indices[
-                    -1
-                ]  # Get the index of the latest occurrence
-                if 0 <= latest_max_idx < len(text_values):
-                    text_values[latest_max_idx] = df_copy["weight_kg"].iloc[
-                        latest_max_idx
-                    ]
-
-            if min_indices:  # If there are any min values
-                latest_min_idx = min_indices[
-                    -1
-                ]  # Get the index of the latest occurrence
-                if 0 <= latest_min_idx < len(text_values):
-                    text_values[latest_min_idx] = df_copy["weight_kg"].iloc[
-                        latest_min_idx
-                    ]
-        else:
-            text_values = df_copy["weight_kg"].tolist()  # Show all texts
+    # Since data is pre-processed to always have exactly 7 data points, show all values
+    text_values = df_copy["weight_kg"].tolist() if not df_copy.empty else []
 
     fig.add_trace(
         go.Scatter(
@@ -238,9 +206,8 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         logger.error(
             f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
         )
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    if period == "今天":
-        df = df[df["date"] == df["date"].max()]
+    # Data is already pre-processed and grouped, so no additional filtering needed
+    # Each period already contains the appropriate data points
     # * Card1
     total_prod = df["weight_kg"].sum()
     # * Card2
@@ -474,18 +441,19 @@ def create_chart3_figure_detail(
         _make_figure_empty_looking(fig)
         return fig
 
+    # Data is already pre-processed with 7 data points per machine
     # Iterate through each machine and add a trace
     machine_names = df_copy["machine_name"].unique()
     for machine_name in machine_names:
         machine_df = df_copy[df_copy["machine_name"] == machine_name]
-        # Sort by mmdd to ensure lines are drawn correctly
-        machine_df = machine_df.sort_values(by="mmdd")
+        # Sort by date to ensure lines are drawn correctly (mmdd might not sort chronologically)
+        machine_df = machine_df.sort_values(by="date")
         fig.add_trace(
             go.Scatter(
                 x=machine_df["mmdd"],
                 y=machine_df["weight_kg"],
-                mode="lines+markers",  # Removed text
-                name=machine_name,  # Use machine_name for legend
+                mode="lines+markers",
+                name=machine_name,
                 textfont=dict(color="#fdfefe", size=12),
             )
         )
