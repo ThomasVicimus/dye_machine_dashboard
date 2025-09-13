@@ -231,7 +231,9 @@ def get_chart3_data(db) -> dict:
     # Always use today as the end date, not the latest date in data
     from datetime import datetime
 
-    today = pd.to_datetime(datetime.now().date())  # Get today's date without time
+    # today = pd.to_datetime(datetime.now().date())  # Get today's date without time
+    # max date in df as today
+    today = df["date"].max()
 
     # Define date ranges using configurable variables - all ending on today
     start_date_7days = today - pd.Timedelta(days=DAYS_7)
