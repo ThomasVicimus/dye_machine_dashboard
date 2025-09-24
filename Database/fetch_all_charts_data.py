@@ -201,11 +201,70 @@ def get_MachineStatus_data(db, lang: str = "zh_cn") -> pd.DataFrame:
     return dfs
 
 
+def get_monthly_dates_for_chart3(today, data_point_num=7):
+    """
+    Helper function to generate monthly date ranges with the same day of month.
+    For end-of-month dates (like 31st), uses the last day of months that don't have that day.
+
+    Args:
+        today: Reference date (pd.Timestamp)
+        data_point_num: Number of monthly data points to generate (default: 7)
+
+    Returns:
+        list: List of date ranges for each month, with start and end dates for aggregation
+    """
+    from datetime import datetime
+    import calendar
+
+    monthly_ranges = []
+    target_day = today.day
+
+    for i in range(data_point_num):
+        # Go back i months from today
+        target_year = today.year
+        target_month = today.month - i
+
+        # Handle year rollover
+        while target_month <= 0:
+            target_month += 12
+            target_year -= 1
+
+        # Get the last day of the target month
+        last_day_of_month = calendar.monthrange(target_year, target_month)[1]
+
+        # Use target_day or last day of month if target_day doesn't exist
+        actual_day = min(target_day, last_day_of_month)
+
+        # Create the target date for this month
+        month_date = pd.Timestamp(year=target_year, month=target_month, day=actual_day)
+
+        # For aggregation, we need to define a range around this date
+        # We'll use the entire month as the range for proper aggregation
+        month_start = pd.Timestamp(year=target_year, month=target_month, day=1)
+        month_end = pd.Timestamp(
+            year=target_year, month=target_month, day=last_day_of_month
+        )
+
+        monthly_ranges.append(
+            {
+                "representative_date": month_date,
+                "start_date": month_start,
+                "end_date": month_end,
+                "group_id": i,
+            }
+        )
+
+    # Reverse to have oldest first
+    return list(reversed(monthly_ranges))
+
+
 def get_chart3_data(db) -> dict:
     """
     Get machine production data from the database for chart 3.
     Data is processed to include all dates in the 7-day, 30-day, and 180-day periods
     ending on the latest available date, with missing 'weight_kg' filled with 0.
+    For the 180-day period (monthly data), each data point represents the same day
+    of the month going back 7 months.
     """
     data_point_num = 7
     # Configurable date ranges (days to go back from latest date)
@@ -250,6 +309,9 @@ def get_chart3_data(db) -> dict:
     all_dates_180days_index = pd.date_range(
         start=start_date_180days, end=today, freq="D", name="date"
     )
+
+    # Generate monthly date ranges for 180-day period
+    monthly_ranges = get_monthly_dates_for_chart3(today, data_point_num)
 
     # Prepare for reindexing by setting index
     # Drop rows where date or machine_name became NaN after initial processing, if any, before setting index
@@ -323,14 +385,69 @@ def get_chart3_data(db) -> dict:
 
         return df_period_processed
 
+    # Helper function to process monthly data for 180-day period
+    def process_monthly_data(monthly_ranges):
+        monthly_results = []
+
+        for month_info in monthly_ranges:
+            start_date = month_info["start_date"]
+            end_date = month_info["end_date"]
+            representative_date = month_info["representative_date"]
+            group_id = month_info["group_id"]
+
+            # Filter data for this month
+            month_mask = (df_indexed.index.get_level_values("date") >= start_date) & (
+                df_indexed.index.get_level_values("date") <= end_date
+            )
+            month_data = df_indexed[month_mask]
+
+            # If no data for this month, create zero entries for all machines
+            if month_data.empty:
+                for machine in unique_machine_names:
+                    monthly_results.append(
+                        {
+                            "date": representative_date,
+                            "machine_name": machine,
+                            "mmdd": representative_date.strftime("%m/%d"),
+                            "weight_kg": 0,
+                            "group": group_id,
+                        }
+                    )
+            else:
+                # Aggregate by machine for this month
+                month_aggregated = month_data.groupby("machine_name")["weight_kg"].sum()
+
+                # Ensure all machines are represented
+                for machine in unique_machine_names:
+                    weight = month_aggregated.get(machine, 0)
+                    monthly_results.append(
+                        {
+                            "date": representative_date,
+                            "machine_name": machine,
+                            "mmdd": representative_date.strftime("%m/%d"),
+                            "weight_kg": weight,
+                            "group": group_id,
+                        }
+                    )
+
+        # Convert to DataFrame
+        df_monthly = pd.DataFrame(monthly_results)
+
+        # Sort by group and machine_name to maintain consistent order
+        df_monthly = df_monthly.sort_values(["group", "machine_name"])
+
+        # Remove the group column and ensure correct column order
+        df_monthly_processed = df_monthly[["date", "machine_name", "mmdd", "weight_kg"]]
+
+        return df_monthly_processed
+
     # Process data for all three periods
     df_7days_processed = process_period_data(all_dates_7days_index, "7days", DAYS_7 + 1)
     df_30days_processed = process_period_data(
         all_dates_30days_index, "30days", DAYS_30 + 1
     )
-    df_180days_processed = process_period_data(
-        all_dates_180days_index, "180days", DAYS_180 + 1
-    )
+    # Use the new monthly processing for 180-day period
+    df_180days_processed = process_monthly_data(monthly_ranges)
 
     return {
         "今天": {"all_machine": df_7days_processed.copy()},
