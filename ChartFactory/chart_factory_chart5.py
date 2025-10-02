@@ -73,6 +73,9 @@ def create_chart5_figure(
     margin_right: int = 40,
     row_height_px: int = 400,  # Default height
     plot_width: Optional[int] = None,
+    page_size: Optional[
+        int
+    ] = None,  # Standard page size for consistent height calculation
 ) -> go.Figure:
     current_lang_opts = lang_option_chart5.get(lang, lang_option_chart5["zh_cn"])
 
@@ -242,6 +245,17 @@ def create_chart5_figure(
         state_color = state_colors.get(first_state, "#ffffff")
         machine_state_colors.append(state_color)
 
+    # Add dummy machines if page_size is provided and we have fewer machines than page_size
+    num_actual_machines = len(unique_machines)
+    if page_size is not None and num_actual_machines < page_size:
+        num_dummy_machines = page_size - num_actual_machines
+        for i in range(num_dummy_machines):
+            dummy_name = f"__dummy_machine_{i}__"
+            machine_display_names.append(dummy_name)
+            machine_state_colors.append(
+                "#000000"
+            )  # Black color for dummy (will be invisible)
+
     for i, machine_name in enumerate(unique_machines):
         machine_df = df[df["machine_name"] == machine_name].copy()
         machine_df = machine_df.sort_values("start_time")
@@ -290,6 +304,24 @@ def create_chart5_figure(
             )
         )
 
+    # Add invisible dummy traces for dummy machines to maintain consistent lane count
+    if page_size is not None and num_actual_machines < page_size:
+        for i in range(num_actual_machines, len(machine_display_names)):
+            dummy_display_name = machine_display_names[i]
+            # Add an invisible trace with no data
+            fig.add_trace(
+                go.Bar(
+                    y=[dummy_display_name],
+                    x=[0],  # Zero width bar
+                    orientation="h",
+                    width=0.7,
+                    marker_color="rgba(0,0,0,0)",  # Completely transparent
+                    name=dummy_display_name,
+                    showlegend=False,
+                    hoverinfo="skip",  # Skip hover for dummy machines
+                )
+            )
+
     now_numeric = now.timestamp() * 1000
 
     if period == "24_hrs":
@@ -336,15 +368,19 @@ def create_chart5_figure(
     num_unique_machines = len(unique_machines)
 
     # Dynamic height calculation
+    # Use the total number of display names (including dummies) for consistent height
+    total_display_machines = len(machine_display_names)
+
     # Base height + per machine height + top/bottom margins
     bar_slot_height = 25  # estimated pixels needed per machine row for bar + padding
-    calculated_plot_area_height = num_unique_machines * bar_slot_height
+    calculated_plot_area_height = total_display_machines * bar_slot_height
     dynamic_fig_height = (
         margin_top + margin_bottom + calculated_plot_area_height + 50
     )  # 50 for x-axis, title etc.
 
     final_height = max(
-        row_height_px, dynamic_fig_height if num_unique_machines > 0 else row_height_px
+        row_height_px,
+        dynamic_fig_height if total_display_machines > 0 else row_height_px,
     )
 
     if plot_width:
@@ -491,14 +527,24 @@ def create_chart5_figure(
     )
 
     # Update y-axis tick colors based on machine states
+    # Make dummy machine labels invisible by setting their color to transparent
+    tick_texts = []
+    for i, name in enumerate(machine_display_names[::-1]):
+        if name.startswith("__dummy_machine_"):
+            # Make dummy machine labels invisible
+            tick_texts.append("")
+        else:
+            # Use original color for real machines
+            original_index = len(machine_display_names) - 1 - i
+            tick_texts.append(
+                f'<span style="color:{machine_state_colors[original_index]}">{name}</span>'
+            )
+
     fig.update_layout(
         yaxis=dict(
             tickmode="array",
             tickvals=list(range(len(machine_display_names))),
-            ticktext=[
-                f'<span style="color:{machine_state_colors[i]}">{name}</span>'
-                for i, name in enumerate(machine_display_names[::-1])
-            ],
+            ticktext=tick_texts,
             tickfont=dict(size=14),
         )
     )

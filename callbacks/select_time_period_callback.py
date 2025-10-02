@@ -175,6 +175,7 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
                     margin_bottom=70,
                     margin_left=80,
                     margin_right=20,
+                    page_size=PAGE_SIZE,
                 )
             else:
                 # For desktop
@@ -182,6 +183,7 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
                     selected_timeframe,
                     data_for_fig,
                     lang=lang,
+                    page_size=PAGE_SIZE,
                 )
                 # Apply consistent layout updates
                 new_figure.update_layout(
