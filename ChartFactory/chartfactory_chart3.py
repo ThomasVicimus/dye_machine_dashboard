@@ -102,7 +102,7 @@ def create_chart3_figure(
         _make_figure_empty_looking(fig)
         return fig
 
-    required_cols = ["mmdd", "weight_kg"]
+    required_cols = ["date", "weight_kg", "order_index"]
     if not all(col in df.columns for col in required_cols):
         missing_cols = [col for col in required_cols if col not in df.columns]
         logger.error(
@@ -112,11 +112,19 @@ def create_chart3_figure(
         _make_figure_empty_looking(fig)
         return fig
 
-    # Data is already pre-processed in get_chart3_data, so we work directly with it
-    df_copy = df.copy()
+    # Filter to only use order_index == 0 (averages/totals)
+    df_copy = df[df["order_index"] == 0].copy()
 
-    # Group by mmdd to sum weight_kg across all machines for the total trend
-    df_copy = df_copy.groupby(["mmdd"])["weight_kg"].sum().reset_index()
+    if df_copy.empty:
+        logger.warning(f"No data with order_index == 0 found for period '{period}'.")
+        fig.update_layout(title_text=f"No average data available for {period}")
+        _make_figure_empty_looking(fig)
+        return fig
+
+    # Convert date to mmdd format for x-axis display
+    df_copy["date"] = pd.to_datetime(df_copy["date"])
+    if "mmdd" not in df_copy.columns:
+        df_copy["mmdd"] = df_copy["date"].dt.strftime("%m-%d")
 
     try:
         df_copy["weight_kg"] = pd.to_numeric(df_copy["weight_kg"], errors="coerce")
@@ -206,21 +214,32 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         logger.error(
             f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
         )
-    # Data is already pre-processed and grouped, so no additional filtering needed
-    # Each period already contains the appropriate data points
-    # * Card1
-    total_prod = df["weight_kg"].sum()
-    # * Card2
-    max_prod_machine = df.loc[df["weight_kg"].idxmax(), "machine_name"]
-    max_prod_value = df["weight_kg"].max()
-    # * Card3
-    min_prod_machine = df.loc[df["weight_kg"].idxmin(), "machine_name"]
-    min_prod_value = df["weight_kg"].min()
+    # Filter to only use order_index == 0 (averages/totals)
+    df_filtered = df[df["order_index"] == 0].copy()
+
+    period_replace_for_cards = {"今天": "7天", "本周": "7周", "本月": "7个月"}
+
+    if df_filtered.empty:
+        # Fallback to show no data
+        total_prod = 0
+        max_prod_machine = "N/A"
+        max_prod_value = 0
+        min_prod_machine = "N/A"
+        min_prod_value = 0
+    else:
+        # * Card1
+        total_prod = df_filtered["weight_kg"].sum()
+        # * Card2
+        max_prod_machine = df_filtered.loc[df_filtered["weight_kg"].idxmax(), "mmdd"]
+        max_prod_value = df_filtered["weight_kg"].max()
+        # * Card3
+        min_prod_machine = df_filtered.loc[df_filtered["weight_kg"].idxmin(), "mmdd"]
+        min_prod_value = df_filtered["weight_kg"].min()
 
     card1 = dbc.CardBody(
         [
             html.Div(
-                f"{period} 总产量",
+                f"{period_replace_for_cards[period]} 总产量",
                 style={"color": "#fdfefe", "fontSize": "12px", "lineHeight": "1.2"},
             ),
             html.Div(
@@ -240,7 +259,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card2 = dbc.CardBody(
         [
             html.Div(
-                f"{period} 最高产量机台",
+                f"{period_replace_for_cards[period]} 最高产量",
                 style={
                     "color": "#fdfefe",
                     "textAlign": "center",
@@ -289,7 +308,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card3 = dbc.CardBody(
         [
             html.Div(
-                f"{period} 最低产量机台",
+                f"{period} 最低产量",
                 style={
                     "color": "#fdfefe",
                     "textAlign": "center",
@@ -399,7 +418,7 @@ def create_chart3_figure_detail(
         _make_figure_empty_looking(fig)
         return fig
 
-    required_cols = ["mmdd", "weight_kg", "machine_name"]  # Added "machine_name"
+    required_cols = ["date", "weight_kg", "machine_name", "order_index"]
     if not all(col in df.columns for col in required_cols):
         missing_cols = [col for col in required_cols if col not in df.columns]
         logger.error(
@@ -409,7 +428,22 @@ def create_chart3_figure_detail(
         _make_figure_empty_looking(fig)
         return fig
 
-    df_copy = df.copy()
+    # Filter to only use order_index == 1 (individual machines)
+    df_copy = df[df["order_index"] == 1].copy()
+
+    if df_copy.empty:
+        logger.warning(
+            f"No individual machine data (order_index == 1) found for period '{period}'."
+        )
+        fig.update_layout(
+            title_text=f"No individual machine data available for {period}"
+        )
+        _make_figure_empty_looking(fig)
+        return fig
+
+    # Convert date to mmdd format for x-axis display
+    df_copy["date"] = pd.to_datetime(df_copy["date"])
+    df_copy["mmdd"] = df_copy["date"].dt.strftime("%m-%d")
     try:
         df_copy["weight_kg"] = pd.to_numeric(df_copy["weight_kg"], errors="coerce")
         if df_copy["weight_kg"].isnull().all():
