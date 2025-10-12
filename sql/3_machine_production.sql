@@ -2,7 +2,8 @@ select
     machine_name,
     date,
     weight_kg,
-    order_index
+    order_index,
+    period
 from production_volume_log
 where period in ({period_replace})
 -- where order_index = 1
