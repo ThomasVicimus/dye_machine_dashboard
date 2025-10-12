@@ -215,26 +215,31 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
             f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
         )
     # Filter to only use order_index == 0 (averages/totals)
-    df_filtered = df[df["order_index"] == 0].copy()
-
-    period_replace_for_cards = {"今天": "7天", "本周": "7周", "本月": "7个月"}
-
-    if df_filtered.empty:
-        # Fallback to show no data
+    card1_mask = (df.period == period) & (df.order_index == 0)
+    card2_3_mask = (df.period == period) & (df.order_index == 1)
+    # * Card1
+    df_card1 = df.loc[card1_mask]
+    if df_card1.empty:
         total_prod = 0
+    else:
+        total_prod = df_card1["weight_kg"].sum()
+    df_card2_3 = df.loc[card2_3_mask]
+    if df_card2_3.empty:
         max_prod_machine = "N/A"
         max_prod_value = 0
         min_prod_machine = "N/A"
         min_prod_value = 0
     else:
-        # * Card1
-        total_prod = df_filtered["weight_kg"].sum()
         # * Card2
-        max_prod_machine = df_filtered.loc[df_filtered["weight_kg"].idxmax(), "mmdd"]
-        max_prod_value = df_filtered["weight_kg"].max()
+        max_prod_machine = df_card2_3.loc[
+            df_card2_3["weight_kg"].idxmax(), "machine_name"
+        ]
+        max_prod_value = df_card2_3["weight_kg"].max()
         # * Card3
-        min_prod_machine = df_filtered.loc[df_filtered["weight_kg"].idxmin(), "mmdd"]
-        min_prod_value = df_filtered["weight_kg"].min()
+        min_prod_machine = df_card2_3.loc[
+            df_card2_3["weight_kg"].idxmin(), "machine_name"
+        ]
+        min_prod_value = df_card2_3["weight_kg"].min()
 
     card1 = dbc.CardBody(
         [
@@ -259,7 +264,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card2 = dbc.CardBody(
         [
             html.Div(
-                f"{period_replace_for_cards[period]} 最高产量",
+                f"{period} 最高产量",
                 style={
                     "color": "#fdfefe",
                     "textAlign": "center",
