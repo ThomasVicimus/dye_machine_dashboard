@@ -20,7 +20,17 @@ def create_chart6_layout(
     """Creates the layout with card1 in column 1 and combined_cards+figure in column 2."""
 
     # Get the cards directly from the factory
-    card1, combined_cards = create_chart6_txt_cards(default_period, dfs)
+    card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
+
+    # Create combined cards for layout compatibility
+    combined_cards = dbc.Row(
+        [
+            dbc.Col(card3, width=6),
+            dbc.Col(card2, width=6),
+        ],
+        className="mb-2 g-2",
+        style={"height": "auto"},
+    )
 
     # *Desktop Chart
     if not mobile:
@@ -174,7 +184,17 @@ def create_chart6_txtcards_layout(period, dfs):
     - Column 1: Large card1 (overall statistics)
     - Columns 2-3: Combined cards (card2 + card3) side by side
     """
-    card1, combined_cards = create_chart6_txt_cards(period, dfs)
+    card1, card2, card3 = create_chart6_txt_cards(period, dfs)
+
+    # Create combined cards for layout compatibility
+    combined_cards = dbc.Row(
+        [
+            dbc.Col(card3, width=6),
+            dbc.Col(card2, width=6),
+        ],
+        className="mb-2 g-2",
+        style={"height": "auto"},
+    )
 
     # Create the layout
     cards_row = dbc.Row(
@@ -214,7 +234,17 @@ def create_chart6_detailed_layout(
     - Column 1: Large card1 (overall statistics) spanning full height
     - Column 2: Row 1 - combined cards (card2 + card3), Row 2 - main figure
     """
-    card1, combined_cards = create_chart6_txt_cards(default_period, dfs)
+    card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
+
+    # Create combined cards for layout compatibility
+    combined_cards = dbc.Row(
+        [
+            dbc.Col(card3, width=6),
+            dbc.Col(card2, width=6),
+        ],
+        className="mb-2 g-2",
+        style={"height": "auto"},
+    )
 
     # Create the main figure with 2 subplots
     main_figure = create_chart6_figure(default_period, dfs)
