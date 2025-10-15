@@ -446,9 +446,13 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "num_cards": 3,
         },
         "chart-6": {
-            "card_ids": ["chart6-card-1"],  # Only chart6-card-1 exists in the layout
+            "card_ids": [
+                "chart6-card-1",
+                "chart6-card-2",
+                "chart6-card-3",
+            ],  # All 3 cards
             "card_factory": create_chart6_txt_cards,
-            "num_cards": 1,  # Only updating 1 card (the large card1)
+            "num_cards": 3,  # Updating all 3 cards
         },
     }
 
@@ -539,13 +543,8 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
                     deserialized_chart_data,
                 )
 
-                # Handle chart-6 special case: factory returns 2 cards but we only update 1
-                if chart_id == "chart-6":
-                    # Return only the first card (card1 - the large overview card)
-                    return [updated_cards[0]]
-                else:
-                    # Return all cards as a list (they come as tuple from factory functions)
-                    return list(updated_cards)
+                # Return all cards as a list (they come as tuple from factory functions)
+                return list(updated_cards)
 
             except Exception as e:
                 logger.error(

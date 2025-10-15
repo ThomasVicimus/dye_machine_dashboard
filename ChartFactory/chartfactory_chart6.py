@@ -558,23 +558,29 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
         },
     )
 
-    # * Combined Cards 2+3 Element
+    # * Individual Cards 2+3 with proper IDs
+    card2 = dbc.Card(
+        card2_content,
+        id="chart6-card-2",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+    card3 = dbc.Card(
+        card3_content,
+        id="chart6-card-3",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+
+    # * Combined Cards 2+3 Element (for layout compatibility)
     combined_cards = dbc.Row(
         [
-            dbc.Col(
-                dbc.Card(card3_content, style={"height": "auto", "overflow": "hidden"}),
-                width=6,
-            ),
-            dbc.Col(
-                dbc.Card(card2_content, style={"height": "auto", "overflow": "hidden"}),
-                width=6,
-            ),
+            dbc.Col(card3, width=6),
+            dbc.Col(card2, width=6),
         ],
         className="mb-2 g-2",
         style={"height": "auto"},
     )
 
-    return card1, combined_cards
+    return card1, card2, card3
 
 
 def create_chart6_figure_mobile(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
