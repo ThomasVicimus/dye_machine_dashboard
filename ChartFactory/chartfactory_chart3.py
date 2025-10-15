@@ -244,7 +244,7 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
     card1 = dbc.CardBody(
         [
             html.Div(
-                f"{period_replace_for_cards[period]} 总产量",
+                f"{period} 总产量",
                 style={"color": "#fdfefe", "fontSize": "12px", "lineHeight": "1.2"},
             ),
             html.Div(
