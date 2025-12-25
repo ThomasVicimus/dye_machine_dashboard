@@ -53,37 +53,46 @@ desktop_app.layout = create_desktop_layout(
     default_period="今天",
 )
 
-
+# Chart 1, 3, 4, 6
 register_time_period_callbacks(
     app=desktop_app,
     # chart_id="chart-1",
     mobile=False,
     lang="zh_cn",
 )
+
+# Chart 5
 register_chart5_timeframe_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
+
+# Chart 2
 register_theme_callbacks(
     app=desktop_app,
     default_color="black",
     default_lang="zh_cn",
 )
+
+# Chart 2
 register_chart2_page_turner(desktop_app)
 
+# Chart 3, 6
 register_txt_cards_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
 
+# All Charts
 register_auto_refresh_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
 
+# Chart 2
 register_chart2_data_refresh_callback(
     app=desktop_app,
     mobile=False,
