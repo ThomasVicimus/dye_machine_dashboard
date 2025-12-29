@@ -288,38 +288,28 @@ class MachineUsageChart:
         """
         try:
             avg_df = dfs[period]["avg"]
-            # Create figure
+
+            # Mobile main: keep structure/style consistent with desktop
+            # (figure title carries the "period"; the pie itself has no internal title).
             fig = go.Figure()
+            pie_trace = self.create_pie_chart(avg_df, title="", subtitle="")
+            pie_trace.title = None
+            fig.add_trace(pie_trace)
 
-            # Add pie chart
-            fig.add_trace(
-                self.create_pie_chart(
-                    avg_df,
-                    f"{lang_option[self.lang]['subplot_title'][0]}",
-                    f"{period}",
-                )
-            )
-
-            # Update layout
             fig.update_layout(
-                title=f"{lang_option[self.lang]['main_title']}",
+                title=f"{lang_option[self.lang]['main_title']} - {period}",
                 title_x=0.5,
                 title_font=dict(size=title_font_size),
                 showlegend=True,
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
-                    y=-0.3,
+                    y=-0.25,
                     xanchor="center",
                     x=0.5,
                     font=dict(size=legend_font_size),
                 ),
-                margin=dict(
-                    t=margin_top,
-                    b=margin_bottom,
-                    l=margin_left,
-                    r=margin_right,
-                ),
+                margin=dict(t=margin_top, b=margin_bottom, l=margin_left, r=margin_right),
                 height=plot_height,
                 width=plot_width,
                 autosize=True,
@@ -387,95 +377,48 @@ class MachineUsageChart:
             List[plotly.graph_objects.Figure]: List of figures for each machine
         """
         try:
-            figures = []
+            figures: List[go.Figure] = []
 
-            # First figure: Avg, Best, Worst
+            # Figure 0: Summary (Avg/Best/Worst) – reuse the desktop builder for consistency
             if all(key in dfs[period] for key in ["avg", "best", "worst"]):
-                avg_df = dfs[period]["avg"]
-                best_df = dfs[period]["best"]
-                worst_df = dfs[period]["worst"]
-
-                # Create first figure with avg, best, worst
-                subplot_titles = [
-                    f"{lang_option[self.lang]['subplot_title'][0]}",  # Average
-                    f"{lang_option[self.lang]['subplot_title'][1]}",  # Best
-                    f"{lang_option[self.lang]['subplot_title'][2]}",  # Worst
-                ]
-
-                fig = make_subplots(
-                    rows=1,
-                    cols=3,
-                    specs=[[{"type": "pie"}, {"type": "pie"}, {"type": "pie"}]],
-                    subplot_titles=subplot_titles,
+                summary_fig = self.create_machine_usage_chart(
+                    period=period,
+                    dfs=dfs,
+                    title_font_size=title_font_size,
+                    subplot_title_font_size=subplot_title_font_size,
+                    legend_font_size=legend_font_size,
+                    margin_top=margin_top,
+                    margin_bottom=margin_bottom,
+                    margin_left=margin_left,
+                    margin_right=margin_right,
+                    plot_height=plot_height,
+                    plot_width=plot_width,
                 )
 
-                # Add pie charts to subplots with titles and subtitles
-                fig.add_trace(
-                    self.create_pie_chart(
-                        avg_df,
-                        f"{lang_option[self.lang]['subplot_title'][0]}",
-                        f"{period}-{lang_option[self.lang]['subplot_title'][0]}",
-                    ),
-                    row=1,
-                    col=1,
-                )
-                fig.add_trace(
-                    self.create_pie_chart(
-                        best_df,
-                        f"{lang_option[self.lang]['subplot_title'][1]}",
-                        f"{period}-{best_df['machine_name'].iloc[0] if 'machine_name' in best_df.columns else lang_option[self.lang]['subplot_title'][1]}",
-                    ),
-                    row=1,
-                    col=2,
-                )
-                fig.add_trace(
-                    self.create_pie_chart(
-                        worst_df,
-                        f"{lang_option[self.lang]['subplot_title'][2]}",
-                        f"{period}-{worst_df['machine_name'].iloc[0] if 'machine_name' in worst_df.columns else lang_option[self.lang]['subplot_title'][2]}",
-                    ),
-                    row=1,
-                    col=3,
-                )
-
-                # Update layout for the first figure
-                fig.update_layout(
+                # On detail pages we already show a page header; keep figure title empty.
+                summary_fig.update_layout(
                     title="",
-                    # f"{lang_option[self.lang]['main_title']} - {period} (Summary)",
-                    title_x=0.5,
-                    title_font=dict(size=title_font_size),
                     showlegend=True,
                     legend=dict(
                         orientation="h",
                         yanchor="bottom",
-                        y=-0.1,
+                        y=-0.15,
                         xanchor="center",
                         x=0.5,
                         font=dict(size=legend_font_size),
                     ),
-                    margin=dict(
-                        t=margin_top,
-                        b=margin_bottom,
-                        l=margin_left,
-                        r=margin_right,
-                    ),
-                    height=plot_height,
-                    width=plot_width,
-                    autosize=True,
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
                     font=dict(color="#fdfefe"),
                 )
-                # Update subplot title fonts
-                fig.update_annotations(
+                summary_fig.update_annotations(
                     font=dict(
                         size=subplot_title_font_size,
                         family="Arial, sans-serif",
                         color="#fdfefe",
                     )
                 )
-
-                figures.append(fig)
+                figures.append(summary_fig)
 
             # Check if all_machine data exists
             if "all_machine" not in dfs[period] or dfs[period]["all_machine"].empty:
@@ -485,6 +428,7 @@ class MachineUsageChart:
                 return figures  # Return figures with just the first summary chart if available
 
             all_machine_df = dfs[period]["all_machine"]
+            all_machine_df = all_machine_df.copy()
 
             if "machine_name" not in all_machine_df.columns:
                 logger.warning(
@@ -516,10 +460,16 @@ class MachineUsageChart:
                 if num_machines_in_fig < machines_per_figure:
                     num_placeholders = machines_per_figure - num_machines_in_fig
 
-                # Get machine names for subplot titles
+                def _truncate_title(value: str, max_len: int = 18) -> str:
+                    if value is None:
+                        return ""
+                    s = str(value)
+                    return s if len(s) <= max_len else s[: max_len - 1] + "…"
+
+                # Get machine names for subplot titles (truncate for mobile readability)
                 subplot_titles = [
                     (
-                        str(name)
+                        _truncate_title(str(name))
                         if pd.notna(name)
                         else f"{lang_option[self.lang]['machine']} {idx+1}"
                     )
@@ -547,8 +497,8 @@ class MachineUsageChart:
 
                     pie_trace = self.create_pie_chart(
                         machine_data,
-                        title=f"{period} - {machine_name}",  # Main title for the pie (used as name)
-                        subtitle=machine_name,  # Subtitle for the pie
+                        title="",  # keep titles external (subplot title + page header)
+                        subtitle="",
                     )
                     # Remove the individual title generated by create_pie_chart as we use subplot_titles
                     pie_trace.title = None
@@ -563,11 +513,6 @@ class MachineUsageChart:
                 # These ensure every figure has exactly 3 charts for visual consistency
                 for p in range(num_placeholders):
                     j = num_machines_in_fig + p
-                    # Create an empty/placeholder pie chart
-                    empty_data = pd.DataFrame(
-                        {"run": [0], "idle": [0], "down": [0], "repair": [0]}
-                    )
-
                     # Use transparent colors for placeholder
                     empty_pie = go.Pie(
                         labels=lang_option[self.lang]["legend"],
@@ -622,6 +567,7 @@ class MachineUsageChart:
                     font=dict(
                         size=subplot_title_font_size,
                         family="Arial, sans-serif",
+                        color="#fdfefe",
                     )
                 )
 
