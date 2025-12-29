@@ -8,6 +8,8 @@ import logging
 import yaml
 import math
 
+from function.text_utilities import truncate_title
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -460,16 +462,10 @@ class MachineUsageChart:
                 if num_machines_in_fig < machines_per_figure:
                     num_placeholders = machines_per_figure - num_machines_in_fig
 
-                def _truncate_title(value: str, max_len: int = 18) -> str:
-                    if value is None:
-                        return ""
-                    s = str(value)
-                    return s if len(s) <= max_len else s[: max_len - 1] + "…"
-
                 # Get machine names for subplot titles (truncate for mobile readability)
                 subplot_titles = [
                     (
-                        _truncate_title(str(name))
+                        truncate_title(name, max_len=18)
                         if pd.notna(name)
                         else f"{lang_option[self.lang]['machine']} {idx+1}"
                     )
