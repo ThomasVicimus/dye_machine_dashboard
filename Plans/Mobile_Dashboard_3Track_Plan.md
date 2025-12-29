@@ -81,10 +81,16 @@ For each chart:
   - Align style (row heights, margins, legend policy) with Chart 1
 
 - **Chart 5 (special case)**
-  - Decide:
-    - **Option A (fast)**: keep single-figure detail and improve readability
-    - **Option B (better)**: detail returns list-of-figures “paged by machines”
-  - Ensure timeframe selection integrates cleanly with detail routing
+  - Main should be **readable** by intentionally showing **less lanes** (similar idea to chart-2 main table showing fewer rows):
+    - limit lanes via `page_size` (e.g. 6–8 machines max on dashboard)
+    - keep the main timeline visually clean (minimal labels, stable height)
+  - Click/tap the chart card to open `/details/chart-5`
+  - Detail should show **all machines at once** in a single scrollable view:
+    - allow the figure height to grow based on machine count (no lane limiting)
+    - user scrolls the detail page to view the full timeline
+  - Ensure timeframe selection integrates cleanly with detail routing (24/48/72h):
+    - main: default timeframe (e.g. 24h)
+    - detail: respects `chart5-timeframe-store` and/or provides controls on detail page later
 
 - **Chart 6**
   - Already has list-of-figures detail
