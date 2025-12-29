@@ -7,7 +7,7 @@ from PlotCharts.PlotChart_chart4 import create_chart4_layout
 from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
-from layouts.create_buttons import create_period_button, create_theme_buttons
+# from layouts.create_buttons import create_period_button, create_theme_buttons
 
 # Note: Figures are passed from mobile_app.py
 
@@ -21,12 +21,14 @@ def create_mobile_layout(
     """Creates the main mobile dashboard layout structure with clickable charts.
 
     Args:
-        initial_charts (dict): Dictionary mapping chart IDs to initial figure objects.
-        initial_chart_data (dict): Dictionary containing the initially fetched data for charts.
-        color_theme: The color theme setting.
-        lang: The language setting.
+        initial_charts_data (dict): Dict of initial chart datasets keyed by store id
+            (e.g. "chart-1-data-store"). Values are nested dicts of DataFrames.
+        color_theme: Theme setting (e.g. "black", "dark_blue")
+        lang: Language setting (e.g. "zh_cn")
+        default_period: Initial selected period key (e.g. "今天")
     """
-    periods = initial_charts_data["chart-1-data-store"].keys()
+    # Period options are derived from chart-1 periods (the global period selector contract)
+    periods = list(initial_charts_data["chart-1-data-store"].keys())
     serialized_initial_charts_data = {
         key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
     }
@@ -36,20 +38,48 @@ def create_mobile_layout(
         style={
             "width": "100vw",
             "height": "100vh",
-            "overflowY": "auto",
+            # Prevent "double scroll" when detail overlays are rendered.
+            # The dashboard itself scrolls inside `mobile-dashboard-page`.
+            "overflow": "hidden",
             "position": "relative",
             "backgroundColor": "#202020",
         },
         children=[
             # Add URL location tracking component
             dcc.Location(id="mobile-url", refresh=False),
-            # Add the container for page content (used by detail_page_callbacks.py)
-            html.Div(id="mobile-page-content"),
             # Add theme store for theme switching
             dcc.Store(id="theme-store", data=color_theme),
-            dbc.Container(
-                id="mobile-rotated-content",
+            # Data stores used by callbacks/detail routing.
+            dcc.Store(
+                id="all-chart-data-store",
+                data=serialized_initial_charts_data,
+            ),
+            dcc.Store(
+                id="time-period-store",
+                data=default_period,
+                storage_type="session",
+            ),
+            dcc.Store(
+                id="chart5-timeframe-store",
+                data="24_hrs",
+                storage_type="session",
+            ),
+            # Detail page content (populated by `callbacks/detail_page_callbacks.py`).
+            # This is intentionally separate from the dashboard page container so the
+            # detail view can act like a full-screen overlay without fighting scroll.
+            html.Div(id="mobile-page-content"),
+            # Main dashboard page
+            html.Div(
+                id="mobile-dashboard-page",
+                style={
+                    "height": "100%",
+                    "width": "100%",
+                    "overflowY": "auto",
+                },
                 children=[
+                    dbc.Container(
+                        id="mobile-rotated-content",
+                        children=[
                     # dbc.Row(
                     #     dbc.Col(
                     #         html.H2(
@@ -59,23 +89,24 @@ def create_mobile_layout(
                     #         width=12,
                     #     )
                     # ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                # Call the imported button creation function
-                                create_period_button(periods=periods),
-                                width=4,  # Align with first chart column
-                            ),
-                            dbc.Col(width=4),  # Empty space in middle
-                            dbc.Col(
-                                # Add color theme buttons on the right
-                                create_theme_buttons(),
-                                width=4,
-                                className="d-flex justify-content-end",  # Align to the right
-                            ),
-                        ],
-                        className="mb-2",
-                    ),
+                    #* Buttons removed for now
+                    # dbc.Row(
+                    #     [
+                    #         dbc.Col(
+                    #             # Call the imported button creation function
+                    #             create_period_button(periods=periods),
+                    #             width=4,  # Align with first chart column
+                    #         ),
+                    #         dbc.Col(width=4),  # Empty space in middle
+                    #         dbc.Col(
+                    #             # Add color theme buttons on the right
+                    #             create_theme_buttons(),
+                    #             width=4,
+                    #             className="d-flex justify-content-end",  # Align to the right
+                    #         ),
+                    #     ],
+                    #     className="mb-2",
+                    # ),
                     # Row 1 (Charts 1-3)
                     dbc.Row(
                         [
@@ -191,24 +222,10 @@ def create_mobile_layout(
                     dcc.Interval(
                         id="mobile-interval", interval=60 * 1000, n_intervals=0
                     ),
-                    # TODOL Json serialize the data store
-                    # Add the data store here and populate with initial data
-                    dcc.Store(
-                        id="all-chart-data-store",
-                        data=serialized_initial_charts_data,
-                    ),
-                    dcc.Store(
-                        id="time-period-store",
-                        data=default_period,
-                        storage_type="session",
-                    ),
-                    dcc.Store(
-                        id="chart5-timeframe-store",
-                        data="24_hrs",
-                        storage_type="session",
+                        ],
+                        fluid=True,
                     ),
                 ],
-                fluid=True,
             ),
         ],
     )
