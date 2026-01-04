@@ -103,6 +103,7 @@ This makes it obvious which period is currently applied.
 2) **Detail page header update**
    - Modify `callbacks/detail_page_callbacks.py` to render the right-side button group conditionally per chart.
    - Use `selected_period=period_data` (or timeframe store for chart-5) to highlight the current selection.
+   - Refactor: move the full-screen mobile detail overlay layout (wrapper + header row) into `layouts/mobile_detail_layout.py` so `callbacks/detail_page_callbacks.py` stays focused on routing + data/figure generation.
 
 3) **Make detail page reactive**
    - Change callback Inputs/States as described so the detail page rerenders on store changes.

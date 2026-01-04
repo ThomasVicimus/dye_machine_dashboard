@@ -12,6 +12,8 @@ from ChartFactory.chartfactory_chart6 import create_chart6_figure_detail
 from dash.dependencies import ALL
 from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
+from layouts.create_buttons import create_period_button, create_chart5_timeframe_buttons
+from layouts.mobile_detail_layout import create_mobile_detail_overlay_layout
 
 logger = logging.getLogger(__name__)
 
@@ -336,48 +338,30 @@ def register_detail_page_callbacks(
                 },
             )
 
-            return_layout = html.Div(
-                id=f"mobile-detail-wrapper-{chart_id}",  # Dynamic ID
-                style={
-                    "width": "100vw",
-                    "height": "100vh",
-                    "overflowY": "auto",  # Ensure vertical scrolling is enabled
-                    "overflowX": "hidden",  # Prevent horizontal scrolling
-                    "position": "relative",
-                    "backgroundColor": "#000000",
-                    "zIndex": 1000,  # Ensure it's on top of everything
-                },
-                children=[
-                    dbc.Container(
-                        id=f"mobile-rotated-detail-content-{chart_id}",  # Dynamic ID
-                        children=[
-                            dbc.Row(
-                                [
-                                    dbc.Col(
-                                        dcc.Link(
-                                            "Back",
-                                            href="/",
-                                            className="btn btn-secondary btn-sm",
-                                        ),
-                                        width="auto",
-                                    ),
-                                    dbc.Col(
-                                        html.H4(
-                                            chart_title,
-                                            className="text-white text-center",
-                                        ),
-                                        width=True,
-                                    ),
-                                ],
-                                align="center",
-                                className="mb-2",
-                            ),
-                            # Insert the scrollable graphs container instead of individual components
-                            graphs_container,
-                        ],
-                        fluid=True,
+            header_right = None
+            if chart_id == "chart-5":
+                header_right = create_chart5_timeframe_buttons(
+                    selected_timeframe=chart5_timeframe_data
+                )
+            elif chart_id in {"chart-1", "chart-3", "chart-4", "chart-6"}:
+                available_periods = []
+                if isinstance(chart_data, dict):
+                    available_periods = [
+                        k
+                        for k in chart_data.keys()
+                        if k not in {"desktop", "No Data", "Error"}
+                    ]
+                if available_periods:
+                    header_right = create_period_button(
+                        periods=available_periods,
+                        selected_period=period_data,
                     )
-                ],
+
+            return_layout = create_mobile_detail_overlay_layout(
+                chart_id=chart_id,
+                chart_title=chart_title,
+                graphs_container=graphs_container,
+                header_right=header_right,
             )
             logger.info(f"DETAIL DEBUG: Returning detail page layout")
             return return_layout
