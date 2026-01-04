@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 
 
-def create_period_button(periods):
+def create_period_button(periods, selected_period=None):
     """Creates the ButtonGroup for period selection for chart 1."""
     if not periods or periods == ["No Data"] or periods == ["Error"]:
         return dbc.Alert("No periods available", color="warning", className="mb-2")
@@ -11,7 +11,7 @@ def create_period_button(periods):
                 period,
                 id={"type": "period-button", "index": period},
                 color="primary",
-                outline=True,
+                outline=(period != selected_period) if selected_period is not None else True,
                 size="sm",
                 style={"fontSize": "calc(0.7rem + 0.1vw)"},
             )
@@ -21,7 +21,7 @@ def create_period_button(periods):
     )
 
 
-def create_chart5_timeframe_buttons():
+def create_chart5_timeframe_buttons(selected_timeframe=None):
     """Creates the ButtonGroup for timeframe selection for chart 5."""
     timeframes = ["24_hrs", "48_hrs", "72_hrs"]
     timeframe_labels = {
@@ -36,7 +36,7 @@ def create_chart5_timeframe_buttons():
                 timeframe_labels[timeframe],
                 id={"type": "chart5-timeframe-button", "index": timeframe},
                 color="primary",
-                outline=True,
+                outline=(timeframe != selected_timeframe) if selected_timeframe is not None else True,
                 size="sm",
                 style={"fontSize": "calc(0.7rem + 0.1vw)"},
             )
