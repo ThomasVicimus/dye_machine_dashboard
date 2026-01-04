@@ -70,12 +70,18 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
         Output(CHART5_ID, "figure"),
         Input(CHART5_TIMEFRAME_STORE_ID, "data"),
         Input("all-chart-data-store", "data"),
+        Input("mobile-url", "pathname"),
         Input(
             "chart-2-interval", "n_intervals"
         ),  # reuse existing timer for auto page turning
         prevent_initial_call=True,
     )
-    def update_chart5_figure(selected_timeframe, all_chart_data, n_intervals):
+    def update_chart5_figure(selected_timeframe, all_chart_data, pathname, n_intervals):
+        # While on detail pages, don't spend time rebuilding the main dashboard chart.
+        # The detail overlay has its own chart rendering path.
+        if pathname and pathname.startswith("/details/"):
+            return dash.no_update
+
         # Get the chart5 specific data from all_chart_data
         chart5_data_serialized = all_chart_data.get(f"{CHART5_ID}-data-store")
 
@@ -298,15 +304,22 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             Output(CHART_ID, "figure"),
             Input(PERIOD_STORE_ID, "data"),
             Input("all-chart-data-store", "data"),
+            Input("mobile-url", "pathname"),
             prevent_initial_call=True,
         )
         def update_chart_figure(
             selected_period,
             all_chart_data,
+            pathname,
             chart_id=CHART_ID,
             chart_factory=chart_factory,
             margin=current_chart_margin,  # Pass the specific margin as a default argument
         ):
+            # While on detail pages, don't spend time rebuilding the main dashboard charts.
+            # We'll refresh them when the user navigates back to "/".
+            if pathname and pathname.startswith("/details/"):
+                return dash.no_update
+
             # Get the specific chart's data from all_chart_data
             chart_specific_data_serialized = all_chart_data.get(
                 f"{chart_id}-data-store"  # Use chart_id from the function's default argument
@@ -466,15 +479,21 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
             [Output(card_id, "children") for card_id in card_ids],
             Input(PERIOD_STORE_ID, "data"),
             Input("all-chart-data-store", "data"),
+            Input("mobile-url", "pathname"),
             prevent_initial_call=True,
         )
         def update_txt_cards(
             selected_period,
             all_chart_data,
+            pathname,
             chart_id=chart_id,
             card_factory=card_factory,
             num_cards=num_cards,
         ):
+            # While on detail pages, don't spend time rebuilding the main dashboard cards.
+            if pathname and pathname.startswith("/details/"):
+                return [dash.no_update] * num_cards
+
             # Get the specific chart's data from all_chart_data
             chart_specific_data_serialized = all_chart_data.get(
                 f"{chart_id}-data-store"
