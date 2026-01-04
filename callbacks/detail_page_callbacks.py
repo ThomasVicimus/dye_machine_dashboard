@@ -143,8 +143,8 @@ def register_detail_page_callbacks(
     @app.callback(
         Output("mobile-page-content", "children"),
         Input("mobile-url", "pathname"),
-        State(PERIOD_STORE_ID, "data"),  # Must match the store ID in the layout
-        State("chart5-timeframe-store", "data"),
+        Input(PERIOD_STORE_ID, "data"),  # Rerender detail on period change
+        Input("chart5-timeframe-store", "data"),  # Rerender chart-5 detail on timeframe change
         State("all-chart-data-store", "data"),
     )
     def display_page(pathname, period_data, chart5_timeframe_data, all_chart_data):
