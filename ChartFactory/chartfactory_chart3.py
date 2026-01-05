@@ -523,11 +523,15 @@ def create_chart3_figure_detail(
             if mdf.empty:
                 continue
             max_y_chunk = max(max_y_chunk, float(mdf["weight_kg"].max()))
+            text_values = mdf["weight_kg"].tolist()
             fig_row.add_trace(
                 go.Scatter(
                     x=mdf["mmdd"],
                     y=mdf["weight_kg"],
-                    mode="lines+markers",
+                    mode="lines+markers+text",
+                    text=text_values,
+                    textposition="top right",
+                    textfont=dict(color="#fdfefe", size=12),
                     showlegend=False,
                     line=dict(width=2),
                     marker=dict(size=6),
