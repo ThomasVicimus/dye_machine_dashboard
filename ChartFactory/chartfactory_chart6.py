@@ -8,6 +8,7 @@ import re
 from dash import html
 import dash_bootstrap_components as dbc
 
+from function.text_utilities import truncate_title
 
 logger = logging.getLogger(__name__)
 
@@ -686,8 +687,8 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
             else "Unknown"
         )
 
-        highest_title = f"停机时数最高 - {machine_name_highest}"
-        lowest_title = f"停机时数最低 - {machine_name_lowest}"
+        highest_title = f"停机时数最高 - {truncate_title(machine_name_highest, max_len=22)}"
+        lowest_title = f"停机时数最低 - {truncate_title(machine_name_lowest, max_len=22)}"
 
         # Remove any existing annotations (summary fig has no subplot titles by default)
         # Then add our custom titles positioned roughly above each subplot
@@ -780,11 +781,15 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
         subplot_titles = []
         unique_reasons_chunk = set()
         for idx in range(num_in_chunk):
-            m_name = str(chunk_df.iloc[idx].get("machine_name", f"M{idx+1}"))
-            subplot_titles.append(m_name if len(m_name) < 30 else m_name[:27] + "...")
+            m_name = chunk_df.iloc[idx].get("machine_name", f"M{idx+1}")
+            subplot_titles.append(truncate_title(m_name, max_len=18))
 
             dn, _ = _get_reason_bars_for_machine(chunk_df.iloc[idx])
             unique_reasons_chunk.update(dn)
+
+        # Pad to always 3 columns for consistent mobile layout
+        while len(subplot_titles) < machines_per_row_fig:
+            subplot_titles.append("")
 
         sorted_reasons_chunk = sorted(unique_reasons_chunk)
         color_mapping_chunk = {
@@ -795,12 +800,11 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
         # Build figure for this set of machines
         fig_machine_row = make_subplots(
             rows=1,
-            cols=num_in_chunk,
+            cols=machines_per_row_fig,
             subplot_titles=subplot_titles,
             horizontal_spacing=0.04,
         )
 
-        first_subplot = True  # To control legend duplicates
         max_y_val_chunk = 0.0
 
         for j in range(num_in_chunk):
@@ -819,37 +823,26 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
                             reason_name, base_colors[k % len(base_colors)]
                         ),
                         legendgroup=reason_name,
-                        showlegend=first_subplot,
+                        showlegend=False,
                         text=[y_vals[k]],
                         textposition="auto",
                     ),
                     row=1,
                     col=j + 1,
                 )
-            first_subplot = False  # Legend only for first subplot
 
         # Y-axis scaling
         y_max = max_y_val_chunk * 1.1 if max_y_val_chunk > 0 else 10
-        for col_idx in range(1, num_in_chunk + 1):
+        for col_idx in range(1, machines_per_row_fig + 1):
             fig_machine_row.update_yaxes(range=[0, y_max], row=1, col=col_idx)
             fig_machine_row.update_xaxes(type="category", row=1, col=col_idx)
 
         # Layout for this figure
-        machine_row_fig_height = row_height_px + title_font_size + legend_font_size + 40
+        machine_row_fig_height = row_height_px + subplot_title_font_size + 20
         machine_row_layout_args = dict(
-            title_text=f"{period} Stop Reasons – Machines {i+1}-{i+num_in_chunk}",
+            title_text="",
             title_x=0.5,
-            title_font_size=title_font_size,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.2,
-                xanchor="center",
-                x=0.5,
-                font_size=legend_font_size,
-                bgcolor="rgba(0,0,0,0)",
-            ),
+            showlegend=False,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font_color="#fdfefe",
