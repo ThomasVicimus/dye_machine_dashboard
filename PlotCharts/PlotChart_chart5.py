@@ -15,7 +15,8 @@ def create_chart5_layout(
     dfs: dict,
     chart_id: str = "chart-5",
     mobile: bool = False,
-    page_size: int = 8,  # Standard page size for consistent display
+    page_size: int = 8,  # Desktop lanes per page (paging is handled in callbacks)
+    mobile_page_size: int = 4,  # Mobile lanes per page (easy to tune)
 ):
     """Creates the layout containing the timeframe buttons and graph for chart 5."""
     # Create the timeframe buttons
@@ -60,7 +61,7 @@ def create_chart5_layout(
             margin_bottom=70,
             margin_left=80,  # Reduced for mobile
             margin_right=20,
-            page_size=page_size,
+            page_size=mobile_page_size,
         )
         initial_figure.update_layout(
             autosize=True,

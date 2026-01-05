@@ -30,7 +30,13 @@ logger = logging.getLogger(__name__)
 # ---- Callback Registration ----
 
 
-def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
+def register_chart5_timeframe_callbacks(
+    app,
+    mobile: bool = False,
+    lang: str = "zh_cn",
+    page_size_mobile: int = 4,
+    page_size_desktop: int = 8,
+):
     """Registers callbacks for chart5 timeframe selection."""
     CHART5_TIMEFRAME_BUTTON_TYPE = "chart5-timeframe-button"
     CHART5_TIMEFRAME_STORE_ID = "chart5-timeframe-store"
@@ -141,7 +147,8 @@ def register_chart5_timeframe_callbacks(app, mobile=False, lang: str = "zh_cn"):
 
         try:
             # ---------------- Pagination-by-slicing logic ----------------
-            PAGE_SIZE = 8
+            # Desktop and mobile have different "lanes per page" requirements.
+            PAGE_SIZE = page_size_mobile if mobile else page_size_desktop
 
             # Safely extract the raw dataframe for the currently selected timeframe
             df_all = deserialized_chart5_data.get(selected_timeframe, {}).get(
