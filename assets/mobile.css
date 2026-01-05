@@ -1,0 +1,38 @@
+/* Mobile dashboard layout helpers (landscape-first).
+   Dash automatically serves files under /assets. */
+
+@media (orientation: landscape) {
+  /* Each dashboard row should behave like a full-screen "page". */
+  .mobile-row-page {
+    /* Prefer stable viewport units when available; fall back via min-height. */
+    height: 100svh;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  /* Make the row and its columns fill the page height. */
+  .mobile-row-page .mobile-chart-row {
+    height: 100%;
+    margin: 0;
+  }
+
+  .mobile-row-page .mobile-chart-col {
+    height: 100%;
+  }
+
+  /* Cards should fill their columns and clip overflow. */
+  .mobile-row-page .mobile-chart-card {
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* Ensure the card body and immediate children can size correctly. */
+  .mobile-row-page .card-body {
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+
+

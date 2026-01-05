@@ -108,114 +108,123 @@ def create_mobile_layout(
                     #     className="mb-2",
                     # ),
                     # Row 1 (Charts 1-3)
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart1_layout(
-                                        default_period=default_period,
-                                        dfs=initial_charts_data["chart-1-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-1",
+                    html.Div(
+                        className="mobile-row-page",
+                        children=[
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart1_layout(
+                                                default_period=default_period,
+                                                dfs=initial_charts_data[
+                                                    "chart-1-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-1",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart2_layout(
-                                        dfs=initial_charts_data["chart-2-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-2",
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart2_layout(
+                                                dfs=initial_charts_data[
+                                                    "chart-2-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-2",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart3_layout(
-                                        default_period=default_period,
-                                        dfs=initial_charts_data["chart-3-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-3",
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart3_layout(
+                                                default_period=default_period,
+                                                dfs=initial_charts_data[
+                                                    "chart-3-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-3",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
+                                ],
+                                className="mobile-chart-row g-0",
+                                align="stretch",
                             ),
                         ],
-                        className="mb-1 g-0",
-                        align="stretch",
-                        # style={"height": "20vh"}, # Height is now on individual cards
                     ),
                     # Row 2 (Charts 4-6)
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart4_layout(
-                                        default_period=default_period,
-                                        dfs=initial_charts_data["chart-4-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-4",
+                    html.Div(
+                        className="mobile-row-page",
+                        children=[
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart4_layout(
+                                                default_period=default_period,
+                                                dfs=initial_charts_data[
+                                                    "chart-4-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-4",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart5_layout(
-                                        default_period="24_hrs",
-                                        dfs=initial_charts_data["chart-5-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-5",
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart5_layout(
+                                                default_period="24_hrs",
+                                                dfs=initial_charts_data[
+                                                    "chart-5-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-5",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart6_layout(
-                                        default_period=default_period,
-                                        dfs=initial_charts_data["chart-6-data-store"],
-                                        mobile=True,
-                                        chart_id="chart-6",
+                                    dbc.Col(
+                                        dbc.Card(
+                                            create_chart6_layout(
+                                                default_period=default_period,
+                                                dfs=initial_charts_data[
+                                                    "chart-6-data-store"
+                                                ],
+                                                mobile=True,
+                                                chart_id="chart-6",
+                                            ),
+                                            body=True,
+                                            className="mobile-chart-card",
+                                        ),
+                                        width=4,
+                                        className="mobile-chart-col",
                                     ),
-                                    body=True,
-                                    style={
-                                        "height": "40vh",
-                                        "backgroundColor": "transparent",
-                                    },
-                                ),
-                                width=4,
+                                ],
+                                className="mobile-chart-row g-2",
+                                align="stretch",
                             ),
                         ],
-                        className="mb-1 g-2",
-                        align="stretch",
                     ),
                     # Placeholder for potential future updates or controls
                     html.Div(id="mobile-dynamic-content", className="text-center"),
