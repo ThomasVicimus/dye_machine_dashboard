@@ -4,6 +4,8 @@ from plotly.subplots import make_subplots
 from typing import Dict, List
 import logging
 
+from function.text_utilities import truncate_title
+
 logger = logging.getLogger(__name__)
 
 # Language options for titles and labels
@@ -427,7 +429,8 @@ def create_chart4_figure_mobile(
         category_name_for_log=current_lang_opts["subplot_title"][0],  # "Average"
     )
 
-    main_title_text = f"{current_lang_opts['main_title']} - {current_lang_opts['subplot_title'][0]} - {period}"
+    # Mobile main: align title style with desktop and Chart-1 mobile main
+    main_title_text = f"{current_lang_opts['main_title']} - {period}"
 
     fig.update_layout(
         title_text=main_title_text,
@@ -435,8 +438,8 @@ def create_chart4_figure_mobile(
         showlegend=True,
         legend=dict(
             orientation="h",
-            yanchor="top",
-            y=-0.2,
+            yanchor="bottom",
+            y=-0.25,
             xanchor="center",
             x=0.5,
             traceorder="normal",
@@ -556,86 +559,33 @@ def create_chart4_figure_detail(
         logger.error(f"Error during data prep for chart4_figure_detail: {e}")
         return _create_error_figure_list(f"Data Preparation Error: {period}")
 
-    # --- Figure 1: Summary (Average, Best, Worst) ---
-    summary_fig_height = row_height_px  # Base height for a row
-    if title_font_size:
-        summary_fig_height += title_font_size + 10  # Add space for main title
+    # --- Figure 0: Summary (Average, Best, Worst) ---
+    # Reuse the desktop summary builder for consistent structure/polish (Chart-1 pattern).
+    summary_fig = create_chart4_figure(
+        period=period,
+        dfs=dfs,
+        lang=lang,
+        margin_top=margin_top,
+        margin_bottom=margin_bottom,
+        margin_left=margin_left,
+        margin_right=margin_right,
+    )
+
+    # On detail pages the header already shows the chart title; keep figure title empty.
+    summary_fig_height = row_height_px
     if subplot_title_font_size:
-        summary_fig_height += (
-            subplot_title_font_size + 5
-        )  # Add space for subplot titles
+        summary_fig_height += subplot_title_font_size + 10
     if legend_font_size:
-        summary_fig_height += legend_font_size + 30  # Add space for legend at bottom
+        summary_fig_height += legend_font_size + 30
 
-    # Calculate maximum y-value across all categories for unified y-axis scaling in summary
-    max_y_value_summary = 0.0
-
-    for df in [avg_df, best_df, worst_df]:
-        if (
-            df is not None
-            and not df.empty
-            and all(col in df.columns for col in metrics_db_keys)
-        ):
-            try:
-                for key in metrics_db_keys:
-                    raw_value = df[key].iloc[0]
-                    val = pd.to_numeric(raw_value, errors="coerce")
-                    if pd.notna(val):
-                        max_y_value_summary = max(max_y_value_summary, val)
-            except (IndexError, Exception) as e:
-                logger.debug(f"Error processing values for summary y-axis scaling: {e}")
-                continue
-
-    # Add 10% padding to the maximum value for better visualization
-    if max_y_value_summary > 0:
-        max_y_value_summary *= 1.1
-    else:
-        max_y_value_summary = 1.0  # Default minimum range if no valid data
-
-    s_title_avg = f"{period} {current_lang_opts['subplot_title'][0]}"
-    s_title_best = f"{period} {current_lang_opts['subplot_title'][1]}"
-    s_title_worst = f"{period} {current_lang_opts['subplot_title'][2]}"
-    if (
-        best_df is not None
-        and not best_df.empty
-        and "machine_name" in best_df.columns
-        and pd.notna(best_df["machine_name"].iloc[0])
-    ):
-        s_title_best += f" ({best_df['machine_name'].iloc[0]})"
-    if (
-        worst_df is not None
-        and not worst_df.empty
-        and "machine_name" in worst_df.columns
-        and pd.notna(worst_df["machine_name"].iloc[0])
-    ):
-        s_title_worst += f" ({worst_df['machine_name'].iloc[0]})"
-
-    fig_summary = make_subplots(
-        rows=1,
-        cols=3,
-        subplot_titles=[s_title_avg, s_title_best, s_title_worst],
-        horizontal_spacing=0.04,
-    )
-    _add_bar_traces_for_category_subplot(
-        fig_summary, avg_df, lang, 1, 1, True, s_title_avg
-    )
-    _add_bar_traces_for_category_subplot(
-        fig_summary, best_df, lang, 1, 2, False, s_title_best
-    )
-    _add_bar_traces_for_category_subplot(
-        fig_summary, worst_df, lang, 1, 3, False, s_title_worst
-    )
-
-    summary_main_title = f"{current_lang_opts['main_title']} - {period} (Summary)"
     summary_layout_args = dict(
-        title_text=summary_main_title,
+        title_text="",
         title_x=0.5,
-        title_font_size=title_font_size,
         showlegend=True,
         legend=dict(
             orientation="h",
-            yanchor="top",
-            y=-0.2,
+            yanchor="bottom",
+            y=-0.15,
             xanchor="center",
             x=0.5,
             font_size=legend_font_size,
@@ -651,33 +601,10 @@ def create_chart4_figure_detail(
         summary_layout_args.update({"width": plot_width, "autosize": False})
     else:
         summary_layout_args["autosize"] = True
-    fig_summary.update_layout(**summary_layout_args)
-    fig_summary.update_annotations(
-        font_size=subplot_title_font_size
-    )  # For subplot titles
-    for c_idx in range(1, 4):  # Axes for summary fig with unified y-axis scaling
-        fig_summary.update_xaxes(
-            row=1,
-            col=c_idx,
-            showline=True,
-            linewidth=1,
-            linecolor="#fdfefe",
-            showgrid=False,
-            tickfont=dict(color="#fdfefe", size=10),
-            type="category",
-        )
-        fig_summary.update_yaxes(
-            row=1,
-            col=c_idx,
-            showline=False,
-            showgrid=True,
-            gridwidth=1,
-            gridcolor="rgba(128,128,128,0.2)",
-            zeroline=True,
-            tickfont=dict(color="#fdfefe"),
-            range=[0, max_y_value_summary],  # Unified y-axis range for summary
-        )
-    output_figures.append(fig_summary)
+
+    summary_fig.update_layout(**summary_layout_args)
+    summary_fig.update_annotations(font_size=subplot_title_font_size)
+    output_figures.append(summary_fig)
 
     # --- Subsequent Figures: Machine Data (3 machines per figure/row) ---
     sorted_machines_df = pd.DataFrame()
@@ -720,9 +647,8 @@ def create_chart4_figure_detail(
 
         machine_subplot_titles = [""] * machines_per_row_fig
         for j in range(num_in_chunk):
-            m_name = str(chunk_df.iloc[j]["machine_name"])
-            machine_subplot_titles[j] = (
-                m_name if len(m_name) < 30 else m_name[:27] + "..."
+            machine_subplot_titles[j] = truncate_title(
+                chunk_df.iloc[j]["machine_name"], max_len=18
             )
 
         fig_machine_row = make_subplots(
@@ -744,9 +670,8 @@ def create_chart4_figure_detail(
                 machine_subplot_titles[j],
             )
 
-        machine_row_main_title = f"{current_lang_opts['main_title']} - {period} (Machines {i+1}-{min(i+num_in_chunk, num_machines)})"
         machine_row_layout_args = dict(
-            title_text=machine_row_main_title,
+            title_text="",
             title_x=0.5,
             title_font_size=title_font_size,
             showlegend=False,

@@ -1,9 +1,13 @@
 import pandas as pd
 import plotly.graph_objects as go
-from typing import Dict, Optional
+from plotly.subplots import make_subplots
+from typing import Dict, Optional, List
 import logging
 from dash import html
 import dash_bootstrap_components as dbc
+import math
+
+from function.text_utilities import truncate_title
 
 
 logger = logging.getLogger(__name__)
@@ -365,9 +369,12 @@ def create_chart3_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
 def create_chart3_figure_detail(
     period: str,
     dfs: Dict[str, Dict[str, pd.DataFrame]],
-) -> go.Figure:
+) -> List[go.Figure]:
     """
-    Creates a line chart showing trend over time for 'weight_kg' against 'mmdd' for each machine.
+    Creates a list of figures for the detail view.
+
+    - output_figures[0]: Overall (order_index == 0) trend figure (overview)
+    - output_figures[1...N]: Per-machine figures, 3 machines per figure (1x3 subplots)
 
     Args:
         period (str): The key for the period in the dfs dictionary (e.g., "last_7_days").
@@ -375,10 +382,26 @@ def create_chart3_figure_detail(
             Expected structure: dfs[period]['all_machine'] should be the target DataFrame.
 
     Returns:
-        go.Figure: A Plotly graph object figure. If data is invalid or missing,
-                   an empty figure with an error message/note might be returned.
+        List[go.Figure]: A list of Plotly figures suitable for the mobile detail page.
     """
-    fig = go.Figure()  # Initialize an empty figure
+    output_figures: List[go.Figure] = []
+
+    # First figure: reuse the existing "overview" builder for consistency
+    try:
+        fig_overview = create_chart3_figure(period, dfs)
+        fig_overview.update_layout(
+            title_text="",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#fdfefe",
+        )
+        output_figures.append(fig_overview)
+    except Exception as e:
+        logger.error(f"Error creating chart3 overview figure for '{period}': {e}")
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"Error: {e}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
 
     try:
         if (
@@ -396,32 +419,36 @@ def create_chart3_figure_detail(
         logger.error(
             f"Data not found for period '{period}' in {dfs.keys()} and key 'all_machine' in {df_period.keys()}. Error: {e}"
         )
-        fig.update_layout(title_text=f"Data not available for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"Data not available for {period}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
     except TypeError as e:
         logger.error(
             f"Invalid structure for 'dfs' argument for period '{period}'. Expected Dict[str, Dict[str, pd.DataFrame]]. Error: {e}"
         )
-        fig.update_layout(title_text=f"Invalid data structure for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"Invalid data structure for {period}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
 
     if not isinstance(df, pd.DataFrame):
         logger.warning(
             f"Data for period '{period}' and key 'all_machine' is not a DataFrame."
         )
-        fig.update_layout(title_text=f"Invalid data format for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"Invalid data format for {period}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
 
     if df.empty:
         logger.warning(
             f"DataFrame for period '{period}' and key 'all_machine' is empty."
         )
-        fig.update_layout(title_text=f"No data to display for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"No data to display for {period}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
 
     required_cols = ["date", "weight_kg", "machine_name", "order_index"]
     if not all(col in df.columns for col in required_cols):
@@ -429,9 +456,10 @@ def create_chart3_figure_detail(
         logger.error(
             f"Missing required columns {missing_cols} in DataFrame for period '{period}'."
         )
-        fig.update_layout(title_text=f"Error: Missing data columns for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        fig_err = go.Figure()
+        fig_err.update_layout(title_text=f"Error: Missing data columns for {period}")
+        _make_figure_empty_looking(fig_err)
+        return [fig_err]
 
     # Filter to only use order_index == 1 (individual machines)
     df_copy = df[df["order_index"] == 1].copy()
@@ -440,11 +468,8 @@ def create_chart3_figure_detail(
         logger.warning(
             f"No individual machine data (order_index == 1) found for period '{period}'."
         )
-        fig.update_layout(
-            title_text=f"No individual machine data available for {period}"
-        )
-        _make_figure_empty_looking(fig)
-        return fig
+        # Return overview only (already in output_figures)
+        return output_figures
 
     # Convert date to mmdd format for x-axis display
     df_copy["date"] = pd.to_datetime(df_copy["date"])
@@ -455,69 +480,99 @@ def create_chart3_figure_detail(
             logger.error(
                 f"'weight_kg' column for period '{period}' contains no valid numeric data after conversion."
             )
-            fig.update_layout(title_text=f"Invalid 'weight_kg' data for {period}")
-            _make_figure_empty_looking(fig)
-            return fig
+            return output_figures
         df_copy.dropna(subset=["weight_kg"], inplace=True)
         if df_copy.empty:
             logger.warning(
                 f"DataFrame became empty after dropping NaNs in 'weight_kg' for period '{period}'."
             )
-            fig.update_layout(title_text=f"No valid 'weight_kg' data for {period}")
-            _make_figure_empty_looking(fig)
-            return fig
-
-        # Calculate y-axis upper bound for padding based on overall max
-        max_y_value = df_copy["weight_kg"].max()
-        if pd.notna(max_y_value):
-            yaxis_upper_bound = max_y_value * 1.3 if max_y_value > 0 else 10.0
-        else:
-            yaxis_upper_bound = 10.0
+            return output_figures
 
     except Exception as e:
         logger.error(f"Error processing data for period '{period}': {e}")
-        fig.update_layout(title_text=f"Error in data processing for {period}")
-        _make_figure_empty_looking(fig)
-        return fig
+        return output_figures
 
-    # Data is already pre-processed with 7 data points per machine
-    # Iterate through each machine and add a trace
-    machine_names = df_copy["machine_name"].unique()
-    for machine_name in machine_names:
-        machine_df = df_copy[df_copy["machine_name"] == machine_name]
-        # Sort by date to ensure lines are drawn correctly (mmdd might not sort chronologically)
-        machine_df = machine_df.sort_values(by="date")
-        fig.add_trace(
-            go.Scatter(
-                x=machine_df["mmdd"],
-                y=machine_df["weight_kg"],
-                mode="lines+markers",
-                name=machine_name,
-                textfont=dict(color="#fdfefe", size=12),
-            )
+    # Build per-machine subplots: 3 machines per figure
+    machine_names = sorted(df_copy["machine_name"].dropna().unique().tolist())
+    if not machine_names:
+        return output_figures
+
+    machines_per_fig = 3
+    num_figs = math.ceil(len(machine_names) / machines_per_fig)
+
+    for fig_idx in range(num_figs):
+        start = fig_idx * machines_per_fig
+        end = min((fig_idx + 1) * machines_per_fig, len(machine_names))
+        chunk_names = machine_names[start:end]
+
+        subplot_titles = [truncate_title(n, max_len=18) for n in chunk_names]
+        # pad to 3 columns for consistent layout
+        while len(subplot_titles) < machines_per_fig:
+            subplot_titles.append("")
+
+        fig_row = make_subplots(
+            rows=1,
+            cols=machines_per_fig,
+            subplot_titles=subplot_titles,
+            horizontal_spacing=0.04,
         )
 
-    fig.update_layout(
-        xaxis_title=None,
-        yaxis_title=None,
-        showlegend=True,  # Ensure legend is visible
-        legend_title_text="Machine",
-        legend_font_color="#fdfefe",
-        legend_bgcolor="rgba(32,32,32,0.8)",  # Semi-transparent background for legend
-        font_color="#fdfefe",
-        margin=dict(l=10, r=10, t=40, b=20),
-        xaxis_showgrid=False,
-        yaxis_showgrid=False,
-        xaxis_showline=True,
-        yaxis_showline=True,
-        xaxis_linecolor="#fdfefe",
-        yaxis_linecolor="#fdfefe",
-        xaxis_tickfont=dict(color="#fdfefe"),
-        yaxis_tickfont=dict(color="#fdfefe"),
-        yaxis_range=[0, yaxis_upper_bound],
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(type="category"),
-    )
+        max_y_chunk = 0.0
+        for j, machine_name in enumerate(chunk_names):
+            mdf = df_copy[df_copy["machine_name"] == machine_name].sort_values("date")
+            if mdf.empty:
+                continue
+            max_y_chunk = max(max_y_chunk, float(mdf["weight_kg"].max()))
+            text_values = mdf["weight_kg"].tolist()
+            fig_row.add_trace(
+                go.Scatter(
+                    x=mdf["mmdd"],
+                    y=mdf["weight_kg"],
+                    mode="lines+markers+text",
+                    text=text_values,
+                    textposition="top right",
+                    textfont=dict(color="#fdfefe", size=12),
+                    showlegend=False,
+                    line=dict(width=2),
+                    marker=dict(size=6),
+                ),
+                row=1,
+                col=j + 1,
+            )
 
-    return fig
+        y_upper = max_y_chunk * 1.3 if max_y_chunk > 0 else 10.0
+
+        fig_row.update_layout(
+            title_text="",
+            showlegend=False,
+            margin=dict(l=10, r=10, t=40, b=20),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#fdfefe",
+            autosize=True,
+        )
+        fig_row.update_annotations(font=dict(size=12, color="#fdfefe"))
+
+        for c in range(1, machines_per_fig + 1):
+            fig_row.update_xaxes(
+                row=1,
+                col=c,
+                showgrid=False,
+                showline=True,
+                linecolor="#fdfefe",
+                tickfont=dict(color="#fdfefe", size=10),
+                type="category",
+            )
+            fig_row.update_yaxes(
+                row=1,
+                col=c,
+                showgrid=False,
+                showline=True,
+                linecolor="#fdfefe",
+                tickfont=dict(color="#fdfefe", size=10),
+                range=[0, y_upper],
+            )
+
+        output_figures.append(fig_row)
+
+    return output_figures

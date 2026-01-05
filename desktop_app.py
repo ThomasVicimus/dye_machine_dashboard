@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 from user_agents import parse
 import logging
 import os
+import socket
 from callbacks.select_time_period_callback import (
     register_time_period_callbacks,
     register_chart5_timeframe_callbacks,
@@ -38,6 +39,21 @@ socketio = SocketIO(server)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def _get_lan_ip() -> str:
+    """
+    Best-effort LAN IP detection for printing a usable URL on the local network.
+    This does not require external connectivity; it just uses routing to pick an interface.
+    """
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        finally:
+            s.close()
+    except Exception:
+        return "127.0.0.1"
+
 desktop_app = Dash(
     __name__,
     server=server,
@@ -53,37 +69,46 @@ desktop_app.layout = create_desktop_layout(
     default_period="今天",
 )
 
-
+# Chart 1, 3, 4, 6
 register_time_period_callbacks(
     app=desktop_app,
     # chart_id="chart-1",
     mobile=False,
     lang="zh_cn",
 )
+
+# Chart 5
 register_chart5_timeframe_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
+
+# Chart 2
 register_theme_callbacks(
     app=desktop_app,
     default_color="black",
     default_lang="zh_cn",
 )
+
+# Chart 2
 register_chart2_page_turner(desktop_app)
 
+# Chart 3, 6
 register_txt_cards_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
 
+# All Charts
 register_auto_refresh_callbacks(
     app=desktop_app,
     mobile=False,
     lang="zh_cn",
 )
 
+# Chart 2
 register_chart2_data_refresh_callback(
     app=desktop_app,
     mobile=False,
@@ -100,9 +125,14 @@ register_startup_modal_callbacks(desktop_app)
 #     lang="zh_cn",
 # )
 if __name__ == "__main__":
+    host = os.environ.get("DASH_HOST", "0.0.0.0")
+    port = int(os.environ.get("DASH_PORT", "8051"))
+    lan_ip = _get_lan_ip()
     logger.info("Starting desktop server...")
+    logger.info(f"Local URL: http://127.0.0.1:{port}/")
+    logger.info(f"LAN URL:   http://{lan_ip}:{port}/")
     desktop_app.run(
-        host="0.0.0.0",
-        port=8051,
+        host=host,
+        port=port,
     )
     # debug=True,
