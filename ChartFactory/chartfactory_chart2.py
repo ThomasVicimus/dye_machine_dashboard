@@ -76,8 +76,10 @@ def create_chart2_figure(
             page_action="native",
             style_table={
                 "overflowX": "auto",
+                "overflowY": "auto",
                 "width": "100%",
                 "height": "100%",
+                "minHeight": 0,
                 # "minHeight": "20vh",
                 # "tableLayout": "fixed",
             },

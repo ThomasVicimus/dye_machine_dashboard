@@ -61,9 +61,20 @@ def create_chart2_layout(
                     interval=page_interval * 1000,  # Convert to milliseconds
                     n_intervals=0,
                 ),
-                fig,
+                html.Div(
+                    fig,
+                    className="chart2-table-wrap",
+                    style={"flex": "1 1 auto", "minHeight": 0},
+                ),
             ],
-            style={"height": "100%", "overflowY": "auto"},
+            className="chart2-card-wrap",
+            style={
+                "height": "100%",
+                "display": "flex",
+                "flexDirection": "column",
+                "overflow": "hidden",
+                "minHeight": 0,
+            },
         )
 
         return table_component
@@ -76,9 +87,20 @@ def create_chart2_layout(
                     interval=page_interval * 1000,
                     n_intervals=0,
                 ),
-                fig,
+                html.Div(
+                    fig,
+                    className="chart2-table-wrap",
+                    style={"flex": "1 1 auto", "minHeight": 0},
+                ),
             ],
-            style={"height": "100%", "overflowY": "auto"},
+            className="chart2-card-wrap",
+            style={
+                "height": "100%",
+                "display": "flex",
+                "flexDirection": "column",
+                "overflow": "hidden",
+                "minHeight": 0,
+            },
         )
 
         return table_component

@@ -33,6 +33,29 @@
     overflow: hidden;
     padding: 0;
   }
+
+  /* Chart-2 DataTable containment: force the table to scroll inside the tile. */
+  .chart2-card-wrap {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .chart2-table-wrap {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Dash DataTable internal containers sometimes ignore parent height unless explicitly set. */
+  .chart2-table-wrap .dash-table-container,
+  .chart2-table-wrap .dash-spreadsheet-container,
+  .chart2-table-wrap .dash-spreadsheet,
+  .chart2-table-wrap .dash-table {
+    height: 100%;
+    min-height: 0;
+  }
 }
+
 
 
