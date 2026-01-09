@@ -148,8 +148,55 @@ This is consistent with how Chart 1/4/5 are designed: “mobile main = overview�
 ## Proposed next steps (what I recommend doing next)
 1) Add CSS classes + adjust row heights so Row 1 is a full-screen “page”.
 2) Fix Chart 2 DataTable containment inside its tile (wrap + overflow + optional fixed header).
-3) Simplify Chart 3 and Chart 6 **mobile main** layouts to “chart-first” (move cards to detail).
+3) Fix **Chart 6 tile height allocation** so the chart uses the available space (keep text cards on main).
 
-If you confirm you’re OK with adding `assets/mobile.css`, we can implement the above in a controlled way with minimal disruption to existing callbacks and IDs.
+We already confirmed Step 3 does **not** need “move cards to detail”. The real issue is that Chart 6’s current tile composition does not provide a reliable height contract to the `dcc.Graph`, so it can collapse to a tiny height even when there is blank space.
+
+---
+
+## Revised Step 3 (keep cards, fix Chart 6 squeeze)
+
+### Symptoms observed
+- Chart 6 tile shows **blank space**, but the `dcc.Graph` region is **tiny/squeezed**.
+- This indicates the graph’s parent container likely has **no computable height** (or is being clipped), so `height: 100%` / `calc(100% - X)` doesn’t behave as intended.
+
+### Likely root causes in current code
+- In `PlotCharts/PlotChart_chart6.py` (mobile path):
+  - The graph wrapper uses `style={"height": "calc(100% - 80px)", "minHeight": "300px"}` inside a parent that may not have a real height.
+  - The layout is nested `dbc.Row/dbc.Col` with `style={"height":"100%"}`, but Bootstrap rows/cols do **not** automatically propagate height unless the parent is flexed correctly and all intermediate containers have `min-height: 0`.
+- In our landscape CSS (`assets/mobile.css`):
+  - `.mobile-row-page .card-body { height: 100%; overflow: hidden; padding: 0; }`
+  - This is good for chart containment, but it can also unintentionally **clip** or **break** nested layouts that expect padding/scroll or rely on natural height.
+- `dcc.Link` wrapper on mobile tiles:
+  - Some tiles wrap complex nested layouts in `dcc.Link(...)`. If the link isn’t given a strict flex/height contract, children using `height: 100%` can still collapse.
+
+### Recommended technical fix (robust across devices)
+Convert the Chart 6 *tile* to an explicit flex layout so heights are deterministic:
+
+- In `PlotCharts/PlotChart_chart6.py` (mobile branch):
+  - Replace the nested “row with calc heights” approach with:
+    - a root container: `display: flex; flex-direction: row; height: 100%; min-height: 0;`
+    - left column: fixed width ratio, `height: 100%`
+    - right column: `display: flex; flex-direction: column; height: 100%; min-height: 0;`
+      - top: combined cards, `flex: 0 0 auto`
+      - bottom: graph wrapper, `flex: 1 1 auto; min-height: 0; overflow: hidden;`
+      - graph itself: `style={"height":"100%","width":"100%"}`
+
+This is the same proven pattern we used to contain the DataTable: **flex + min-height: 0**.
+
+### CSS support (small, targeted)
+Add a few targeted helpers in `assets/mobile.css`:
+- `.chart6-tile { height: 100%; min-height: 0; display: flex; }`
+- `.chart6-tile .chart6-right { min-height: 0; display: flex; flex-direction: column; }`
+- `.chart6-tile .chart6-graph-wrap { flex: 1 1 auto; min-height: 0; overflow: hidden; }`
+
+Also add a selective override if needed:
+- `.chart6-tile .card-body { padding: 0.25rem; overflow: hidden; }`
+so Chart 6 can keep small spacing without affecting other charts.
+
+### Scope / difficulty
+- **Not complicated**, but requires careful “height contract” work (flex + min-height) to avoid regressions.
+- Expected effort: **1–3 hours** to implement + visually verify on 1–2 device sizes.
+
 
 
