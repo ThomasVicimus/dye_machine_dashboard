@@ -10,6 +10,7 @@ from dash import html
 
 logger = logging.getLogger(__name__)
 
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 def create_chart6_layout(
     default_period: str,
@@ -66,7 +67,7 @@ def create_chart6_layout(
                     dcc.Graph(
                         id=chart_id,
                         figure=initial_figure,
-                        config={"displayModeBar": False, "responsive": True},
+                        config=NON_INTERACTIVE_GRAPH_CONFIG,
                         style={"width": "100%", "height": "100%"},
                     ),
                     style={"height": "calc(100% - 80px)", "minHeight": "240px"},
@@ -132,7 +133,7 @@ def create_chart6_layout(
                     dcc.Graph(
                         id=chart_id,
                         figure=initial_figure,
-                        config={"displayModeBar": False, "responsive": True},
+                        config=NON_INTERACTIVE_GRAPH_CONFIG,
                         style={"width": "100%", "height": "100%"},
                     ),
                     style={"height": "calc(100% - 80px)", "minHeight": "300px"},
@@ -267,7 +268,7 @@ def create_chart6_detailed_layout(
                 dcc.Graph(
                     id=f"{chart_id}-main",
                     figure=main_figure,
-                    config={"displayModeBar": False, "responsive": True},
+                    config=NON_INTERACTIVE_GRAPH_CONFIG,
                     style={"height": "100%", "width": "100%"},
                 ),
                 style={"height": "calc(100% - 80px)", "minHeight": "200px"},

@@ -14,6 +14,7 @@ from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_chart5_timeframe_buttons
 from layouts.mobile_detail_layout import create_mobile_detail_overlay_layout
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -295,10 +296,7 @@ def register_detail_page_callbacks(
                                             "height": "45vh",
                                             "width": "100%",
                                         },
-                                        config={
-                                            "displayModeBar": False,
-                                            "responsive": True,
-                                        },
+                                        config=NON_INTERACTIVE_GRAPH_CONFIG,
                                     ),
                                     width=12,
                                 ),
@@ -317,10 +315,7 @@ def register_detail_page_callbacks(
                                         "height": "80vh",
                                         "width": "100%",
                                     },
-                                    config={
-                                        "displayModeBar": False,
-                                        "responsive": True,
-                                    },
+                                    config=NON_INTERACTIVE_GRAPH_CONFIG,
                                 ),
                                 width=12,
                             ),

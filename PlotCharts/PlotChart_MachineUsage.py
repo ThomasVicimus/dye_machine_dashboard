@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import dcc
 
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +36,7 @@ def create_chart1_layout(
         return dcc.Graph(
             id=chart_id,
             figure=initial_figure,
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
             style={"width": "100%", "height": "100%", "minHeight": "25vh"},
         )
     else:
@@ -60,7 +61,7 @@ def create_chart1_layout(
                 "width": "100%",
                 "minHeight": "20vh",
             },  # Height adjusted
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
         )
         return dcc.Link(
             graph_component,
