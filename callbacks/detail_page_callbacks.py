@@ -328,12 +328,12 @@ def register_detail_page_callbacks(
                         )
                     ]
 
-            # Wrap all graph components in a scrollable container
+            # Wrap all graph components in a container.
+            # IMPORTANT: the overlay wrapper is the single scroll container; avoid nested scroll
+            # here to prevent scroll "leakage" into the underlying dashboard on mobile.
             graphs_container = html.Div(
                 children=graph_components,
                 style={
-                    "overflowY": "auto",
-                    "maxHeight": "90vh",  # Limit height to ensure scrollability
                     "padding": "5px",
                 },
             )

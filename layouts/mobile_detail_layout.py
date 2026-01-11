@@ -58,9 +58,14 @@ def create_mobile_detail_overlay_layout(
             "height": "100vh",
             "overflowY": "auto",
             "overflowX": "hidden",
-            "position": "relative",
+            # Make this a true full-screen modal overlay so it doesn't scroll-chain into the dashboard.
+            "position": "fixed",
+            "top": 0,
+            "left": 0,
             "backgroundColor": "#000000",
             "zIndex": 1000,
+            # Prevent scroll chaining / rubber-banding from exposing the dashboard underneath.
+            "overscrollBehavior": "contain",
         },
         children=[
             dbc.Container(

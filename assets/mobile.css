@@ -2,12 +2,20 @@
    Dash automatically serves files under /assets. */
 
 @media (orientation: landscape) {
+  :root {
+    /* Breathing room so the row-page doesn't feel edge-to-edge. */
+    --mobile-row-padding-v: 1svh;
+    --mobile-row-padding-h: 1vw;
+  }
+
   /* Each dashboard row should behave like a full-screen "page". */
   .mobile-row-page {
     /* Prefer stable viewport units when available; fall back via min-height. */
-    height: 100svh;
+    height: 96svh;
     min-height: 100vh;
     width: 100%;
+    padding: var(--mobile-row-padding-v) var(--mobile-row-padding-h);
+    box-sizing: border-box;
   }
 
   /* Make the row and its columns fill the page height. */
