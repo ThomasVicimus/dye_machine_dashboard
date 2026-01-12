@@ -63,7 +63,34 @@
     height: 100%;
     min-height: 0;
   }
+
+  /* Chart 6 Layout: Strict Flex Container */
+  .chart6-tile {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .chart6-left {
+    flex: 0 0 33.333%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .chart6-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .chart6-graph-wrap {
+    flex: 1; /* Grow to fill remaining space */
+    min-height: 0;
+    position: relative;
+  }
 }
-
-
-
