@@ -22,6 +22,7 @@ from ChartFactory.chartfactory_chart6 import (
     create_chart6_txt_cards,
 )
 import math  # Needed for ceiling division when paging machines for chart-5
+from function.dashboard_config import get_lane_count, get_data_refresh_interval
 
 
 logger = logging.getLogger(__name__)
@@ -34,13 +35,19 @@ def register_chart5_timeframe_callbacks(
     app,
     mobile: bool = False,
     lang: str = "zh_cn",
-    page_size_mobile: int = 4,
-    page_size_desktop: int = 8,
+    page_size_mobile: int = None,
+    page_size_desktop: int = None,
 ):
     """Registers callbacks for chart5 timeframe selection."""
     CHART5_TIMEFRAME_BUTTON_TYPE = "chart5-timeframe-button"
     CHART5_TIMEFRAME_STORE_ID = "chart5-timeframe-store"
     CHART5_ID = "chart-5"
+
+    # Apply config defaults if not explicitly passed
+    if page_size_mobile is None:
+        page_size_mobile = get_lane_count("mobile")
+    if page_size_desktop is None:
+        page_size_desktop = get_lane_count("desktop")
 
     @app.callback(
         Output(CHART5_TIMEFRAME_STORE_ID, "data", allow_duplicate=True),
