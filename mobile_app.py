@@ -21,6 +21,7 @@ from callbacks.detail_page_callbacks import (
     register_table_click_url_push,
     register_detail_page_callbacks,
 )
+from function.dashboard_config import get_default_theme, get_default_lang
 
 db = DatabaseConnection()
 conn = db.connect()
@@ -35,6 +36,10 @@ socketio = SocketIO(server)
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Get defaults from config
+DEFAULT_THEME = get_default_theme()
+DEFAULT_LANG = get_default_lang()
 
 def _get_lan_ip() -> str:
     """
@@ -61,8 +66,8 @@ mobile_app = Dash(
 
 mobile_app.layout = create_mobile_layout(
     initial_charts_data=data,
-    color_theme="black",
-    lang="zh_cn",
+    color_theme=DEFAULT_THEME,
+    lang=DEFAULT_LANG,
     default_period="今天",
 )
 
@@ -70,39 +75,39 @@ mobile_app.layout = create_mobile_layout(
 register_time_period_callbacks(
     app=mobile_app,
     mobile=True,
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 register_theme_callbacks(
     app=mobile_app,
-    default_color="black",
-    default_lang="zh_cn",
+    default_color=DEFAULT_THEME,
+    default_lang=DEFAULT_LANG,
 )
 register_auto_refresh_callbacks(
     app=mobile_app,
     mobile=True,
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 register_table_click_url_push(app=mobile_app)
 register_detail_page_callbacks(
     app=mobile_app,
     # chart_id="chart-1",
     # default_period="今天",
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 register_chart2_data_refresh_callback(
     app=mobile_app,
     mobile=True,
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 register_chart5_timeframe_callbacks(
     app=mobile_app,
     mobile=True,
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 register_txt_cards_callbacks(
     app=mobile_app,
     mobile=True,
-    lang="zh_cn",
+    lang=DEFAULT_LANG,
 )
 # register_chart2_detail_callback(app=mobile_app)
 
