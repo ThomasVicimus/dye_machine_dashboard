@@ -272,11 +272,15 @@ python scripts/edit_config.py
 
 ## 7. Done Criteria
 
-- [ ] `env/dashboard_config.yml` exists with documented fields
-- [ ] `function/dashboard_config.py` loads and caches config
-- [ ] Chart 2 and Chart 5 use config for lane/row counts
+- [x] `env/dashboard_config.yml` exists with documented fields
+- [x] `function/dashboard_config.py` loads and caches config
+- [x] Chart 2 uses config for lane/row counts (Step 3)
+- [x] Chart 5 PlotChart uses config for lane counts (Step 4)
+- [x] Chart 5 callback uses config for lane counts (Step 5)
+- [x] Refactored `mobile_app.py` / `desktop_app.py` for theme/lang defaults (Step 6)
+- [x] Refactored `layouts` for refresh interval and timeframe defaults (Step 6+)
 - [ ] Changing the YAML value and restarting the app changes the dashboard behavior
-- [ ] Documentation updated in README files
+- [x] Documentation updated in README files (Step 7)
 
 ---
 
