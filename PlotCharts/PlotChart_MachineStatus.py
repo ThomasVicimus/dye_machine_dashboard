@@ -3,6 +3,7 @@ import logging
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from ChartFactory.chartfactory_chart2 import create_chart2_figure
+from function.dashboard_config import get_lane_count, get_chart2_page_interval
 
 logger = logging.getLogger(__name__)
 
@@ -10,9 +11,9 @@ logger = logging.getLogger(__name__)
 def create_chart2_layout(
     dfs: dict,
     chart_id: str = "chart-2",
-    page_interval: int = 15,
-    desktop_row_count: int = 8,
-    mobile_row_count: int = 4,
+    page_interval: int = None,
+    desktop_row_count: int = None,
+    mobile_row_count: int = None,
     mobile: bool = False,
     theme: str = "black",
 ):
@@ -21,10 +22,18 @@ def create_chart2_layout(
     Args:
         dfs: Dictionary containing dataframes.
         chart_id: Unique ID for the table component.
-        page_interval: Seconds between page turns (default: 15).
+        page_interval: Seconds between page turns (default from config).
         mobile: Whether the layout is for mobile view.
         theme: Current theme (black or dark_blue).
     """
+    # Apply config defaults if not explicitly passed
+    if page_interval is None:
+        page_interval = get_chart2_page_interval()
+    if desktop_row_count is None:
+        desktop_row_count = get_lane_count("desktop")
+    if mobile_row_count is None:
+        mobile_row_count = get_lane_count("mobile")
+
     # Assuming df is in the dfs dictionary with a relevant key
     if mobile:
         mobile_option = "mobile"
