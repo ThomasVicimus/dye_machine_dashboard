@@ -79,17 +79,30 @@ def register_chart5_timeframe_callbacks(
             return current_timeframe
         return current_timeframe
 
-    @app.callback(
-        Output(CHART5_ID, "figure"),
+    # Determine inputs based on mode
+    chart5_inputs = [
         Input(CHART5_TIMEFRAME_STORE_ID, "data"),
         Input("all-chart-data-store", "data"),
         Input("mobile-url", "pathname"),
-        Input(
-            "chart-2-interval", "n_intervals"
-        ),  # reuse existing timer for auto page turning
+    ]
+    
+    if mobile:
+        # Paging driven by shared store (buttons)
+        chart5_inputs.append(Input("main-page-index-store", "data"))
+    else:
+        # Paging driven by interval (auto-timer)
+        chart5_inputs.append(Input("chart-2-interval", "n_intervals"))
+
+    @app.callback(
+        Output(CHART5_ID, "figure"),
+        chart5_inputs,
         prevent_initial_call=True,
     )
-    def update_chart5_figure(selected_timeframe, all_chart_data, pathname, n_intervals):
+    def update_chart5_figure(selected_timeframe, all_chart_data, pathname, page_trigger):
+        """
+        Updates Chart 5. 
+        'page_trigger' is either the page index (mobile) or n_intervals (desktop).
+        """
         # While on detail pages, don't spend time rebuilding the main dashboard chart.
         # The detail overlay has its own chart rendering path.
         if pathname and pathname.startswith("/details/"):
@@ -167,9 +180,13 @@ def register_chart5_timeframe_callbacks(
 
                 page_count = max(1, math.ceil(len(unique_machines) / PAGE_SIZE))
 
-                # n_intervals may be None when the callback fires from timeframe button change
-                current_interval = n_intervals or 0
-                current_page_idx = current_interval % page_count
+                if mobile:
+                     # Mobile: page_trigger is the direct page index from store
+                    current_page_idx = (page_trigger or 0) % page_count
+                else:
+                    # Desktop: page_trigger is n_intervals, calculate page index
+                    current_interval = page_trigger or 0
+                    current_page_idx = current_interval % page_count
 
                 start_idx = current_page_idx * PAGE_SIZE
                 end_idx = start_idx + PAGE_SIZE

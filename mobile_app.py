@@ -21,6 +21,7 @@ from callbacks.detail_page_callbacks import (
     register_table_click_url_push,
     register_detail_page_callbacks,
 )
+from callbacks.page_turner_callbacks import register_page_turner_callbacks
 from function.dashboard_config import get_default_theme, get_default_lang
 
 db = DatabaseConnection()
@@ -109,7 +110,10 @@ register_txt_cards_callbacks(
     mobile=True,
     lang=DEFAULT_LANG,
 )
-# register_chart2_detail_callback(app=mobile_app)
+register_page_turner_callbacks(
+    app=mobile_app,
+    mobile=True,
+)
 
 if __name__ == "__main__":
     host = os.environ.get("DASH_HOST", "0.0.0.0")
