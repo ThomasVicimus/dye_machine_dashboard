@@ -3,7 +3,10 @@ from dash import html
 
 
 def create_period_button(periods, selected_period=None):
-    """Creates the ButtonGroup for period selection for chart 1."""
+    """
+    [DEPRECATED] Creates the ButtonGroup for period selection for chart 1.
+    This function is deprecated in favor of create_combined_control_row.
+    """
     if not periods or periods == ["No Data"] or periods == ["Error"]:
         return dbc.Alert("No periods available", color="warning", className="mb-2")
     return dbc.ButtonGroup(
@@ -84,7 +87,10 @@ def create_theme_buttons():
 
 
 def create_main_page_turner_buttons(current_page=0, total_pages=1):
-    """Creates a shared Page Turner button group for the mobile main page."""
+    """
+    [DEPRECATED] Creates a shared Page Turner button group for the mobile main page.
+    This function is deprecated in favor of create_combined_control_row.
+    """
 
     # Page indicator text (e.g., "Page 1 / 5")
     # Using small font size for mobile
@@ -117,4 +123,86 @@ def create_main_page_turner_buttons(current_page=0, total_pages=1):
         ],
         className="mb-1",
         style={"width": "100%", "justifyContent": "center"},
+    )
+
+
+def create_combined_control_row(periods, selected_period=None, current_page=0, total_pages=1):
+    """
+    Creates a combined row containing Time Period buttons (Left) and Page Turner buttons (Right).
+    This replaces the separate calls to keep the UI compact.
+    """
+    
+    # --- Part 1: Period Buttons ---
+    period_buttons_content = None
+    if not periods or periods == ["No Data"] or periods == ["Error"]:
+        period_buttons_content = dbc.Alert("No periods", color="warning", className="mb-0 py-1", style={"fontSize": "0.7rem"})
+    else:
+        period_buttons_content = dbc.ButtonGroup(
+            [
+                dbc.Button(
+                    period,
+                    id={"type": "period-button", "index": period},
+                    color="primary",
+                    outline=(
+                        (period != selected_period) if selected_period is not None else True
+                    ),
+                    size="sm",
+                    style={"fontSize": "0.7rem", "padding": "0.1rem 0.3rem"},
+                )
+                for period in periods
+            ],
+            className="mb-0",
+        )
+
+    # --- Part 2: Page Turner Buttons ---
+    # Page indicator text (e.g., "1/5")
+    page_indicator = html.Span(
+        f"{current_page + 1}/{total_pages}",
+        id="main-page-indicator",
+        className="mx-1 align-self-center",
+        style={"fontSize": "0.7rem", "color": "#fdfefe", "whiteSpace": "nowrap"},
+    )
+
+    page_turner_content = dbc.ButtonGroup(
+        [
+            dbc.Button(
+                "←",
+                id="main-prev-button",
+                color="secondary",
+                outline=True,
+                size="sm",
+                style={"fontSize": "0.7rem", "padding": "0.1rem 0.3rem"},
+            ),
+            page_indicator,
+            dbc.Button(
+                "→",
+                id="main-next-button",
+                color="secondary",
+                outline=True,
+                size="sm",
+                style={"fontSize": "0.7rem", "padding": "0.1rem 0.3rem"},
+            ),
+        ],
+        className="mb-0",
+    )
+
+    # --- Combined Row ---
+    return dbc.Row(
+        [
+            dbc.Col(
+                period_buttons_content,
+                width=True, # Auto width
+                className="d-flex align-items-center justify-content-start",
+                style={"overflowX": "auto", "paddingRight": "5px"}
+            ),
+            dbc.Col(
+                page_turner_content,
+                width="auto", # Fit content
+                className="d-flex align-items-center justify-content-end",
+                style={"paddingLeft": "5px"}
+            ),
+        ],
+        className="g-0 w-100",
+        align="center",
+        style={"flexWrap": "nowrap"} # Prevent wrapping to keep single line
     )

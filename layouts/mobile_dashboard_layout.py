@@ -8,7 +8,7 @@ from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
 # from layouts.create_buttons import create_period_button, create_theme_buttons
-from layouts.create_buttons import create_main_page_turner_buttons
+from layouts.create_buttons import create_main_page_turner_buttons, create_combined_control_row
 from function.dashboard_config import get_data_refresh_interval, get_chart5_default_timeframe, get_lane_count
 
 # Note: Figures are passed from mobile_app.py
@@ -101,11 +101,16 @@ def create_mobile_layout(
                     #     )
                     # ),
                     # Pagination row for mobile
+                    # Combined Control Row (Sticky)
                     dbc.Row(
                         dbc.Col(
-                            create_main_page_turner_buttons(),
+                            create_combined_control_row(
+                                periods=periods,
+                                selected_period=default_period, 
+                                current_page=0, 
+                                total_pages=1
+                            ),
                             width=12,
-                            className="text-center",
                         ),
                         className="mb-1",
                         style={
