@@ -108,6 +108,14 @@ def create_mobile_layout(
                             className="text-center",
                         ),
                         className="mb-1",
+                        style={
+                            "position": "sticky",
+                            "top": "0",
+                            "zIndex": "1020",
+                            "backgroundColor": "#202020",
+                            "paddingTop": "5px",
+                            "paddingBottom": "5px"
+                        },
                     ),
                     #* Buttons removed for now
                     # Row 1 (Charts 1-3)
