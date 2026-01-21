@@ -145,7 +145,9 @@ def register_detail_page_callbacks(
         Output("mobile-page-content", "children"),
         Input("mobile-url", "pathname"),
         Input(PERIOD_STORE_ID, "data"),  # Rerender detail on period change
-        Input("chart5-timeframe-store", "data"),  # Rerender chart-5 detail on timeframe change
+        Input(
+            "chart5-timeframe-store", "data"
+        ),  # Rerender chart-5 detail on timeframe change
         State("all-chart-data-store", "data"),
     )
     def display_page(pathname, period_data, chart5_timeframe_data, all_chart_data):
@@ -347,10 +349,10 @@ def register_detail_page_callbacks(
                         if k not in {"desktop", "No Data", "Error"}
                     ]
                 if available_periods:
-                header_right = create_period_button(
-                    periods=available_periods,
-                    selected_period=period_data,
-                )
+                    header_right = create_period_button(
+                        periods=available_periods,
+                        selected_period=period_data,
+                    )
 
             return_layout = create_mobile_detail_overlay_layout(
                 chart_id=chart_id,
