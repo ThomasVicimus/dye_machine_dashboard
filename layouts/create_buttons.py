@@ -12,7 +12,9 @@ def create_period_button(periods, selected_period=None):
                 period,
                 id={"type": "period-button", "index": period},
                 color="primary",
-                outline=(period != selected_period) if selected_period is not None else True,
+                outline=(
+                    (period != selected_period) if selected_period is not None else True
+                ),
                 size="sm",
                 style={"fontSize": "calc(0.7rem + 0.1vw)"},
             )
@@ -37,7 +39,11 @@ def create_chart5_timeframe_buttons(selected_timeframe=None):
                 timeframe_labels[timeframe],
                 id={"type": "chart5-timeframe-button", "index": timeframe},
                 color="primary",
-                outline=(timeframe != selected_timeframe) if selected_timeframe is not None else True,
+                outline=(
+                    (timeframe != selected_timeframe)
+                    if selected_timeframe is not None
+                    else True
+                ),
                 size="sm",
                 style={"fontSize": "calc(0.7rem + 0.1vw)"},
             )
@@ -79,20 +85,20 @@ def create_theme_buttons():
 
 def create_main_page_turner_buttons(current_page=0, total_pages=1):
     """Creates a shared Page Turner button group for the mobile main page."""
-    
+
     # Page indicator text (e.g., "Page 1 / 5")
     # Using small font size for mobile
     page_indicator = html.Span(
         f"{current_page + 1} / {total_pages}",
         id="main-page-indicator",
         className="mx-2 align-self-center",
-        style={"fontSize": "0.8rem", "color": "#fdfefe"}
+        style={"fontSize": "0.8rem", "color": "#fdfefe"},
     )
-    
+
     return dbc.ButtonGroup(
         [
             dbc.Button(
-                "← Prev",
+                "←-",
                 id="main-prev-button",
                 color="secondary",
                 outline=True,
@@ -101,7 +107,7 @@ def create_main_page_turner_buttons(current_page=0, total_pages=1):
             ),
             page_indicator,
             dbc.Button(
-                "Next →",
+                "-→",
                 id="main-next-button",
                 color="secondary",
                 outline=True,
@@ -110,5 +116,5 @@ def create_main_page_turner_buttons(current_page=0, total_pages=1):
             ),
         ],
         className="mb-1",
-        style={"width": "100%", "justifyContent": "center"}
+        style={"width": "100%", "justifyContent": "center"},
     )
