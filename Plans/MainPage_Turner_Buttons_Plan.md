@@ -126,28 +126,32 @@ Add explicit "Prev / Next" buttons (and optionally a page indicator) on the dash
 ---
 
 ## Recommendation
-Start with **Option A** (reuse Chart 2 paging UI to drive Chart 5) because it matches your current UX ("click-only paging, buttons already shown on dashboard") and is the smallest change.
-
-If later you want a cleaner unified control bar, implement **Option B**.
+**Implement Option B** (shared page-turner ButtonGroup). This provides a single, unified control for both charts, which is superior for mobile UX where screen space and clarity are at a premium.
 
 ---
 
-## "Done" criteria (Option A)
+## "Done" criteria (Option B)
 - On mobile main page:
-  - User clicks Chart 2 next/prev
-  - Chart 2 switches page
-  - **Chart 5 switches to the corresponding page** and shows **exactly N lanes** (from config, default 4 for mobile)
-- No auto page turning occurs on mobile.
-- Both charts use the same lane count from `env/dashboard_config.yml`.
+  - There is a "Prev / Next" button group.
+  - Clicking "Next" advances both Chart 2 and Chart 5 to the next set of machines.
+  - Clicking "Prev" goes back.
+  - A page indicator shows the current page range (e.g., "1 - 4 / 20").
+  - Auto page turning is disabled.
+  - Chart 2's native paging buttons are hidden (to avoid confusion) or synchronized.
 
 ---
 
-## Implementation checklist (Option A)
+## Implementation checklist (Option B)
 
-- [ ] Edit `callbacks/select_time_period_callback.py`:
-  - [ ] Change `Input("chart-2-interval", "n_intervals")` to `Input("chart-2", "page_current")`
-  - [ ] Update paging logic from interval-based to `page_current`-based
+- [ ] Create UI components:
+  - [ ] Add `create_main_page_turner_buttons()` in `layouts/create_buttons.py`.
+  - [ ] Add `dcc.Store(id="main-page-index-store", data=0)` in `layouts/mobile_dashboard_layout.py`.
+  - [ ] Add the button group to `layouts/mobile_dashboard_layout.py`.
+- [ ] Implement logic:
+  - [ ] Create `callbacks/page_turner_callbacks.py` (or add to existing).
+  - [ ] Add callback to update `main-page-index-store` from button clicks (looping/clamping).
+  - [ ] Add callback to set `chart-2.page_current` from `main-page-index-store.data`.
+  - [ ] Modify `callbacks/select_time_period_callback.py` to use `main-page-index-store.data` for Chart 5.
 - [ ] Test on mobile:
-  - [ ] Click Chart 2 pagination
-  - [ ] Verify Chart 5 updates to matching page
-  - [ ] Verify no auto page turning
+  - [ ] Verify synchronization between Table and Timeline.
+  - [ ] Verify no auto-paging.
