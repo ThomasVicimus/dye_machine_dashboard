@@ -109,6 +109,12 @@ def create_chart2_figure(
                 "width": "auto",
                 "minWidth": "60px",
             },
+            css=[
+                {
+                    "selector": ".previous-next-container",
+                    "rule": "display: none;",
+                }
+            ],
         )
     return fig
 
