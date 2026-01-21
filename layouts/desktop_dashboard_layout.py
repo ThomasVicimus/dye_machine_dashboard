@@ -7,6 +7,7 @@ from PlotCharts.PlotChart_chart4 import create_chart4_layout
 from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
+from function.dashboard_config import get_data_refresh_interval, get_chart5_default_timeframe
 
 # from layouts.create_buttons import create_period_button, create_theme_buttons
 
@@ -22,11 +23,15 @@ def create_desktop_layout(
     """Creates the main mobile dashboard layout structure with clickable charts.
 
     Args:
-        initial_charts (dict): Dictionary mapping chart IDs to initial figure objects.
-        initial_chart_data (dict): Dictionary containing the initially fetched data for charts.
+        initial_charts_data (dict): Dictionary containing the initially fetched data for charts.
         color_theme: The color theme setting.
         lang: The language setting.
+        default_period: Initial selected period key (e.g. "今天")
     """
+    # Get values from config
+    REFRESH_INTERVAL = get_data_refresh_interval()
+    CHART5_DEFAULT_TIMEFRAME = get_chart5_default_timeframe()
+
     periods = initial_charts_data["chart-1-data-store"].keys()
     serialized_initial_charts_data = {
         key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
@@ -161,7 +166,7 @@ def create_desktop_layout(
                             dbc.Col(
                                 dbc.Card(
                                     create_chart5_layout(
-                                        default_period="24_hrs",
+                                        default_period=CHART5_DEFAULT_TIMEFRAME,
                                         dfs=initial_charts_data["chart-5-data-store"],
                                         mobile=False,
                                         chart_id="chart-5",
@@ -201,7 +206,7 @@ def create_desktop_layout(
                     # Placeholder for potential future updates or controls
                     html.Div(id="mobile-dynamic-content", className="text-center"),
                     dcc.Interval(
-                        id="mobile-interval", interval=60 * 1000, n_intervals=0
+                        id="mobile-interval", interval=REFRESH_INTERVAL * 1000, n_intervals=0
                     ),
                     # Add the data store here and populate with initial data
                     dcc.Store(
@@ -215,7 +220,7 @@ def create_desktop_layout(
                     ),
                     dcc.Store(
                         id="chart5-timeframe-store",
-                        data="24_hrs",
+                        data=CHART5_DEFAULT_TIMEFRAME,
                         storage_type="session",
                     ),
                     # --------------------------------------------
@@ -267,7 +272,7 @@ def create_desktop_layout(
                                         {"label": "48小时", "value": "48_hrs"},
                                         {"label": "72小时", "value": "72_hrs"},
                                     ],
-                                    value="24_hrs",
+                                    value=CHART5_DEFAULT_TIMEFRAME,
                                     inline=False,
                                 ),
                             ),

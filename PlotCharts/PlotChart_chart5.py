@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 import logging
+from function.dashboard_config import get_lane_count
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +17,16 @@ def create_chart5_layout(
     dfs: dict,
     chart_id: str = "chart-5",
     mobile: bool = False,
-    page_size: int = 8,  # Desktop lanes per page (paging is handled in callbacks)
-    mobile_page_size: int = 4,  # Mobile lanes per page (easy to tune)
+    page_size: int = None,
+    mobile_page_size: int = None,
 ):
     """Creates the layout containing the timeframe buttons and graph for chart 5."""
-    # Create the timeframe buttons
-    # timeframe_buttons = create_chart5_timeframe_buttons()
+    
+    # Apply config defaults if not explicitly passed
+    if page_size is None:
+        page_size = get_lane_count("desktop")
+    if mobile_page_size is None:
+        mobile_page_size = get_lane_count("mobile")
 
     # *Desktop Chart
     if not mobile:
