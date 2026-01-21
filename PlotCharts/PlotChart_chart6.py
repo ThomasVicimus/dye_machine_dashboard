@@ -137,19 +137,19 @@ def create_chart6_layout(
         # We assume combined_cards is defined above (Rows with Cols).
         # We'll just wrap it in a div that doesn't force a height, allowing it to take natural size.
         cards_section = html.Div(
-            combined_cards,
-            style={"marginBottom": "10px"},
+                    combined_cards,
+                    style={"marginBottom": "10px"},
         )
         
         # Graph section (Bottom right)
         # Use dcc.Graph with responsive config
         graph_section = html.Div(
-            dcc.Graph(
-                id=chart_id,
-                figure=initial_figure,
+                    dcc.Graph(
+                        id=chart_id,
+                        figure=initial_figure,
                 config=NON_INTERACTIVE_GRAPH_CONFIG,
-                style={"width": "100%", "height": "100%"},
-            ),
+                        style={"width": "100%", "height": "100%"},
+                    ),
             className="chart6-graph-wrap",
         )
 
@@ -164,11 +164,11 @@ def create_chart6_layout(
 
         # Left column: Card 1 (fixed width)
         left_col = html.Div(
-            dbc.Card(
-                card1,
-                id="chart6-card-1",
-                className="h-100",
-            ),
+                    dbc.Card(
+                        card1,
+                        id="chart6-card-1",
+                        className="h-100",
+                    ),
             className="chart6-left",
         )
 

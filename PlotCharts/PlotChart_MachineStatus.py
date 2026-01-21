@@ -71,7 +71,7 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 html.Div(
-                    fig,
+                fig,
                     className="chart2-table-wrap",
                     style={"flex": "1 1 auto", "minHeight": 0},
                 ),
@@ -97,7 +97,7 @@ def create_chart2_layout(
                     n_intervals=0,
                 ),
                 html.Div(
-                    fig,
+                fig,
                     className="chart2-table-wrap",
                     style={"flex": "1 1 auto", "minHeight": 0},
                 ),

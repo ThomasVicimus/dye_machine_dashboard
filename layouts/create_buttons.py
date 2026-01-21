@@ -1,4 +1,5 @@
 import dash_bootstrap_components as dbc
+from dash import html
 
 
 def create_period_button(periods, selected_period=None):
@@ -74,3 +75,40 @@ def create_theme_buttons():
 
 
 # *TODO Color Theme button
+
+
+def create_main_page_turner_buttons(current_page=0, total_pages=1):
+    """Creates a shared Page Turner button group for the mobile main page."""
+    
+    # Page indicator text (e.g., "Page 1 / 5")
+    # Using small font size for mobile
+    page_indicator = html.Span(
+        f"{current_page + 1} / {total_pages}",
+        id="main-page-indicator",
+        className="mx-2 align-self-center",
+        style={"fontSize": "0.8rem", "color": "#fdfefe"}
+    )
+    
+    return dbc.ButtonGroup(
+        [
+            dbc.Button(
+                "← Prev",
+                id="main-prev-button",
+                color="secondary",
+                outline=True,
+                size="sm",
+                style={"fontSize": "0.7rem"},
+            ),
+            page_indicator,
+            dbc.Button(
+                "Next →",
+                id="main-next-button",
+                color="secondary",
+                outline=True,
+                size="sm",
+                style={"fontSize": "0.7rem"},
+            ),
+        ],
+        className="mb-1",
+        style={"width": "100%", "justifyContent": "center"}
+    )

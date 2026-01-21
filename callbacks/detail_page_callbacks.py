@@ -347,10 +347,10 @@ def register_detail_page_callbacks(
                         if k not in {"desktop", "No Data", "Error"}
                     ]
                 if available_periods:
-                    header_right = create_period_button(
-                        periods=available_periods,
-                        selected_period=period_data,
-                    )
+                header_right = create_period_button(
+                    periods=available_periods,
+                    selected_period=period_data,
+                )
 
             return_layout = create_mobile_detail_overlay_layout(
                 chart_id=chart_id,
