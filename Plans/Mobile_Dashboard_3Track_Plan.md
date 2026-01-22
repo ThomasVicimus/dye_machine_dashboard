@@ -37,6 +37,60 @@ Lock down the **mobile UI contracts** that everything else depends on:
     - **single-figure detail** (full-height)
     - **list-of-figures detail** (row-figures stacked; consistent height per row)
 
+### Known UI issues to solve (and the plan)
+
+#### 1) Detail page container leakage (scroll reaches “transparent” and shows dashboard underneath)
+**Symptom**
+- When the detail overlay is open, scrolling to the end can “leak” into the underlying dashboard (or visually expose it), which feels like the overlay is not fully isolated.
+
+**Likely root causes**
+- The overlay wrapper in `layouts/mobile_detail_layout.py` is currently:
+  - `position: "relative"` (not a true full-screen modal)
+  - so the underlying dashboard can still participate in scroll (scroll chaining).
+- The detail graphs container in `callbacks/detail_page_callbacks.py` uses `maxHeight: "90vh"` and its own scrolling, which can create nested scroll areas that “hand off” scroll to the page underneath.
+
+**Fix plan**
+- **Make the overlay a true modal layer**:
+  - Change `layouts/mobile_detail_layout.py:create_mobile_detail_overlay_layout(...)` wrapper to:
+    - `position: "fixed"`, `top: 0`, `left: 0`
+    - keep `width: 100vw`, `height: 100vh`, `zIndex` high
+    - add `overscrollBehavior: "contain"` (prevents scroll chaining on mobile browsers)
+- **Simplify scrolling to one place**:
+  - Prefer: outer overlay scrolls (`overflowY: auto`), inner `graphs_container` should NOT introduce a second scroll.
+  - In `callbacks/detail_page_callbacks.py`, remove/avoid `maxHeight: "90vh"` on `graphs_container` and let the overlay be the only scroller.
+- **Optional hard lock** (if any device still leaks):
+  - When pathname starts with `/details/`, add a CSS class to the dashboard container to disable scroll and pointer events (e.g., `overflow: hidden; pointer-events: none;`).
+
+#### 2) Viewport adjustment (row pages feel “too full” at 100% height)
+**Symptom**
+- Each row uses essentially the full viewport (`100svh`), which is visually too tight and leaves no breathing room.
+
+**Fix plan**
+- Adjust landscape sizing in `assets/mobile.css`:
+  - Change `.mobile-row-page` from `height: 100svh` to something like:
+    - `height: 96svh` (or `calc(100svh - 2rem)`)
+  - Add consistent padding so charts don’t touch edges:
+    - `padding: 1svh 1vw; box-sizing: border-box;`
+  - If we introduce a sticky header bar (see #3), subtract its height:
+    - `height: calc(100svh - var(--mobile-toolbar-height));`
+
+#### 3) Shared page-turner buttons visible on both “pages” (Row 1 + Row 2)
+**Context**
+- Per `Plans/MainPage_Turner_Buttons_Plan.md`, the future feature is a shared control that can page both Chart 2 and Chart 5.
+- With the “row pages” design, the control must be visible while viewing either row.
+
+**Fix plan**
+- Add a **sticky dashboard toolbar** (single source of truth) above the row pages:
+  - In `layouts/mobile_dashboard_layout.py`, add a toolbar container (even if empty now), e.g.:
+    - `html.Div(id="mobile-dashboard-toolbar", ...)`
+  - Style via `assets/mobile.css`:
+    - `position: sticky; top: 0; z-index: 20; background: #202020;`
+- Put the shared page-turner ButtonGroup (Option B) in this toolbar later.
+- Ensure row-page heights account for the toolbar height:
+  - define `--mobile-toolbar-height` and set `.mobile-row-page { height: calc(100svh - var(--mobile-toolbar-height)); }`
+- When the **detail overlay** is open:
+  - the overlay (fixed) covers the toolbar automatically, so no extra work beyond the leakage fix.
+
 ### Done criteria
 - Tapping each chart card reliably routes to `/details/chart-x`
 - Detail page renders and scrolls correctly for:

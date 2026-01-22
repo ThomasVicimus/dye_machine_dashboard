@@ -6,21 +6,27 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 import logging
+from function.dashboard_config import get_lane_count
 
 logger = logging.getLogger(__name__)
 
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 def create_chart5_layout(
     default_period: str,
     dfs: dict,
     chart_id: str = "chart-5",
     mobile: bool = False,
-    page_size: int = 8,  # Desktop lanes per page (paging is handled in callbacks)
-    mobile_page_size: int = 4,  # Mobile lanes per page (easy to tune)
+    page_size: int = None,
+    mobile_page_size: int = None,
 ):
     """Creates the layout containing the timeframe buttons and graph for chart 5."""
-    # Create the timeframe buttons
-    # timeframe_buttons = create_chart5_timeframe_buttons()
+    
+    # Apply config defaults if not explicitly passed
+    if page_size is None:
+        page_size = get_lane_count("desktop")
+    if mobile_page_size is None:
+        mobile_page_size = get_lane_count("mobile")
 
     # *Desktop Chart
     if not mobile:
@@ -37,7 +43,7 @@ def create_chart5_layout(
         chart_component = dcc.Graph(
             id=chart_id,
             figure=initial_figure,
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
             style={
                 "width": "100%",
                 "height": "100%",
@@ -76,7 +82,7 @@ def create_chart5_layout(
                 "width": "100%",
                 "minHeight": "30vh",  # Adjusted minHeight
             },
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
         )
         chart_link = dcc.Link(
             graph_component,

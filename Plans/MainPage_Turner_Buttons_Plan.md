@@ -1,64 +1,87 @@
-# Main Page “Page Turner” Buttons Plan (Chart 2 + Chart 5, Mobile)
+# Main Page "Page Turner" Buttons Plan (Chart 2 + Chart 5, Mobile)
 
 ## Questions to answer
-1) **Can Chart 2’s existing paging controls also control Chart 5** on the mobile main page?
+1) **Can Chart 2's existing paging controls also control Chart 5** on the mobile main page?
 2) If not (or if we want better UX), **can we add one set of buttons** that controls **both Chart 2 and Chart 5** at the same time?
 
-## Current behavior (mobile main)
-- **Chart 2 (table)**
-  - Component: `dash_table.DataTable(id="chart-2", page_action="native")`
-  - Paging: user clicks the DataTable’s built-in pagination controls (page_next / page_prev).
-  - Auto page turning is **not enabled** on mobile because `callbacks/refresher_callback.py:register_chart2_page_turner(app)` is **not called** in `mobile_app.py` (and that matches your desired UX).
+---
 
-- **Chart 5 (timeline)**
-  - The current callback in `callbacks/select_time_period_callback.py:register_chart5_timeframe_callbacks(...)` updates `chart-5.figure`.
-  - It **can** “page” by slicing the dataframe (machines subset) using `PAGE_SIZE`, but the current driver is `Input("chart-2-interval", "n_intervals")` (reusing Chart 2’s interval) — this is effectively an *auto-page-turn* mechanism.
-  - If you want **click-only paging** (no auto), Chart 5 needs a **click-driven page index input**.
+## Current state (after config refactor – Jan 2026)
+
+### Chart 2 (table)
+- Component: `dash_table.DataTable(id="chart-2", page_action="native")`
+- **Mobile**: native pagination controls ARE visible (Prev / Next buttons built into DataTable)
+- **Desktop**: pagination controls are hidden via CSS (`.previous-next-container { display: none }`)
+- Auto page turning callback `register_chart2_page_turner()` is **NOT called** in `mobile_app.py`
+  - ✅ This is correct: users click the DataTable's built-in controls
+- Lane counts (rows per page) are now pulled from `env/dashboard_config.yml` via `get_lane_count("mobile")` / `get_lane_count("desktop")`
+
+### Chart 5 (timeline)
+- Callback: `callbacks/select_time_period_callback.py:register_chart5_timeframe_callbacks(...)`
+- **Current paging driver**: `Input("chart-2-interval", "n_intervals")`
+  - ⚠️ This is **auto page turning** via the interval timer – NOT click-driven
+  - The interval fires every `page_interval` seconds (default 15s from config)
+- Lane counts are now pulled from config via `get_lane_count("mobile")` / `get_lane_count("desktop")`
+
+### Problem
+Chart 2 is click-only (correct), but Chart 5 is still auto-turning (incorrect for mobile UX).
+They are **not synchronized**: clicking Chart 2's pagination does not affect Chart 5.
+
+---
 
 ## Key idea
-To have “one set of buttons” control both charts, both Chart 2 and Chart 5 need to share a **single source of truth** for “current page index”.
+To have "one set of buttons" control both charts, both Chart 2 and Chart 5 need to share a **single source of truth** for "current page index".
 
 There are two good ways to achieve this:
 
 ---
 
-## Option A (recommended first): reuse Chart 2’s existing DataTable paging buttons to drive Chart 5
+## Option A (recommended): reuse Chart 2's existing DataTable paging buttons to drive Chart 5
 
 ### What it means
-Keep Chart 2 exactly as-is (user clicks the DataTable’s built-in page controls), and wire Chart 5 to **listen to Chart 2’s current page**.
+Keep Chart 2 exactly as-is (user clicks the DataTable's built-in page controls), and wire Chart 5 to **listen to Chart 2's current page**.
 
 ### How it works
-- Add an input to Chart 5 update callback:
-  - `Input("chart-2", "page_current")`
-  - (optional) `State("chart-2", "page_count")` for wrap-around logic
-- In Chart 5 slicing logic, replace the interval-driven `current_page_idx` with:
-  - `current_page_idx = page_current or 0`
+- Modify Chart 5 update callback:
+  - **Remove**: `Input("chart-2-interval", "n_intervals")` as page driver
+  - **Add**: `Input("chart-2", "page_current")` as the page driver
+  - Optionally add `State("chart-2", "page_count")` for wrap-around logic
+- In Chart 5 slicing logic, replace:
+  ```python
+  current_interval = n_intervals or 0
+  current_page_idx = current_interval % page_count
+  ```
+  With:
+  ```python
+  current_page_idx = (page_current or 0) % page_count
+  ```
 
 ### Why this answers your question
-Yes: **the same “buttons” (Chart 2’s built-in paging UI) can control Chart 5**, because Chart 5 will page according to whatever Chart 2 is currently showing.
+Yes: **the same "buttons" (Chart 2's built-in paging UI) can control Chart 5**, because Chart 5 will page according to whatever Chart 2 is currently showing.
 
 ### Files to edit
 - `callbacks/select_time_period_callback.py`
   - In `register_chart5_timeframe_callbacks(...)`:
-    - remove/reduce reliance on `Input("chart-2-interval", "n_intervals")`
-    - add `Input("chart-2", "page_current")` as the page driver
-    - use `page_size_mobile=4` lanes for mobile main (already added)
+    - Change `Input("chart-2-interval", "n_intervals")` → `Input("chart-2", "page_current")`
+    - (Optional) Add `State("chart-2", "page_count")` if you want to clamp
+    - Line ~87-90: remove/change the interval input
+    - Line ~170-172: change `current_interval = n_intervals or 0` → `current_page_idx = (page_current or 0) % page_count`
 
 ### Pros / cons
-- **Pros**: minimal UI work; no new buttons; preserves your “click-only” preference.
-- **Cons**: Chart 5 paging becomes “coupled” to Chart 2 being present on the page (it is, in your current layout).
+- **Pros**: minimal UI work; no new buttons; preserves "click-only" preference; both charts stay synchronized
+- **Cons**: Chart 5 paging becomes "coupled" to Chart 2 being present on the page (it is, in your current layout)
 
 ---
 
 ## Option B: add a shared page-turner ButtonGroup controlling both Chart 2 and Chart 5
 
 ### What it means
-Add explicit “Prev / Next” buttons (and optionally a page indicator) on the dashboard. Clicking these buttons advances a shared page index, which:
+Add explicit "Prev / Next" buttons (and optionally a page indicator) on the dashboard. Clicking these buttons advances a shared page index, which:
 - sets `chart-2.page_current`
 - slices machines for chart-5
 
 ### UI spec
-- Location: top row of the mobile dashboard (near where the period/theme buttons previously were).
+- Location: top row of the mobile dashboard (near where the period/theme buttons previously were), or as a sticky footer toolbar
 - Buttons:
   - Prev
   - Next
@@ -84,7 +107,6 @@ Add explicit “Prev / Next” buttons (and optionally a page indicator) on the 
 3) **Drive Chart 5**
    - In `register_chart5_timeframe_callbacks`, use:
      - `Input("main-page-index-store", "data")` as page index
-     - `page_size_mobile=4`
    - Slice machines accordingly.
 
 ### Files to edit
@@ -98,21 +120,38 @@ Add explicit “Prev / Next” buttons (and optionally a page indicator) on the 
   - Change chart-5 paging input to use `main-page-index-store`
 
 ### Pros / cons
-- **Pros**: explicit UX; decouples Chart 5 from Chart 2; works even if Chart 2 layout changes later.
-- **Cons**: more code/UI work; must decide what “page count” means (use Chart 2’s page_count, or compute from Chart 5 machine count).
+- **Pros**: explicit UX; decouples Chart 5 from Chart 2; works even if Chart 2 layout changes later
+- **Cons**: more code/UI work; must decide what "page count" means (use Chart 2's page_count, or compute from Chart 5 machine count)
 
 ---
 
 ## Recommendation
-Start with **Option A** (reuse Chart 2 paging UI to drive Chart 5) because it matches your current UX (“click-only paging, buttons already shown on dashboard”) and is the smallest change.
+**Implement Option B** (shared page-turner ButtonGroup). This provides a single, unified control for both charts, which is superior for mobile UX where screen space and clarity are at a premium.
 
-If later you want a cleaner unified control bar, implement **Option B**.
+---
 
-## “Done” criteria (Option A)
+## "Done" criteria (Option B)
 - On mobile main page:
-  - User clicks Chart 2 next/prev
-  - Chart 2 switches page
-  - **Chart 5 switches to the corresponding page** and shows **exactly 4 lanes** (mobile)
-- No auto page turning occurs.
+  - There is a "Prev / Next" button group.
+  - Clicking "Next" advances both Chart 2 and Chart 5 to the next set of machines.
+  - Clicking "Prev" goes back.
+  - A page indicator shows the current page range (e.g., "1 - 4 / 20").
+  - Auto page turning is disabled.
+  - Chart 2's native paging buttons are hidden (to avoid confusion) or synchronized.
 
+---
 
+## Implementation checklist (Option B)
+
+- [ ] Create UI components:
+  - [ ] Add `create_main_page_turner_buttons()` in `layouts/create_buttons.py`.
+  - [ ] Add `dcc.Store(id="main-page-index-store", data=0)` in `layouts/mobile_dashboard_layout.py`.
+  - [ ] Add the button group to `layouts/mobile_dashboard_layout.py`.
+- [ ] Implement logic:
+  - [ ] Create `callbacks/page_turner_callbacks.py` (or add to existing).
+  - [ ] Add callback to update `main-page-index-store` from button clicks (looping/clamping).
+  - [ ] Add callback to set `chart-2.page_current` from `main-page-index-store.data`.
+  - [ ] Modify `callbacks/select_time_period_callback.py` to use `main-page-index-store.data` for Chart 5.
+- [ ] Test on mobile:
+  - [ ] Verify synchronization between Table and Timeline.
+  - [ ] Verify no auto-paging.

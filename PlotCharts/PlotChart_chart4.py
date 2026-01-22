@@ -9,6 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 def create_chart4_layout(
     default_period: str,
@@ -31,7 +32,7 @@ def create_chart4_layout(
         return dcc.Graph(
             id=chart_id,
             figure=initial_figure,
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
             style={
                 "width": "100%",
                 "height": "100%",
@@ -58,7 +59,7 @@ def create_chart4_layout(
                 "width": "100%",
                 "minHeight": "30vh",  # Adjusted minHeight
             },
-            config={"displayModeBar": False, "responsive": True},
+            config=NON_INTERACTIVE_GRAPH_CONFIG,
         )
         return dcc.Link(
             graph_component,

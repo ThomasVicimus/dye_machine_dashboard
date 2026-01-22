@@ -10,6 +10,7 @@ from dash import html
 
 logger = logging.getLogger(__name__)
 
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 def create_chart6_layout(
     default_period: str,
@@ -21,6 +22,19 @@ def create_chart6_layout(
 
     # Get the cards directly from the factory
     card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
+
+    # Ensure Chart-6 text cards have stable IDs in the layout.
+    # Some callbacks update these cards by id; wrapping here makes the layout contract explicit.
+    card2 = dbc.Card(
+        getattr(card2, "children", card2),
+        id="chart6-card-2",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+    card3 = dbc.Card(
+        getattr(card3, "children", card3),
+        id="chart6-card-3",
+        style={"height": "auto", "overflow": "hidden"},
+    )
 
     # Create combined cards for layout compatibility
     combined_cards = dbc.Row(
@@ -66,7 +80,7 @@ def create_chart6_layout(
                     dcc.Graph(
                         id=chart_id,
                         figure=initial_figure,
-                        config={"displayModeBar": False, "responsive": True},
+                        config=NON_INTERACTIVE_GRAPH_CONFIG,
                         style={"width": "100%", "height": "100%"},
                     ),
                     style={"height": "calc(100% - 80px)", "minHeight": "240px"},
@@ -119,50 +133,52 @@ def create_chart6_layout(
             ),
         )
 
-        # Create the combined right side (cards + figure)
-        combined_fig = html.Div(
-            [
-                # Row 1: Combined cards
-                html.Div(
+        # Combined cards (Top right)
+        # We assume combined_cards is defined above (Rows with Cols).
+        # We'll just wrap it in a div that doesn't force a height, allowing it to take natural size.
+        cards_section = html.Div(
                     combined_cards,
                     style={"marginBottom": "10px"},
-                ),
-                # Row 2: Figure (responsive)
-                html.Div(
+        )
+        
+        # Graph section (Bottom right)
+        # Use dcc.Graph with responsive config
+        graph_section = html.Div(
                     dcc.Graph(
                         id=chart_id,
                         figure=initial_figure,
-                        config={"displayModeBar": False, "responsive": True},
+                config=NON_INTERACTIVE_GRAPH_CONFIG,
                         style={"width": "100%", "height": "100%"},
                     ),
-                    style={"height": "calc(100% - 80px)", "minHeight": "300px"},
-                ),
-            ],
-            style={"height": "100%"},
+            className="chart6-graph-wrap",
         )
 
-        # Create the main 2-column layout
-        mobile_layout = dbc.Row(
+        # Right column: Flex column with Cards (fixed) + Graph (grow)
+        right_col = html.Div(
             [
-                # Column 1: Large card1
-                dbc.Col(
+                cards_section,
+                graph_section,
+            ],
+            className="chart6-right",
+        )
+
+        # Left column: Card 1 (fixed width)
+        left_col = html.Div(
                     dbc.Card(
                         card1,
                         id="chart6-card-1",
                         className="h-100",
                     ),
-                    width=4,
-                    style={"height": "100%"},
-                ),
-                # Column 2: Combined cards + figure
-                dbc.Col(
-                    combined_fig,
-                    width=8,
-                    style={"height": "100%"},
-                ),
+            className="chart6-left",
+        )
+
+        # Main Layout: Flex Row
+        mobile_layout = html.Div(
+            [
+                left_col,
+                right_col,
             ],
-            className="h-100 g-2",
-            style={"height": "100%"},
+            className="chart6-tile",
         )
 
         return dcc.Link(
@@ -173,8 +189,9 @@ def create_chart6_layout(
                 "display": "block",
                 "height": "100%",
                 "width": "100%",
-                "overflowY": "auto",
-            },  # Ensure link covers graph
+                "textDecoration": "none", # Remove link underline if any
+                "color": "inherit" # Inherit text color
+            },
         )
 
 
@@ -185,6 +202,18 @@ def create_chart6_txtcards_layout(period, dfs):
     - Columns 2-3: Combined cards (card2 + card3) side by side
     """
     card1, card2, card3 = create_chart6_txt_cards(period, dfs)
+    
+    # Ensure Chart-6 text cards have stable IDs in the layout.
+    card2 = dbc.Card(
+        getattr(card2, "children", card2),
+        id="chart6-card-2",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+    card3 = dbc.Card(
+        getattr(card3, "children", card3),
+        id="chart6-card-3",
+        style={"height": "auto", "overflow": "hidden"},
+    )
 
     # Create combined cards for layout compatibility
     combined_cards = dbc.Row(
@@ -236,6 +265,18 @@ def create_chart6_detailed_layout(
     """
     card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
 
+    # Ensure Chart-6 text cards have stable IDs in the layout.
+    card2 = dbc.Card(
+        getattr(card2, "children", card2),
+        id="chart6-card-2",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+    card3 = dbc.Card(
+        getattr(card3, "children", card3),
+        id="chart6-card-3",
+        style={"height": "auto", "overflow": "hidden"},
+    )
+
     # Create combined cards for layout compatibility
     combined_cards = dbc.Row(
         [
@@ -267,7 +308,7 @@ def create_chart6_detailed_layout(
                 dcc.Graph(
                     id=f"{chart_id}-main",
                     figure=main_figure,
-                    config={"displayModeBar": False, "responsive": True},
+                    config=NON_INTERACTIVE_GRAPH_CONFIG,
                     style={"height": "100%", "width": "100%"},
                 ),
                 style={"height": "calc(100% - 80px)", "minHeight": "200px"},

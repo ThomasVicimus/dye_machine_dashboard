@@ -1,6 +1,7 @@
 # import dash_bootstrap_components as dbc
 from dash import dash_table
 import logging
+from function.dashboard_config import get_lane_count
 
 logger = logging.getLogger(__name__)
 
@@ -8,13 +9,18 @@ logger = logging.getLogger(__name__)
 def create_chart2_figure(
     df,
     mobile,
-    # desktop_row_count: int = 4,
-    desktop_row_count: int = 8,  # * has to be Edit in PlotChart
-    mobile_row_count: int = 4,  # * has to be Edit in PlotChart
+    desktop_row_count: int = None,
+    mobile_row_count: int = None,
     header_bg_color="#2774a7",
     text_color="#fdfefe",
 ):
     chart_id = "chart-2"
+
+    # Apply config defaults if not explicitly passed
+    if desktop_row_count is None:
+        desktop_row_count = get_lane_count("desktop")
+    if mobile_row_count is None:
+        mobile_row_count = get_lane_count("mobile")
 
     # Calculate total number of pages
     if not mobile:
@@ -76,8 +82,10 @@ def create_chart2_figure(
             page_action="native",
             style_table={
                 "overflowX": "auto",
+                "overflowY": "auto",
                 "width": "100%",
                 "height": "100%",
+                "minHeight": 0,
                 # "minHeight": "20vh",
                 # "tableLayout": "fixed",
             },
@@ -101,6 +109,12 @@ def create_chart2_figure(
                 "width": "auto",
                 "minWidth": "60px",
             },
+            css=[
+                {
+                    "selector": ".previous-next-container",
+                    "rule": "display: none;",
+                }
+            ],
         )
     return fig
 

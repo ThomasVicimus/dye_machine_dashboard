@@ -14,6 +14,7 @@ from dash import callback_context
 from Database.serialize_df import deserialize_dataframe_dict
 from layouts.create_buttons import create_period_button, create_chart5_timeframe_buttons
 from layouts.mobile_detail_layout import create_mobile_detail_overlay_layout
+from function.dash_graph_config import NON_INTERACTIVE_GRAPH_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +145,9 @@ def register_detail_page_callbacks(
         Output("mobile-page-content", "children"),
         Input("mobile-url", "pathname"),
         Input(PERIOD_STORE_ID, "data"),  # Rerender detail on period change
-        Input("chart5-timeframe-store", "data"),  # Rerender chart-5 detail on timeframe change
+        Input(
+            "chart5-timeframe-store", "data"
+        ),  # Rerender chart-5 detail on timeframe change
         State("all-chart-data-store", "data"),
     )
     def display_page(pathname, period_data, chart5_timeframe_data, all_chart_data):
@@ -295,10 +298,7 @@ def register_detail_page_callbacks(
                                             "height": "45vh",
                                             "width": "100%",
                                         },
-                                        config={
-                                            "displayModeBar": False,
-                                            "responsive": True,
-                                        },
+                                        config=NON_INTERACTIVE_GRAPH_CONFIG,
                                     ),
                                     width=12,
                                 ),
@@ -317,10 +317,7 @@ def register_detail_page_callbacks(
                                         "height": "80vh",
                                         "width": "100%",
                                     },
-                                    config={
-                                        "displayModeBar": False,
-                                        "responsive": True,
-                                    },
+                                    config=NON_INTERACTIVE_GRAPH_CONFIG,
                                 ),
                                 width=12,
                             ),
@@ -328,12 +325,12 @@ def register_detail_page_callbacks(
                         )
                     ]
 
-            # Wrap all graph components in a scrollable container
+            # Wrap all graph components in a container.
+            # IMPORTANT: the overlay wrapper is the single scroll container; avoid nested scroll
+            # here to prevent scroll "leakage" into the underlying dashboard on mobile.
             graphs_container = html.Div(
                 children=graph_components,
                 style={
-                    "overflowY": "auto",
-                    "maxHeight": "90vh",  # Limit height to ensure scrollability
                     "padding": "5px",
                 },
             )

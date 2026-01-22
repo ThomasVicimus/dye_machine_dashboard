@@ -1,0 +1,96 @@
+/* Mobile dashboard layout helpers (landscape-first).
+   Dash automatically serves files under /assets. */
+
+@media (orientation: landscape) {
+  :root {
+    /* Breathing room so the row-page doesn't feel edge-to-edge. */
+    --mobile-row-padding-v: 1svh;
+    --mobile-row-padding-h: 1vw;
+  }
+
+  /* Each dashboard row should behave like a full-screen "page". */
+  .mobile-row-page {
+    /* Prefer stable viewport units when available; fall back via min-height. */
+    height: 96svh;
+    min-height: 100vh;
+    width: 100%;
+    padding: var(--mobile-row-padding-v) var(--mobile-row-padding-h);
+    box-sizing: border-box;
+  }
+
+  /* Make the row and its columns fill the page height. */
+  .mobile-row-page .mobile-chart-row {
+    height: 100%;
+    margin: 0;
+  }
+
+  .mobile-row-page .mobile-chart-col {
+    height: 100%;
+  }
+
+  /* Cards should fill their columns and clip overflow. */
+  .mobile-row-page .mobile-chart-card {
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* Ensure the card body and immediate children can size correctly. */
+  .mobile-row-page .card-body {
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* Chart-2 DataTable containment: force the table to scroll inside the tile. */
+  .chart2-card-wrap {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .chart2-table-wrap {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Dash DataTable internal containers sometimes ignore parent height unless explicitly set. */
+  .chart2-table-wrap .dash-table-container,
+  .chart2-table-wrap .dash-spreadsheet-container,
+  .chart2-table-wrap .dash-spreadsheet,
+  .chart2-table-wrap .dash-table {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Chart 6 Layout: Strict Flex Container */
+  .chart6-tile {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .chart6-left {
+    flex: 0 0 33.333%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .chart6-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .chart6-graph-wrap {
+    flex: 1; /* Grow to fill remaining space */
+    min-height: 0;
+    position: relative;
+  }
+}
