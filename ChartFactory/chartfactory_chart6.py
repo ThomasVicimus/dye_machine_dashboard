@@ -75,6 +75,7 @@ def _get_reason_display_name(reason_col, reason_mapping):
 def create_chart6_figure(
     period: str,
     dfs: Dict[str, Dict[str, pd.DataFrame]],
+    show_lowest: bool = True,
     # Optional styling parameters can be added here if needed
     # e.g., bar_color_highest: Optional[str] = None, bar_color_lowest: Optional[str] = None
 ) -> go.Figure:
@@ -93,10 +94,11 @@ def create_chart6_figure(
     # Load reason mapping
     reason_mapping = _load_reason_mapping()
 
+    cols = 2 if show_lowest else 1
     # Create subplots with two columns
     fig = make_subplots(
         rows=1,
-        cols=2,
+        cols=cols,
         # subplot_titles=("Highest Usage Machine", "Lowest Usage Machine"),
         # specs=[[{"secondary_y": False}, {"secondary_y": False}]],
     )
@@ -107,15 +109,15 @@ def create_chart6_figure(
             or period not in dfs
             or not isinstance(dfs[period], dict)
             or "highest" not in dfs[period]
-            or "lowest" not in dfs[period]
+            or (show_lowest and "lowest" not in dfs[period])
         ):
             raise KeyError(
-                f"Expected path dfs[period]['highest'] and dfs[period]['lowest'] not found or 'dfs' is not structured correctly.\n {type(dfs)=}"
+                f"Expected path dfs[period]['highest'] {'and dfs[period][lowest]' if show_lowest else ''} not found or 'dfs' is not structured correctly.\n {type(dfs)=}"
             )
 
         df_period = dfs[period]
         df_highest = df_period["highest"]
-        df_lowest = df_period["lowest"]
+        df_lowest = df_period["lowest"] if show_lowest else pd.DataFrame()
 
     except KeyError as e:
         logger.error(
@@ -133,8 +135,8 @@ def create_chart6_figure(
         return fig
 
     # Validate DataFrames
-    if not isinstance(df_highest, pd.DataFrame) or not isinstance(
-        df_lowest, pd.DataFrame
+    if not isinstance(df_highest, pd.DataFrame) or (
+        show_lowest and not isinstance(df_lowest, pd.DataFrame)
     ):
         logger.warning(
             f"Data for period '{period}' - 'highest' or 'lowest' is not a DataFrame."
@@ -225,7 +227,7 @@ def create_chart6_figure(
         color = color_mapping[reason_display]
 
         # Add bar for lowest machine (only if value > 0)
-        if values["lowest"] > 0:
+        if values["lowest"] > 0 and show_lowest:
             fig.add_trace(
                 go.Bar(
                     x=[reason_display],
@@ -254,7 +256,8 @@ def create_chart6_figure(
                     showlegend=True,
                 ),
                 row=1,
-                col=2,
+                row=1,
+                col=2 if show_lowest else 1,
             )
 
     # Update layout
@@ -279,7 +282,10 @@ def create_chart6_figure(
     # Find the maximum value across all data to ensure consistent y-axis scaling
     max_value = 0
     for values in all_reasons.values():
-        max_value = max(max_value, values["highest"], values["lowest"])
+        val_list = [values["highest"]]
+        if show_lowest:
+            val_list.append(values["lowest"])
+        max_value = max(max_value, *val_list)
 
     # Add some padding to the y-axis (10% above max value)
     y_max = max_value * 1.1 if max_value > 0 else 10
@@ -293,25 +299,27 @@ def create_chart6_figure(
         row=1,
         col=1,
     )
-    fig.update_yaxes(
-        # title_text="Hours",
-        # title_font_color="#fdfefe",
-        # tickfont=dict(color="#fdfefe"),
-        range=[0, y_max],  # Set same range for both subplots
-        row=1,
-        col=2,
-    )
+    if show_lowest:
+        fig.update_yaxes(
+            # title_text="Hours",
+            # title_font_color="#fdfefe",
+            # tickfont=dict(color="#fdfefe"),
+            range=[0, y_max],  # Set same range for both subplots
+            row=1,
+            col=2,
+        )
 
     fig.update_xaxes(
         showticklabels=False,
         row=1,
         col=1,
     )
-    fig.update_xaxes(
-        showticklabels=False,
-        row=1,
-        col=2,
-    )
+    if show_lowest:
+        fig.update_xaxes(
+            showticklabels=False,
+            row=1,
+            col=2,
+        )
     # * Remove Cmt out to Show X-axis tickers
     # fig.update_xaxes(
     #     title_text="Stop Reasons",
@@ -585,7 +593,15 @@ def create_chart6_txt_cards(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
 
 
 def create_chart6_figure_mobile(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
-    return create_chart6_figure(period, dfs)
+    return create_chart6_figure(period, dfs, show_lowest=False)
+
+
+def create_chart6_txt_cards_mobile_main(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
+    """
+    Returns only the 'Overall' (Card 1) and 'Highest' (Card 2) cards.
+    """
+    card1, card2, _ = create_chart6_txt_cards(period, dfs)
+    return card1, card2
 
 
 def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
