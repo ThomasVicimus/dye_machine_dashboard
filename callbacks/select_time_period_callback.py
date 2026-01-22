@@ -20,6 +20,7 @@ from ChartFactory.chartfactory_chart6 import (
     create_chart6_figure,
     create_chart6_figure_mobile,
     create_chart6_txt_cards,
+    create_chart6_txt_cards_mobile_main,
 )
 import math  # Needed for ceiling division when paging machines for chart-5
 from function.dashboard_config import get_lane_count, get_data_refresh_interval
@@ -489,14 +490,15 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "card_factory": create_chart3_txt_cards,
             "num_cards": 3,
         },
+        },
         "chart-6": {
             "card_ids": [
                 "chart6-card-1",
                 "chart6-card-2",
                 "chart6-card-3",
-            ],  # All 3 cards
-            "card_factory": create_chart6_txt_cards,
-            "num_cards": 3,  # Updating all 3 cards
+            ] if not mobile else ["chart6-card-1", "chart6-card-2"],  # Mobile uses only 2 cards
+            "card_factory": create_chart6_txt_cards if not mobile else create_chart6_txt_cards_mobile_main,
+            "num_cards": 3 if not mobile else 2,  # Updating 3 or 2 cards
         },
     }
 

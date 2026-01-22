@@ -1,6 +1,7 @@
-from ChartFactory.chartfactory_chart6 import (
     create_chart6_figure,
     create_chart6_txt_cards,
+    create_chart6_figure_mobile,
+    create_chart6_txt_cards_mobile_main,
 )
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
@@ -20,31 +21,48 @@ def create_chart6_layout(
 ):
     """Creates the layout with card1 in column 1 and combined_cards+figure in column 2."""
 
-    # Get the cards directly from the factory
-    card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
+    # Get the cards and configure layout based on mode
+    if mobile:
+        # Use mobile factory (returns 2 cards)
+        card1, card2 = create_chart6_txt_cards_mobile_main(default_period, dfs)
+        card3 = None
+        
+        # Mobile combined cards: Only Card 2
+        card2 = dbc.Card(
+            getattr(card2, "children", card2),
+            id="chart6-card-2",
+            style={"height": "auto", "overflow": "hidden"},
+        )
+        combined_cards = dbc.Row(
+            [dbc.Col(card2, width=12)],
+            className="mb-2 g-2",
+            style={"height": "auto"},
+        )
+    else:
+        # Desktop factory (returns 3 cards)
+        card1, card2, card3 = create_chart6_txt_cards(default_period, dfs)
+        
+        # Ensure Chart-6 text cards have stable IDs in the layout.
+        card2 = dbc.Card(
+            getattr(card2, "children", card2),
+            id="chart6-card-2",
+            style={"height": "auto", "overflow": "hidden"},
+        )
+        card3 = dbc.Card(
+            getattr(card3, "children", card3),
+            id="chart6-card-3",
+            style={"height": "auto", "overflow": "hidden"},
+        )
 
-    # Ensure Chart-6 text cards have stable IDs in the layout.
-    # Some callbacks update these cards by id; wrapping here makes the layout contract explicit.
-    card2 = dbc.Card(
-        getattr(card2, "children", card2),
-        id="chart6-card-2",
-        style={"height": "auto", "overflow": "hidden"},
-    )
-    card3 = dbc.Card(
-        getattr(card3, "children", card3),
-        id="chart6-card-3",
-        style={"height": "auto", "overflow": "hidden"},
-    )
-
-    # Create combined cards for layout compatibility
-    combined_cards = dbc.Row(
-        [
-            dbc.Col(card3, width=6),
-            dbc.Col(card2, width=6),
-        ],
-        className="mb-2 g-2",
-        style={"height": "auto"},
-    )
+        # Create combined cards for layout compatibility
+        combined_cards = dbc.Row(
+            [
+                dbc.Col(card3, width=6),
+                dbc.Col(card2, width=6),
+            ],
+            className="mb-2 g-2",
+            style={"height": "auto"},
+        )
 
     # *Desktop Chart
     if not mobile:
@@ -114,7 +132,7 @@ def create_chart6_layout(
         )
     else:
         # *Mobile Chart
-        initial_figure = create_chart6_figure(
+        initial_figure = create_chart6_figure_mobile(
             default_period,
             dfs,
         )
