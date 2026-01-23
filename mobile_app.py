@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_THEME = get_default_theme()
 DEFAULT_LANG = get_default_lang()
 
+
 def _get_lan_ip() -> str:
     """
     Best-effort LAN IP detection for printing a usable URL on the local network.
@@ -56,6 +57,7 @@ def _get_lan_ip() -> str:
             s.close()
     except Exception:
         return "127.0.0.1"
+
 
 mobile_app = Dash(
     __name__,
@@ -122,4 +124,4 @@ if __name__ == "__main__":
     logger.info("Starting mobile server...")
     logger.info(f"Local URL: http://127.0.0.1:{port}/")
     logger.info(f"LAN URL:   http://{lan_ip}:{port}/")
-    mobile_app.run(host=host, port=port, debug=True)
+    mobile_app.run(host=host, port=port, debug=False)

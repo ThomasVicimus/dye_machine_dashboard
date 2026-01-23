@@ -285,6 +285,7 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "chart_factory_mobile": create_chart6_figure_mobile,
             "chart_titles": "Idle Time",
             "margin": dict(l=10, r=10, t=10, b=80),
+            "margin_mobile": dict(l=2, r=2, t=6, b=34),
         },
     }
 
@@ -329,6 +330,8 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
         current_chart_margin = chart_config[
             "margin"
         ]  # Extract margin for the current chart
+        # Use mobile-specific margin if available, otherwise fall back to desktop margin
+        current_chart_margin_mobile = chart_config.get("margin_mobile", current_chart_margin)
         if mobile:
             chart_factory = chart_config["chart_factory_mobile"]
         else:
@@ -348,6 +351,8 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             chart_id=CHART_ID,
             chart_factory=chart_factory,
             margin=current_chart_margin,  # Pass the specific margin as a default argument
+            margin_mobile=current_chart_margin_mobile,  # Pass mobile-specific margin
+            is_mobile=mobile,  # Capture mobile flag for this chart
         ):
             # While on detail pages, don't spend time rebuilding the main dashboard charts.
             # We'll refresh them when the user navigates back to "/".
@@ -435,12 +440,32 @@ def register_time_period_callbacks(app, mobile=False, lang: str = "zh_cn"):
             #     )
 
             try:
-                if mobile:
+                if is_mobile:
                     new_figure = chart_factory(  # Use chart_factory from the function's default argument
                         selected_period,
                         deserialized_chart_data,  # Pass the chart-specific deserialized dataset
                     )
-                    # No additional layout updates for mobile to preserve default styling
+                    # Apply mobile-specific layout updates including margins
+                    new_figure.update_layout(
+                        autosize=True,
+                        height=None,
+                        margin=margin_mobile,
+                    )
+                    # Ensure legend placement for chart-6 matches the initial mobile configuration
+                    if chart_id == "chart-6":
+                        new_figure.update_layout(
+                            legend=dict(
+                                orientation="h",
+                                yanchor="top",
+                                y=-0.10,
+                                xanchor="center",
+                                x=0.5,
+                                font=dict(color="#fdfefe", size=10),
+                                entrywidthmode="fraction",
+                                entrywidth=0.33,
+                            ),
+                            bargap=0.18,
+                        )
                 else:
                     # Create the chart using the deserialized data and the selected period
                     new_figure = chart_factory(  # Use chart_factory from the function's default argument
