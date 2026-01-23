@@ -256,7 +256,7 @@ def create_chart6_figure(
                     showlegend=True,
                 ),
                 row=1,
-                row=1,
+                # row=1,
                 col=2 if show_lowest else 1,
             )
 
@@ -596,7 +596,9 @@ def create_chart6_figure_mobile(period: str, dfs: Dict[str, Dict[str, pd.DataFra
     return create_chart6_figure(period, dfs, show_lowest=False)
 
 
-def create_chart6_txt_cards_mobile_main(period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]):
+def create_chart6_txt_cards_mobile_main(
+    period: str, dfs: Dict[str, Dict[str, pd.DataFrame]]
+):
     """
     Returns only the 'Overall' (Card 1) and 'Highest' (Card 2) cards.
     """
@@ -703,8 +705,12 @@ def create_chart6_figure_detail(period: str, dfs: Dict[str, Dict[str, pd.DataFra
             else "Unknown"
         )
 
-        highest_title = f"停机时数最高 - {truncate_title(machine_name_highest, max_len=22)}"
-        lowest_title = f"停机时数最低 - {truncate_title(machine_name_lowest, max_len=22)}"
+        highest_title = (
+            f"停机时数最高 - {truncate_title(machine_name_highest, max_len=22)}"
+        )
+        lowest_title = (
+            f"停机时数最低 - {truncate_title(machine_name_lowest, max_len=22)}"
+        )
 
         # Remove any existing annotations (summary fig has no subplot titles by default)
         # Then add our custom titles positioned roughly above each subplot

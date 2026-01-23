@@ -86,7 +86,7 @@ def register_chart5_timeframe_callbacks(
         Input("all-chart-data-store", "data"),
         Input("mobile-url", "pathname"),
     ]
-    
+
     if mobile:
         # Paging driven by shared store (buttons)
         chart5_inputs.append(Input("main-page-index-store", "data"))
@@ -99,9 +99,11 @@ def register_chart5_timeframe_callbacks(
         chart5_inputs,
         prevent_initial_call=True,
     )
-    def update_chart5_figure(selected_timeframe, all_chart_data, pathname, page_trigger):
+    def update_chart5_figure(
+        selected_timeframe, all_chart_data, pathname, page_trigger
+    ):
         """
-        Updates Chart 5. 
+        Updates Chart 5.
         'page_trigger' is either the page index (mobile) or n_intervals (desktop).
         """
         # While on detail pages, don't spend time rebuilding the main dashboard chart.
@@ -182,7 +184,7 @@ def register_chart5_timeframe_callbacks(
                 page_count = max(1, math.ceil(len(unique_machines) / PAGE_SIZE))
 
                 if mobile:
-                     # Mobile: page_trigger is the direct page index from store
+                    # Mobile: page_trigger is the direct page index from store
                     current_page_idx = (page_trigger or 0) % page_count
                 else:
                     # Desktop: page_trigger is n_intervals, calculate page index
@@ -490,14 +492,21 @@ def register_txt_cards_callbacks(app, mobile=False, lang: str = "zh_cn"):
             "card_factory": create_chart3_txt_cards,
             "num_cards": 3,
         },
-        },
         "chart-6": {
-            "card_ids": [
-                "chart6-card-1",
-                "chart6-card-2",
-                "chart6-card-3",
-            ] if not mobile else ["chart6-card-1", "chart6-card-2"],  # Mobile uses only 2 cards
-            "card_factory": create_chart6_txt_cards if not mobile else create_chart6_txt_cards_mobile_main,
+            "card_ids": (
+                [
+                    "chart6-card-1",
+                    "chart6-card-2",
+                    "chart6-card-3",
+                ]
+                if not mobile
+                else ["chart6-card-1", "chart6-card-2"]
+            ),  # Mobile uses only 2 cards
+            "card_factory": (
+                create_chart6_txt_cards
+                if not mobile
+                else create_chart6_txt_cards_mobile_main
+            ),
             "num_cards": 3 if not mobile else 2,  # Updating 3 or 2 cards
         },
     }
