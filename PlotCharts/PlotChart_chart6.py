@@ -37,7 +37,7 @@ def create_chart6_layout(
         )
         combined_cards = dbc.Row(
             [dbc.Col(card2, width=12)],
-            className="mb-2 g-2",
+            className="mb-1 g-1",
             style={"height": "auto"},
         )
     else:
@@ -141,16 +141,20 @@ def create_chart6_layout(
         initial_figure.update_layout(
             autosize=True,
             height=None,
-            margin=dict(l=10, r=10, t=10, b=80),  # More bottom margin for legend
-            # Move legend to bottom
+            # Mobile: shrink margins and pack legend so the plot area is larger.
+            margin=dict(l=2, r=2, t=6, b=34),
             legend=dict(
-                orientation="h",  # Horizontal orientation
+                orientation="h",
                 yanchor="top",
-                y=-0.2,  # Position below the plot
+                y=-0.10,
                 xanchor="center",
                 x=0.5,
-                font=dict(color="#fdfefe"),
+                font=dict(color="#fdfefe", size=10),
+                # Encourage multi-column wrapping so the legend uses less height.
+                entrywidthmode="fraction",
+                entrywidth=0.33,
             ),
+            bargap=0.18,
         )
 
         # Combined cards (Top right)
@@ -158,7 +162,7 @@ def create_chart6_layout(
         # We'll just wrap it in a div that doesn't force a height, allowing it to take natural size.
         cards_section = html.Div(
             combined_cards,
-            style={"marginBottom": "10px"},
+            style={"marginBottom": "4px"},
         )
 
         # Graph section (Bottom right)

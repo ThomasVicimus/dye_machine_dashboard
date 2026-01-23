@@ -69,14 +69,18 @@
     display: flex;
     flex-direction: row;
     height: 100%;
+    min-height: 0;
     width: 100%;
-    gap: 0.5rem;
+    min-width: 0;
+    gap: 0.25rem;
+    overflow: hidden;
   }
   
   .chart6-left {
-    flex: 0 0 33.333%;
+    flex: 0 0 30%;
     height: 100%;
     overflow: hidden;
+    min-width: 0;
   }
   
   .chart6-right {
@@ -92,5 +96,15 @@
     flex: 1; /* Grow to fill remaining space */
     min-height: 0;
     position: relative;
+    overflow: hidden;
+  }
+
+  /* Ensure Plotly fully stretches to the flex container height/width. */
+  .chart6-graph-wrap .dash-graph,
+  .chart6-graph-wrap .js-plotly-plot,
+  .chart6-graph-wrap .plot-container,
+  .chart6-graph-wrap .svg-container {
+    height: 100% !important;
+    width: 100% !important;
   }
 }
