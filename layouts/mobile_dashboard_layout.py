@@ -7,9 +7,17 @@ from PlotCharts.PlotChart_chart4 import create_chart4_layout
 from PlotCharts.PlotChart_chart5 import create_chart5_layout
 from PlotCharts.PlotChart_chart6 import create_chart6_layout
 from Database.serialize_df import serialize_dataframe_dict
+
 # from layouts.create_buttons import create_period_button, create_theme_buttons
-from layouts.create_buttons import create_main_page_turner_buttons, create_combined_control_row
-from function.dashboard_config import get_data_refresh_interval, get_chart5_default_timeframe, get_lane_count
+from layouts.create_buttons import (
+    create_main_page_turner_buttons,
+    create_combined_control_row,
+)
+from function.dashboard_config import (
+    get_data_refresh_interval,
+    get_chart5_default_timeframe,
+    get_lane_count,
+)
 
 # Note: Figures are passed from mobile_app.py
 
@@ -37,6 +45,16 @@ def create_mobile_layout(
     periods = list(initial_charts_data["chart-1-data-store"].keys())
     serialized_initial_charts_data = {
         key: serialize_dataframe_dict(df) for key, df in initial_charts_data.items()
+    }
+
+    # Sticky control-row style (also used by a callback to hide it on detail pages)
+    MAIN_CONTROLS_ROW_STYLE = {
+        "position": "sticky",
+        "top": "0",
+        "zIndex": "1020",
+        "backgroundColor": "#202020",
+        "paddingTop": "5px",
+        "paddingBottom": "5px",
     }
 
     return html.Div(
@@ -88,167 +106,167 @@ def create_mobile_layout(
                     "overflowY": "auto",
                 },
                 children=[
-            dbc.Container(
-                id="mobile-rotated-content",
-                children=[
-                    # dbc.Row(
-                    #     dbc.Col(
-                    #         html.H2(
-                    #             "Mobile Dashboard",
-                    #             className="text-center pt-1 pb-0",
-                    #         ),
-                    #         width=12,
-                    #     )
-                    # ),
-                    # Pagination row for mobile
-                    # Combined Control Row (Sticky)
-                    dbc.Row(
-                        dbc.Col(
-                            create_combined_control_row(
-                                periods=periods,
-                                selected_period=default_period, 
-                                current_page=0, 
-                                total_pages=1
-                            ),
-                            width=12,
-                        ),
-                        className="mb-1",
-                        style={
-                            "position": "sticky",
-                            "top": "0",
-                            "zIndex": "1020",
-                            "backgroundColor": "#202020",
-                            "paddingTop": "5px",
-                            "paddingBottom": "5px"
-                        },
-                    ),
-                    #* Buttons removed for now
-                    # Row 1 (Charts 1-3)
-                    html.Div(
-                        className="mobile-row-page",
+                    dbc.Container(
+                        id="mobile-rotated-content",
                         children=[
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart1_layout(
-                                        default_period=default_period,
-                                                dfs=initial_charts_data[
-                                                    "chart-1-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-1",
+                            # dbc.Row(
+                            #     dbc.Col(
+                            #         html.H2(
+                            #             "Mobile Dashboard",
+                            #             className="text-center pt-1 pb-0",
+                            #         ),
+                            #         width=12,
+                            #     )
+                            # ),
+                            # Pagination row for mobile
+                            # Combined Control Row (Sticky)
+                            dbc.Row(
+                                children=[
+                                    dbc.Col(
+                                        create_combined_control_row(
+                                            periods=periods,
+                                            selected_period=default_period,
+                                            current_page=0,
+                                            total_pages=1,
+                                        ),
+                                        width=12,
                                     ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
+                                ],
+                                id="mobile-main-controls-row",
+                                className="mb-1",
+                                style=MAIN_CONTROLS_ROW_STYLE,
                             ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart2_layout(
-                                                dfs=initial_charts_data[
-                                                    "chart-2-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-2",
+                            # * Buttons removed for now
+                            # Row 1 (Charts 1-3)
+                            html.Div(
+                                className="mobile-row-page",
+                                children=[
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart1_layout(
+                                                        default_period=default_period,
+                                                        dfs=initial_charts_data[
+                                                            "chart-1-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-1",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart2_layout(
+                                                        dfs=initial_charts_data[
+                                                            "chart-2-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-2",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart3_layout(
+                                                        default_period=default_period,
+                                                        dfs=initial_charts_data[
+                                                            "chart-3-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-3",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                        ],
+                                        className="mobile-chart-row g-0",
+                                        align="stretch",
                                     ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
+                                ],
                             ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart3_layout(
-                                        default_period=default_period,
-                                                dfs=initial_charts_data[
-                                                    "chart-3-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-3",
+                            # Row 2 (Charts 4-6)
+                            html.Div(
+                                className="mobile-row-page",
+                                children=[
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart4_layout(
+                                                        default_period=default_period,
+                                                        dfs=initial_charts_data[
+                                                            "chart-4-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-4",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart5_layout(
+                                                        default_period=CHART5_DEFAULT_TIMEFRAME,
+                                                        dfs=initial_charts_data[
+                                                            "chart-5-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-5",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    create_chart6_layout(
+                                                        default_period=default_period,
+                                                        dfs=initial_charts_data[
+                                                            "chart-6-data-store"
+                                                        ],
+                                                        mobile=True,
+                                                        chart_id="chart-6",
+                                                    ),
+                                                    body=True,
+                                                    className="mobile-chart-card",
+                                                ),
+                                                width=4,
+                                                className="mobile-chart-col",
+                                            ),
+                                        ],
+                                        className="mobile-chart-row g-2",
+                                        align="stretch",
                                     ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
+                                ],
+                            ),
+                            # Placeholder for potential future updates or controls
+                            html.Div(
+                                id="mobile-dynamic-content", className="text-center"
+                            ),
+                            dcc.Interval(
+                                id="mobile-interval",
+                                interval=REFRESH_INTERVAL * 1000,
+                                n_intervals=0,
                             ),
                         ],
-                                className="mobile-chart-row g-0",
-                        align="stretch",
-                            ),
-                        ],
-                    ),
-                    # Row 2 (Charts 4-6)
-                    html.Div(
-                        className="mobile-row-page",
-                        children=[
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart4_layout(
-                                        default_period=default_period,
-                                                dfs=initial_charts_data[
-                                                    "chart-4-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-4",
-                                    ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart5_layout(
-                                                default_period=CHART5_DEFAULT_TIMEFRAME,
-                                                dfs=initial_charts_data[
-                                                    "chart-5-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-5",
-                                    ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    create_chart6_layout(
-                                        default_period=default_period,
-                                                dfs=initial_charts_data[
-                                                    "chart-6-data-store"
-                                                ],
-                                        mobile=True,
-                                        chart_id="chart-6",
-                                    ),
-                                    body=True,
-                                            className="mobile-chart-card",
-                                ),
-                                width=4,
-                                        className="mobile-chart-col",
-                            ),
-                        ],
-                                className="mobile-chart-row g-2",
-                        align="stretch",
-                            ),
-                        ],
-                    ),
-                    # Placeholder for potential future updates or controls
-                    html.Div(id="mobile-dynamic-content", className="text-center"),
-                    dcc.Interval(
-                        id="mobile-interval", interval=REFRESH_INTERVAL * 1000, n_intervals=0
-                    ),
-                ],
-                fluid=True,
+                        fluid=True,
                     ),
                 ],
             ),

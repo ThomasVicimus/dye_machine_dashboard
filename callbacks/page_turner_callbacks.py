@@ -10,6 +10,26 @@ logger = logging.getLogger(__name__)
 def register_page_turner_callbacks(app, mobile=True):
     """Registers callbacks for the shared page turner buttons on the mobile main page."""
 
+    # Keep the sticky control row on the main dashboard only (hide on /details/*).
+    # This prevents the main-page controls from blocking buttons in the mobile detail overlay.
+    _MAIN_CONTROLS_ROW_STYLE = {
+        "position": "sticky",
+        "top": "0",
+        "zIndex": "1020",
+        "backgroundColor": "#202020",
+        "paddingTop": "5px",
+        "paddingBottom": "5px",
+    }
+
+    @app.callback(
+        Output("mobile-main-controls-row", "style"),
+        Input("mobile-url", "pathname"),
+    )
+    def _toggle_main_controls_visibility(pathname):
+        if pathname and pathname.startswith("/details/"):
+            return {**_MAIN_CONTROLS_ROW_STYLE, "display": "none"}
+        return _MAIN_CONTROLS_ROW_STYLE
+
     @app.callback(
         [
             Output("main-page-index-store", "data"),

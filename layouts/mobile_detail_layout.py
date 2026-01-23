@@ -63,7 +63,8 @@ def create_mobile_detail_overlay_layout(
             "top": 0,
             "left": 0,
             "backgroundColor": "#000000",
-            "zIndex": 1000,
+            # Must sit above the main dashboard's sticky controls (zIndex 1020).
+            "zIndex": 2000,
             # Prevent scroll chaining / rubber-banding from exposing the dashboard underneath.
             "overscrollBehavior": "contain",
         },
@@ -81,5 +82,3 @@ def create_mobile_detail_overlay_layout(
             )
         ],
     )
-
-
